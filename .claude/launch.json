@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "DoubleTap static site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["-y", "live-server", "--port=8000", "--no-browser", "/Users/hadi/Developer/DoubleTap-website"],
+      "port": 8000
+    }
+  ]
+}

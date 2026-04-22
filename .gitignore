@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / env
+*.log
+.env
+.env.*
+!.env.example
+
+# Claude — machine-specific state
+.claude/settings.local.json
+.claude/worktrees/
+
+# Node (in case any tooling is added)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel/
