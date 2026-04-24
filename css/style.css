@@ -321,95 +321,186 @@ ul {
   }
 }
 
-/* Keyboard pill — small inline in headlines (matches .kb-key style) */
-.kbd {
+/* ============================================================
+   KEY COMPONENT — unified keyboard-key styling.
+   One component, size and shape variants. Shares the visual
+   language of .kb-key in the Magic Keyboard section.
+
+   Usage:
+     <span class="key key-sm">A</span>                    — letter/number
+     <span class="key key-sm">                            — centered glyph
+       <img class="key-glyph" src="..." alt="">
+     </span>
+     <span class="key key-sm key-mod" data-side="left">   — modifier + label
+       <span class="key-stack">
+         <img class="key-glyph" src="..." alt="">
+         <span class="key-name">option</span>
+       </span>
+     </span>
+     <span class="key key-md key-fn">                     — function key
+       <img class="key-glyph" src="..." alt="">
+       <span class="key-fn-label">F1</span>
+     </span>
+     <span class="key key-sm key-space" aria-label="space">
+       <span class="sr-only">space</span>
+     </span>
+   ============================================================ */
+
+.key {
+  --key-size: 64px;
+  --key-radius: 9px;
+  --key-font: 20px;
+  --key-icon: 18px;
+  --key-label: 11px;
+  --key-pad: 11px;
+
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  vertical-align: -0.08em;
-  width: 0.9em;
-  height: 0.9em;
-  margin: 0 0.04em;
-  border: 0;
-  border-radius: 0.18em;
-  background: #000;
-  font-family: var(--font-sys);
-  font-size: 0.55em;
-  font-weight: 600;
-  color: #d8d8d8;
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
-/* Keyboard pill — inline in body text (matches .kb-key style) */
-.kbd-inline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 64px;
-  height: 64px;
-  padding-inline: var(--space-3);
-  border: 0;
-  border-radius: 9px;
-  background: #000;
-  font-family: var(--font-sys);
-  font-size: 20px;
-  font-weight: 500;
-  color: #d8d8d8;
-  text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.6);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
-/* Real Apple glyphs inside key pills — SVG has native fill="white" fill-opacity="0.85" */
-.kbd img {
-  width: 62%;
-  height: 62%;
-  object-fit: contain;
-  display: block;
-}
-
-.kbd-inline img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  display: block;
-}
-
-/* Modifier key with icon + label (matches .kb-mod structure) */
-.kbd-mod {
-  display: inline-flex;
-  justify-content: center;
-  min-width: 64px;
-  height: 64px;
+  min-width: var(--key-size);
+  height: var(--key-size);
   padding: 0;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--key-radius);
   background: #000;
-  color: #d8d8d8;
   font-family: var(--font-sys);
+  font-size: var(--key-font);
+  font-weight: 500;
+  line-height: 1;
+  color: #d8d8d8;
   text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.6);
+  vertical-align: middle;
+  isolation: isolate;
   box-shadow:
     inset 0 0 0 1.5px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 1px 2px rgba(0, 0, 0, 0.6);
-  vertical-align: middle;
+  flex-shrink: 0;
 }
 
-.kbd-mod[data-mod="command"] {
-  min-width: 80px;
+.key::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 1;
 }
 
-/* Space bar — wide blank key, matches .kb-w-space */
-.kbd-inline.kbd-space {
-  min-width: 140px;
+.key > * { position: relative; z-index: 2; }
+
+/* Size variants */
+.key-xs {
+  --key-size: 1.1em;
+  --key-radius: 0.2em;
+  --key-font: 0.7em;
+  --key-icon: 62%;
+  --key-pad: 0;
+  margin: 0 0.08em;
+  vertical-align: -0.2em;
+  font-weight: 600;
 }
 
-.kbd-inline.kbd-space .sr-only {
+.key-sm {
+  --key-size: 44px;
+  --key-radius: 7px;
+  --key-font: 16px;
+  --key-icon: 16px;
+  --key-label: 9px;
+  --key-pad: 7px;
+}
+
+.key-md {
+  --key-size: 64px;
+  --key-radius: 9px;
+  --key-font: 20px;
+  --key-icon: 18px;
+  --key-label: 11px;
+  --key-pad: 11px;
+}
+
+.key-lg {
+  --key-size: 80px;
+  --key-radius: 11.376px;
+  --key-font: 24px;
+  --key-icon: 22px;
+  --key-label: 13px;
+  --key-pad: 14px;
+}
+
+/* Centered glyph */
+.key-glyph {
+  width: var(--key-icon);
+  height: var(--key-icon);
+  object-fit: contain;
+  opacity: 0.9;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Modifier variant — icon top + label bottom, side-aligned */
+.key-mod { justify-content: flex-start; }
+.key-mod[data-side="right"] { justify-content: flex-end; }
+
+.key-mod .key-stack {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: fit-content;
+  height: 100%;
+  padding: var(--key-pad);
+  align-items: flex-start;
+}
+
+.key-mod[data-side="right"] .key-stack { align-items: flex-end; }
+
+.key-mod .key-name {
+  font-size: var(--key-label);
+  color: inherit;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* fn variant — globe icon + "fn" label side-by-side at the bottom */
+.key-mod[data-mod="fn"] .key-stack {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+/* F-row variant — icon top-center + "F1" bottom-center */
+.key-fn {
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--key-pad) calc(var(--key-pad) * 0.6);
+}
+
+.key-fn .key-glyph {
+  width: calc(var(--key-icon) * 1.4);
+  height: var(--key-icon);
+}
+
+.key-fn-label {
+  font-size: var(--key-label);
+  color: inherit;
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* Width variants */
+.key-w-cmd { min-width: calc(var(--key-size) * 1.35); }
+.key-w-shift { min-width: calc(var(--key-size) * 1.75); }
+.key-space { min-width: calc(var(--key-size) * 3.2); }
+
+.key .sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -419,40 +510,6 @@ ul {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.kbd-mod-stack {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: fit-content;
-  height: 100%;
-  padding-block: 11px;
-}
-
-.kbd-mod[data-side="left"] .kbd-mod-stack img {
-  align-self: flex-start;
-}
-
-.kbd-mod[data-side="right"] .kbd-mod-stack img {
-  align-self: flex-end;
-}
-
-.kbd-mod-stack img {
-  width: 15px;
-  height: 15px;
-  object-fit: contain;
-  display: block;
-  flex-shrink: 0;
-}
-
-.kbd-mod-stack span {
-  font-size: 11px;
-  font-weight: 500;
-  color: #d8d8d8;
-  opacity: 0.7;
-  line-height: 1;
-  letter-spacing: 0.02em;
 }
 
 /* Badges (meta-style strip) */
@@ -873,72 +930,14 @@ ul {
   border-radius: var(--radius-xl);
 }
 
-.tap-key {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  flex-shrink: 0;
-  border-radius: 11.376px;
-  border: 0;
-  background: #000;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  padding: 0;
-  color: #d8d8d8;
-  text-shadow: 0 0.5px 0.5px rgba(0, 0, 0, 0.6);
+/* Hero demo cycling key — .key.key-lg with the infinite press animation */
+.tap .key {
   box-shadow:
     inset 0 0 0 1.5px rgba(255, 255, 255, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 1px 2px rgba(0, 0, 0, 0.6),
     0 8px 24px var(--color-shadow);
   animation: key-tap 3.2s var(--ease) infinite;
-}
-
-.tap-key[data-mod="command"] {
-  width: 101px;
-}
-
-.tap-key-stack {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: fit-content;
-  height: 100%;
-  padding-block: 14px;
-}
-
-.tap-key[data-side="left"]:not([data-mod="fn"]) .tap-key-svg {
-  align-self: flex-start;
-}
-
-.tap-key[data-side="right"]:not([data-mod="fn"]) .tap-key-svg {
-  align-self: flex-end;
-}
-
-.tap-key[data-mod="fn"] .tap-key-stack {
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-end;
-  width: 100%;
-  padding: 0 13px 14px 13px;
-}
-
-.tap-key-svg {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  display: block;
-  flex-shrink: 0;
-}
-
-.tap-key-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: #d8d8d8;
-  opacity: 0.7;
-  line-height: 1;
-  letter-spacing: 0.02em;
 }
 
 @keyframes key-tap {
@@ -1630,6 +1629,50 @@ body.light {
   box-shadow: 0 0 8px var(--color-accent);
 }
 
+/* "Double-click me" pointer above the left shift — teaches the affordance */
+.kb-hint {
+  position: absolute;
+  left: 5.5%;
+  top: 58%;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  background: var(--color-hud-bg);
+  color: var(--color-accent);
+  border: var(--border-width) solid var(--color-accent);
+  border-radius: var(--radius-full);
+  font-family: var(--font-sys);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 11;
+  box-shadow: 0 0 18px rgba(0, 229, 160, 0.35);
+  animation: kb-hint-bob 2.2s var(--ease-in-out) infinite;
+  transition: opacity var(--duration-normal) var(--ease);
+}
+
+.kb-hint .kb-hint-arrow {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.kb-hint.is-hidden {
+  opacity: 0;
+}
+
+@keyframes kb-hint-bob {
+  0%, 100% { transform: translate(-50%, -100%); }
+  50%      { transform: translate(-50%, calc(-100% - 4px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-hint { animation: none; }
+}
+
 /* Note: keyboard scales via container query unit on .kb transform — no media-query overrides needed */
 
 .triggers-right {
@@ -1673,7 +1716,7 @@ body.light {
    ===================================== */
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--space-5);
 }
 
@@ -1682,15 +1725,21 @@ body.light {
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-2xl);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  min-height: 360px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 1.4fr);
+  gap: var(--space-10);
+  align-items: center;
   position: relative;
   overflow: hidden;
   transition:
     background-color var(--duration-slow) var(--ease),
     border-color var(--duration-slow) var(--ease);
+}
+
+.action-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .action-card::before {
@@ -1734,8 +1783,7 @@ body.light {
 }
 
 .action-card-preview {
-  margin-block-start: auto;
-  padding: var(--space-5);
+  padding: var(--space-6);
   background: var(--color-sink);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-lg);
@@ -1744,14 +1792,22 @@ body.light {
   color: var(--color-text);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  min-height: 100%;
+  justify-content: center;
 }
 
 .action-card-preview .line {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.action-card-preview .mul,
+.action-card-preview .plus {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-base);
 }
 
 .action-card-preview .prompt {
@@ -1766,82 +1822,41 @@ body.light {
    10. F-KEYS RECLAIMED (unique feature)
    ===================================== */
 .fkeys-wrap {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-12);
-  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.fkeys-intro,
+.fkeys-outro {
+  max-width: 760px;
 }
 
 .fkeys-row {
   display: flex;
-  gap: var(--space-1);
-  padding: var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-3);
   background: var(--color-sink);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  margin-block-end: var(--space-6);
 }
 
-.fkey {
+/* F-keys row — 12 equal-width F-row keys stretch to fill the full width */
+.fkeys-row .key {
   flex: 1;
   min-width: 0;
-  height: 52px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--color-surface-2), var(--color-surface));
-  border: var(--border-width) solid var(--color-line);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  position: relative;
-  font-family: var(--font-sys);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--color-text);
-  transition:
-    background var(--duration-fast) var(--ease),
-    border-color var(--duration-fast) var(--ease);
-}
-
-.fkey .sym {
-  font-size: 14px;
-  line-height: 1;
-  color: var(--color-accent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 16px;
-}
-
-.fkey .sym img,
-.fkey .sym svg {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  display: block;
-}
-
-.fkey .sym img {
-  filter: var(--color-icon-filter);
-}
-
-.fkey .sub {
-  font-family: var(--font-mono);
-  font-size: 8px;
-  color: var(--color-text-faint);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.fkey:hover {
-  border-color: var(--color-accent);
-  background: linear-gradient(180deg, var(--color-accent-dim), transparent);
+  --key-size: 96px;
+  height: 96px;
+  --key-font: 26px;
+  --key-icon: 28px;
+  --key-label: 14px;
+  --key-pad: 14px;
+  --key-radius: 11.376px;
 }
 
 .fkeys-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
 }
 
@@ -1850,7 +1865,7 @@ body.light {
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-lg);
@@ -1861,52 +1876,8 @@ body.light {
 .fkey-item .k {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-width: 168px;
-}
-
-.fkey-btn {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 52px;
-  height: 52px;
-  padding: 8px 6px;
-  background: #000;
-  border-radius: var(--radius-sm);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.6);
-  isolation: isolate;
-}
-
-.fkey-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.fkey-btn-glyph {
-  width: 20px;
-  height: 15px;
-  object-fit: contain;
-  opacity: 0.85;
-  display: block;
-}
-
-.fkey-btn-label {
-  font-family: var(--font-sys);
-  font-size: 10px;
-  color: var(--kb-text);
-  opacity: 0.7;
-  letter-spacing: 0.02em;
-  line-height: 1;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .fkey-item .label {
@@ -2813,9 +2784,17 @@ body.light {
     grid-template-columns: 1fr;
   }
 
-  .fkeys-wrap {
+  .fkeys-row .key {
+    --key-size: 64px;
+    height: 64px;
+    --key-font: 18px;
+    --key-icon: 20px;
+    --key-label: 11px;
+    --key-pad: 10px;
+  }
+
+  .fkeys-list {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
   }
 
   .hud-grid {
@@ -2907,6 +2886,22 @@ body.light {
     gap: var(--space-4);
   }
 
+  .action-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .fkeys-row .key {
+    --key-size: 48px;
+    height: 48px;
+    --key-font: 14px;
+    --key-icon: 16px;
+    --key-label: 9px;
+    --key-pad: 6px;
+  }
+
+  .fkeys-row { gap: var(--space-1); padding: var(--space-2); }
+
   .footer-grid {
     grid-template-columns: 1fr;
   }
@@ -2931,7 +2926,7 @@ body.light {
     scroll-behavior: auto;
   }
 
-  .tap-key,
+  .tap .key,
   .eyebrow .dot,
   .panel-head .dot,
   .hud-pill .hd,

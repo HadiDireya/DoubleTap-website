@@ -115,8 +115,11 @@ if (actionItems.length > 0 || tapKey) {
       tapKeySvg.src = `assets/keys/${m.svg}`;
       tapKeyName.textContent = m.name;
       tapLabel.textContent = m.label;
+      tapKey.style.animation = 'none';
+      void tapKey.offsetWidth;
+      tapKey.style.animation = '';
     }
-  }, 2400);
+  }, 3200);
 }
 
 /* ================================================================
@@ -126,15 +129,80 @@ const kbTargets = document.querySelectorAll('.kb-key[data-target]');
 const kbHud = document.getElementById('kb-hud');
 const kbHudLabel = document.getElementById('kb-hud-label');
 
+// Lightweight synthesized chiclet click — short filtered noise burst, no asset.
+const AudioCtxCtor = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+const getAudioCtx = () => {
+  if (!AudioCtxCtor) return null;
+  if (!audioCtx) audioCtx = new AudioCtxCtor();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+};
+
+const playClick = () => {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // Body: damped low sine — key bottoming out.
+  const body = ctx.createOscillator();
+  body.type = 'sine';
+  body.frequency.setValueAtTime(520, now);
+  body.frequency.exponentialRampToValueAtTime(180, now + 0.05);
+  const bodyGain = ctx.createGain();
+  bodyGain.gain.setValueAtTime(0.0001, now);
+  bodyGain.gain.exponentialRampToValueAtTime(0.28, now + 0.003);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+  body.connect(bodyGain);
+  bodyGain.connect(ctx.destination);
+  body.start(now);
+  body.stop(now + 0.07);
+
+  // Tick: tiny muted noise transient for the contact.
+  const tickFrames = Math.floor(ctx.sampleRate * 0.012);
+  const tickBuf = ctx.createBuffer(1, tickFrames, ctx.sampleRate);
+  const tickData = tickBuf.getChannelData(0);
+  for (let i = 0; i < tickFrames; i += 1) {
+    tickData[i] = (Math.random() * 2 - 1) * (1 - i / tickFrames);
+  }
+  const tick = ctx.createBufferSource();
+  tick.buffer = tickBuf;
+  const tickLp = ctx.createBiquadFilter();
+  tickLp.type = 'lowpass';
+  tickLp.frequency.value = 2200;
+  tickLp.Q.value = 0.7;
+  const tickGain = ctx.createGain();
+  tickGain.gain.setValueAtTime(0.0001, now);
+  tickGain.gain.exponentialRampToValueAtTime(0.12, now + 0.001);
+  tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+  tick.connect(tickLp);
+  tickLp.connect(tickGain);
+  tickGain.connect(ctx.destination);
+  tick.start(now);
+  tick.stop(now + 0.02);
+};
+
 const TRIGGER_LABELS = {
   lopt: 'Spotlight opened',
-  ropt: 'Ghostty launched',
+  ropt: 'Terminal opened',
   rcmd: 'Saved → Closed → Switched',
-  fn: 'Clipboard piped to jq',
+  fn: 'Clipboard formatted',
   lctrl: 'Dictation started',
   lcmd: 'Hide all windows',
   lshift: 'Caps Lock toggled',
   rshift: 'Screen zoomed',
+  f1: 'Clipboard opened',
+  f2: 'Focus mode on',
+  f3: 'Desktop shown',
+  f4: 'Raycast opened',
+  f5: 'Screenshot captured',
+  f6: 'Dark mode toggled',
+  f7: 'New terminal tab',
+  f8: 'Window snapped ←',
+  f9: 'Window snapped →',
+  f10: 'Do Not Disturb on',
+  f11: 'Emoji picker opened',
+  f12: 'Quick note saved',
 };
 
 const setActiveTarget = (target) => {
@@ -164,9 +232,29 @@ const fireKey = (key) => {
   }
 };
 
-kbTargets.forEach((key) => {
-  key.addEventListener('click', () => fireKey(key));
-});
+const kbGrid = document.querySelector('.kb-grid');
+const kbHint = document.getElementById('kb-hint');
+
+if (kbGrid) {
+  kbGrid.addEventListener('click', (e) => {
+    const key = e.target.closest('.kb-key');
+    if (!key) return;
+
+    if (kbHint && !kbHint.classList.contains('is-hidden')) {
+      kbHint.classList.add('is-hidden');
+    }
+
+    playClick();
+    key.classList.add('is-pressed');
+    setTimeout(() => key.classList.remove('is-pressed'), 140);
+  });
+
+  kbGrid.addEventListener('dblclick', (e) => {
+    const key = e.target.closest('.kb-key');
+    if (!key || !key.dataset.target) return;
+    fireKey(key);
+  });
+}
 
 /* ================================================================
    Scroll reveal — IntersectionObserver

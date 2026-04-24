@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DoubleTap — Tap ⌥⌥ do anything</title>
-  <meta name="description" content="DoubleTap listens for double-taps of any modifier or function key and fires a shortcut, a three-step macro, or a shell command — without moving your hands off the home row.">
+  <meta name="description" content="Double-tap any modifier or function key on your Mac to open an app, run a shortcut, or play back a sequence of keystrokes — without lifting your hands off the keyboard.">
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/png" href="assets/icons/icon-dark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,12 +60,12 @@
       <div class="eyebrow"><span class="dot"></span> macOS 13+ · Apple Silicon &amp; Intel</div>
 
       <h1 class="hero-headline">
-        Tap <span class="kbd"><img src="assets/keys/option.svg" alt="option"></span><span class="kbd"><img src="assets/keys/option.svg" alt="option"></span><br>
+        Tap <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><br>
         <span class="muted">do</span> anything.
       </h1>
 
       <p class="hero-sub">
-        DoubleTap listens for double-taps of any modifier or function key and fires a shortcut, a three-step macro, or a shell command. Your pinky finally earns its keep.
+        Double-tap ⌘, ⌥, ⌃, ⇧, fn or any F-key and DoubleTap instantly opens an app, runs a shortcut, or plays back a sequence of keystrokes. Your pinky finally earns its keep.
       </p>
 
       <div class="hero-ctas">
@@ -78,7 +78,7 @@
 
       <div class="hero-meta">
         <div class="hero-meta-stat"><div class="n">20</div><div class="l">Trigger keys</div></div>
-        <div class="hero-meta-stat"><div class="n">3</div><div class="l">Step chains</div></div>
+        <div class="hero-meta-stat"><div class="n">3</div><div class="l">Step sequences</div></div>
         <div class="hero-meta-stat"><div class="n">14d</div><div class="l">Free trial</div></div>
         <div class="hero-meta-stat"><div class="n">0</div><div class="l">Telemetry</div></div>
       </div>
@@ -92,10 +92,10 @@
         </div>
 
         <div class="tap">
-          <div class="tap-key" id="tap-key" data-side="left" data-mod="option">
-            <span class="tap-key-stack">
-              <img class="tap-key-svg" id="tap-key-svg" src="assets/keys/option.svg" alt="" width="22" height="22" role="presentation">
-              <span class="tap-key-name" id="tap-key-name">option</span>
+          <div class="key key-lg key-mod" id="tap-key" data-side="left" data-mod="option">
+            <span class="key-stack">
+              <img class="key-glyph" id="tap-key-svg" src="assets/keys/option.svg" alt="" width="22" height="22" role="presentation">
+              <span class="key-name" id="tap-key-name">option</span>
             </span>
           </div>
           <div class="tap-meta">
@@ -118,21 +118,21 @@
           <div class="action-label">Fires</div>
           <div class="action-slot" id="action-slot" aria-live="polite">
             <div class="action-item active">
-              <span class="kbd-mod" data-side="left" data-mod="command"><span class="kbd-mod-stack"><img src="assets/keys/command.svg" alt=""><span>command</span></span></span><span class="kbd-inline kbd-space" aria-label="space"><span class="sr-only">space</span></span>
+              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm key-space" aria-label="space"><span class="sr-only">space</span></span>
               <span class="note">— Spotlight</span>
             </div>
             <div class="action-item">
-              <span class="prompt">$</span><span>open -a "Ghostty"</span>
+              <span class="prompt">$</span><span>open -a "Safari"</span>
             </div>
             <div class="action-item">
-              <span class="kbd-mod" data-side="left" data-mod="command"><span class="kbd-mod-stack"><img src="assets/keys/command.svg" alt=""><span>command</span></span></span><span class="kbd-inline">A</span>
+              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">A</span>
               <span class="arr">→</span>
-              <span class="kbd-mod" data-side="left" data-mod="command"><span class="kbd-mod-stack"><img src="assets/keys/command.svg" alt=""><span>command</span></span></span><span class="kbd-inline">C</span>
+              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">C</span>
               <span class="arr">→</span>
-              <span class="kbd-mod" data-side="left" data-mod="command"><span class="kbd-mod-stack"><img src="assets/keys/command.svg" alt=""><span>command</span></span></span><span class="kbd-mod" data-side="left"><span class="kbd-mod-stack"><img src="assets/keys/tab.svg" alt=""><span>tab</span></span></span>
+              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm key-mod" data-side="left" data-mod="tab"><span class="key-stack"><img class="key-glyph" src="assets/keys/tab.svg" alt=""><span class="key-name">tab</span></span></span>
             </div>
             <div class="action-item">
-              <span class="prompt">$</span><span>pbpaste | jq .</span>
+              <span class="prompt">$</span><span>shortcuts run "Focus Mode"</span>
             </div>
           </div>
           <div class="action-indicators" id="action-indicators" aria-hidden="true">
@@ -152,14 +152,14 @@
     <div class="section-header reveal">
       <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Triggers</div>
       <h2 class="section-title">Your modifier keys just got a second job.</h2>
-      <p class="section-subtitle">DoubleTap turns ⌘ ⌥ ⌃ ⇧ Fn and every F-key into double-tap triggers. Left and right are separate, so you get twenty distinct gestures without memorizing a single chord.</p>
+      <p class="section-subtitle">DoubleTap turns <span class="key key-xs"><img class="key-glyph" src="assets/keys/command.svg" alt="command"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/control.svg" alt="control"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/shift.svg" alt="shift"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/globe.svg" alt="fn"></span> and every F-key into double-tap triggers. Left and right keys count separately, giving you twenty different triggers — no finger-twisting combinations to remember.</p>
     </div>
 
     <div class="triggers-stack">
       <div class="triggers-frame reveal">
         <div class="panel-head">
           <div class="left"><span>◆ Keyboard map</span></div>
-          <div>Click a modifier to fire</div>
+          <div>Double-click a modifier or F-key to fire</div>
         </div>
 
         <div class="kb-stage" role="group" aria-label="Interactive Magic Keyboard">
@@ -168,55 +168,60 @@
             <span class="kb-hud-label" id="kb-hud-label">Spotlight opened</span>
           </div>
 
+          <div class="kb-hint" id="kb-hint" aria-hidden="true">
+            <span class="kb-hint-label">Double-click me</span>
+            <span class="kb-hint-arrow">↓</span>
+          </div>
+
           <div class="kb">
             <div class="kb-grid">
               <!-- Function row (y=33.0938) -->
               <button type="button" class="kb-key kb-fn kb-fn-esc" style="left: 33.0938px; top: 33.0938px; width: 172.708px;"><span class="kb-sym kb-sym-bl">esc</span></button>
-              <button type="button" class="kb-key kb-fn" data-fn="F1" style="left: 218.212px; top: 33.0938px;" aria-label="F1 brightness down">
+              <button type="button" class="kb-key kb-fn" data-fn="F1" data-target="f1" style="left: 218.212px; top: 33.0938px;" aria-label="Double-tap F1">
                 <img class="kb-fn-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F1</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F2" style="left: 344.383px; top: 33.0938px;" aria-label="F2 brightness up">
+              <button type="button" class="kb-key kb-fn" data-fn="F2" data-target="f2" style="left: 344.383px; top: 33.0938px;" aria-label="Double-tap F2">
                 <img class="kb-fn-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F2</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F3" style="left: 470.553px; top: 33.0938px;" aria-label="F3 Mission Control">
+              <button type="button" class="kb-key kb-fn" data-fn="F3" data-target="f3" style="left: 470.553px; top: 33.0938px;" aria-label="Double-tap F3">
                 <img class="kb-fn-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F3</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F4" style="left: 596.723px; top: 33.0938px;" aria-label="F4 Spotlight">
+              <button type="button" class="kb-key kb-fn" data-fn="F4" data-target="f4" style="left: 596.723px; top: 33.0938px;" aria-label="Double-tap F4">
                 <svg class="kb-fn-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg>
                 <span class="kb-fn-label">F4</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F5" style="left: 722.893px; top: 33.0938px;" aria-label="F5 keyboard backlight down">
+              <button type="button" class="kb-key kb-fn" data-fn="F5" data-target="f5" style="left: 722.893px; top: 33.0938px;" aria-label="Double-tap F5">
                 <img class="kb-fn-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F5</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F6" style="left: 849.064px; top: 33.0938px;" aria-label="F6 keyboard backlight up">
+              <button type="button" class="kb-key kb-fn" data-fn="F6" data-target="f6" style="left: 849.064px; top: 33.0938px;" aria-label="Double-tap F6">
                 <img class="kb-fn-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F6</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F7" style="left: 975.234px; top: 33.0938px;" aria-label="F7 Previous">
+              <button type="button" class="kb-key kb-fn" data-fn="F7" data-target="f7" style="left: 975.234px; top: 33.0938px;" aria-label="Double-tap F7">
                 <img class="kb-fn-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F7</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F8" style="left: 1101.4px; top: 33.0938px;" aria-label="F8 Play Pause">
+              <button type="button" class="kb-key kb-fn" data-fn="F8" data-target="f8" style="left: 1101.4px; top: 33.0938px;" aria-label="Double-tap F8">
                 <img class="kb-fn-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F8</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F9" style="left: 1227.57px; top: 33.0938px;" aria-label="F9 Next">
+              <button type="button" class="kb-key kb-fn" data-fn="F9" data-target="f9" style="left: 1227.57px; top: 33.0938px;" aria-label="Double-tap F9">
                 <img class="kb-fn-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F9</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F10" style="left: 1353.74px; top: 33.0938px;" aria-label="F10 Mute">
+              <button type="button" class="kb-key kb-fn" data-fn="F10" data-target="f10" style="left: 1353.74px; top: 33.0938px;" aria-label="Double-tap F10">
                 <img class="kb-fn-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F10</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F11" style="left: 1479.91px; top: 33.0938px;" aria-label="F11 Volume Down">
+              <button type="button" class="kb-key kb-fn" data-fn="F11" data-target="f11" style="left: 1479.91px; top: 33.0938px;" aria-label="Double-tap F11">
                 <img class="kb-fn-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F11</span>
               </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F12" style="left: 1606.08px; top: 33.0938px;" aria-label="F12 Volume Up">
+              <button type="button" class="kb-key kb-fn" data-fn="F12" data-target="f12" style="left: 1606.08px; top: 33.0938px;" aria-label="Double-tap F12">
                 <img class="kb-fn-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true">
                 <span class="kb-fn-label">F12</span>
               </button>
@@ -273,7 +278,7 @@
               <button type="button" class="kb-key kb-w-return-iso" style="left: 1720.36px; top: 284.4px; width: 126.18px; height: 238.896px;" aria-label="return"><img class="kb-sym-img kb-sym-return" src="assets/keys/return.svg" alt=""></button>
 
               <!-- ZXCV row (y=535.706) -->
-              <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift" data-target="lshift" style="left: 33.0938px; top: 535.706px; width: 141.683px;" aria-label="Double-tap left shift">
+              <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift is-target" data-target="lshift" style="left: 33.0938px; top: 535.706px; width: 141.683px;" aria-label="Double-tap left shift">
                 <img class="kb-sym-img kb-sym-bl" src="assets/keys/shift.svg" alt="">
               </button>
               <button type="button" class="kb-key kb-dual" style="left: 187.187px; top: 535.706px;"><span class="kb-t">~</span><span class="kb-b">`</span></button>
@@ -370,54 +375,72 @@
     <div class="section-header reveal">
       <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Actions</div>
       <h2 class="section-title">Tap twice. Do anything.</h2>
-      <p class="section-subtitle">Beyond a single shortcut. Fire macros, pipe through the shell, chain three keystrokes 50&nbsp;ms apart. All labeled, all yours.</p>
+      <p class="section-subtitle">Trigger a single shortcut, play back a sequence of keystrokes, or run any command on your Mac. Every trigger is yours to assign.</p>
     </div>
 
     <div class="actions-grid reveal-stagger">
       <div class="action-card reveal">
-        <div class="action-card-eyebrow">01 · Shortcut</div>
-        <h3 class="action-card-title">Modifier-aware shortcuts</h3>
-        <p class="action-card-desc">Any combination of ⌘ ⌥ ⌃ ⇧ plus a keystroke. One mapping per trigger, no conflicts, no mode switches.</p>
+        <div class="action-card-info">
+          <div class="action-card-eyebrow">01 · Shortcut</div>
+          <h3 class="action-card-title">Any keyboard shortcut</h3>
+          <p class="action-card-desc">Any combination of <span class="key key-xs"><img class="key-glyph" src="assets/keys/command.svg" alt="command"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/control.svg" alt="control"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/shift.svg" alt="shift"></span> plus a key. One shortcut per trigger — no conflicts, no modes to remember.</p>
+        </div>
         <div class="action-card-preview">
           <div class="line">
-            <span class="kbd-inline">L<img src="assets/keys/option.svg" alt="option"></span><span>×2</span>
+            <span class="key key-md key-mod" data-side="left" data-mod="option"><span class="key-stack"><img class="key-glyph" src="assets/keys/option.svg" alt=""><span class="key-name">option</span></span></span>
+            <span class="mul">×2</span>
             <span class="arr">→</span>
-            <span class="kbd-inline"><img src="assets/keys/command.svg" alt="command"></span><span>+</span><span class="kbd-inline">Space</span>
+            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="plus">+</span>
+            <span class="key key-md key-space" aria-label="space"><span class="sr-only">space</span></span>
           </div>
           <div class="line">
-            <span class="kbd-inline"><img src="assets/keys/globe.svg" alt="fn"></span><span>×2</span>
+            <span class="key key-md key-mod" data-mod="fn"><span class="key-stack"><img class="key-glyph" src="assets/keys/globe.svg" alt=""><span class="key-name">fn</span></span></span>
+            <span class="mul">×2</span>
             <span class="arr">→</span>
-            <span class="kbd-inline"><img src="assets/keys/command.svg" alt="command"></span><span>+</span><span class="kbd-inline"><img src="assets/keys/shift.svg" alt="shift"></span><span>+</span><span class="kbd-inline">4</span>
+            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="plus">+</span>
+            <span class="key key-md key-mod key-w-shift" data-side="left" data-mod="shift"><span class="key-stack"><img class="key-glyph" src="assets/keys/shift.svg" alt=""><span class="key-name">shift</span></span></span>
+            <span class="plus">+</span>
+            <span class="key key-md">4</span>
           </div>
         </div>
       </div>
 
       <div class="action-card reveal">
-        <div class="action-card-eyebrow">02 · Chain</div>
-        <h3 class="action-card-title">Three-step keystroke chains</h3>
-        <p class="action-card-desc">A single tap can run a macro. Three keystrokes, 50&nbsp;ms apart, each with independent modifiers.</p>
+        <div class="action-card-info">
+          <div class="action-card-eyebrow">02 · Chain</div>
+          <h3 class="action-card-title">Multi-step sequences</h3>
+          <p class="action-card-desc">One double-tap can play back up to three keystrokes in a row — each with its own modifiers. Perfect for repetitive actions like Select All → Copy → Switch window.</p>
+        </div>
         <div class="action-card-preview">
           <div class="line">
-            <span class="kbd-inline">R<img src="assets/keys/command.svg" alt="command"></span><span>×2</span>
+            <span class="key key-md key-mod key-w-cmd" data-side="right" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="mul">×2</span>
             <span class="arr">→</span>
           </div>
           <div class="line">
-            <span class="kbd-inline"><img src="assets/keys/command.svg" alt="command"></span><span>A</span>
+            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="key key-md">A</span>
             <span class="arr">→</span>
-            <span class="kbd-inline"><img src="assets/keys/command.svg" alt="command"></span><span>C</span>
+            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="key key-md">C</span>
             <span class="arr">→</span>
-            <span class="kbd-inline"><img src="assets/keys/command.svg" alt="command"></span><span class="kbd-inline"><img src="assets/keys/tab.svg" alt="tab"></span>
+            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
+            <span class="key key-md key-mod" data-side="left" data-mod="tab"><span class="key-stack"><img class="key-glyph" src="assets/keys/tab.svg" alt=""><span class="key-name">tab</span></span></span>
           </div>
         </div>
       </div>
 
       <div class="action-card reveal">
-        <div class="action-card-eyebrow">03 · Shell</div>
-        <h3 class="action-card-title">Any zsh command</h3>
-        <p class="action-card-desc">Open URLs, post to an API, toggle a script, pipe the clipboard through <code>jq</code>. Runs async — never blocks the UI.</p>
+        <div class="action-card-info">
+          <div class="action-card-eyebrow">03 · Shell</div>
+          <h3 class="action-card-title">Run any command</h3>
+          <p class="action-card-desc">Open websites, launch apps, run a Shortcut, or execute your own script. Runs quietly in the background so nothing skips a beat.</p>
+        </div>
         <div class="action-card-preview">
-          <div class="line"><span class="prompt">$</span> open -a "Ghostty"</div>
-          <div class="line"><span class="prompt">$</span> pbpaste | jq .</div>
+          <div class="line"><span class="prompt">$</span> open -a "Safari"</div>
+          <div class="line"><span class="prompt">$</span> open https://apple.com</div>
           <div class="line"><span class="prompt">$</span> shortcuts run "Toggle&nbsp;Focus"</div>
         </div>
       </div>
@@ -436,113 +459,75 @@
     </div>
 
     <div class="fkeys-wrap">
-      <div class="reveal">
-        <p class="fkeys-note">
-          <strong>Standard function keys on, media controls on — at the same time.</strong>
-          No trip to System Settings. Hold F1 / F2 / F5 / F6 / F11 / F12 and it ramps at the system key-repeat cadence.
-        </p>
+      <p class="fkeys-note fkeys-intro reveal">
+        <strong>Standard function keys on, media controls on — at the same time.</strong>
+        No trip to System Settings. Hold <span class="key key-xs">F1</span> <span class="key key-xs">F2</span> <span class="key key-xs">F5</span> <span class="key key-xs">F6</span> <span class="key key-xs">F11</span> <span class="key key-xs">F12</span> and it ramps at the system key-repeat cadence.
+      </p>
 
-        <div class="fkeys-row" aria-hidden="true">
-          <div class="fkey"><span class="sym"><img src="assets/keys/sun.min.svg" alt=""></span><span class="sub">F1</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/sun.max.svg" alt=""></span><span class="sub">F2</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/squares.svg" alt=""></span><span class="sub">F3</span></div>
-          <div class="fkey"><span class="sym"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg></span><span class="sub">F4</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/light.min.svg" alt=""></span><span class="sub">F5</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/light.max.svg" alt=""></span><span class="sub">F6</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/backward.svg" alt=""></span><span class="sub">F7</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/playpause.svg" alt=""></span><span class="sub">F8</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/forward.svg" alt=""></span><span class="sub">F9</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/mute.svg" alt=""></span><span class="sub">F10</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/speaker.lower.1.fill.svg" alt=""></span><span class="sub">F11</span></div>
-          <div class="fkey"><span class="sym"><img src="assets/keys/speaker.up.3.svg" alt=""></span><span class="sub">F12</span></div>
-        </div>
-
-        <p class="fkeys-note" style="margin-block-end: 0;">
-          F5 / F6 uses the private CoreBrightness path Control Center uses — so keyboard backlight actually works on Apple Silicon, where the public API is a no-op.
-        </p>
+      <div class="fkeys-row reveal" aria-hidden="true">
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/sun.min.svg" alt=""><span class="key-fn-label">F1</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/sun.max.svg" alt=""><span class="key-fn-label">F2</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/squares.svg" alt=""><span class="key-fn-label">F3</span></div>
+        <div class="key key-fn"><svg class="key-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg><span class="key-fn-label">F4</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/light.min.svg" alt=""><span class="key-fn-label">F5</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/light.max.svg" alt=""><span class="key-fn-label">F6</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/backward.svg" alt=""><span class="key-fn-label">F7</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/playpause.svg" alt=""><span class="key-fn-label">F8</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/forward.svg" alt=""><span class="key-fn-label">F9</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/mute.svg" alt=""><span class="key-fn-label">F10</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt=""><span class="key-fn-label">F11</span></div>
+        <div class="key key-fn"><img class="key-glyph" src="assets/keys/speaker.up.3.svg" alt=""><span class="key-fn-label">F12</span></div>
       </div>
+
+      <p class="fkeys-note fkeys-outro reveal">
+        <span class="key key-xs">F5</span> <span class="key key-xs">F6</span> control keyboard backlight the way Control Center does — so it actually works on Apple Silicon Macs, where most apps can't touch it.
+      </p>
 
       <div class="fkeys-list reveal">
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F1</span>
-            </span>
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F2</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true"><span class="key-fn-label">F1</span></span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true"><span class="key-fn-label">F2</span></span>
           </div>
           <span class="label">Display brightness</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F3</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true"><span class="key-fn-label">F3</span></span>
           </div>
           <span class="label">Mission Control</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <svg class="fkey-btn-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg>
-              <span class="fkey-btn-label">F4</span>
-            </span>
+            <span class="key key-md key-fn"><svg class="key-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg><span class="key-fn-label">F4</span></span>
           </div>
           <span class="label">Spotlight</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F5</span>
-            </span>
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F6</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true"><span class="key-fn-label">F5</span></span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true"><span class="key-fn-label">F6</span></span>
           </div>
           <span class="label">Keyboard backlight</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F7</span>
-            </span>
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F8</span>
-            </span>
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F9</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true"><span class="key-fn-label">F7</span></span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true"><span class="key-fn-label">F8</span></span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true"><span class="key-fn-label">F9</span></span>
           </div>
           <span class="label">Previous / Play–Pause / Next</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F10</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true"><span class="key-fn-label">F10</span></span>
           </div>
           <span class="label">Mute</span>
         </div>
         <div class="fkey-item">
           <div class="k">
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F11</span>
-            </span>
-            <span class="fkey-btn">
-              <img class="fkey-btn-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true">
-              <span class="fkey-btn-label">F12</span>
-            </span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true"><span class="key-fn-label">F11</span></span>
+            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true"><span class="key-fn-label">F12</span></span>
           </div>
           <span class="label">Volume Down / Up</span>
         </div>
@@ -559,7 +544,7 @@
     <div class="section-header reveal">
       <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Feedback HUDs</div>
       <h2 class="section-title">Know it fired. Your choice of style.</h2>
-      <p class="section-subtitle">Pick the confirmation that matches your Mac. Silent mode is a first-class option.</p>
+      <p class="section-subtitle">Pick the confirmation style that fits your Mac. Prefer silence? That's a first-class option too.</p>
     </div>
 
     <div class="hud-grid reveal-stagger">
@@ -576,7 +561,7 @@
         </div>
         <div>
           <h3 class="hud-title">Glass</h3>
-          <p class="hud-desc">A centered floating HUD with a live Metal shader backdrop. Reads on any wallpaper.</p>
+          <p class="hud-desc">A centered floating indicator with a subtle animated backdrop. Stays readable on any wallpaper.</p>
         </div>
       </div>
 
@@ -589,7 +574,7 @@
           <div class="hud-notch-wrap">
             <div class="hud-notch">
               <span class="hd"></span>
-              <span>Ghostty launched</span>
+              <span>Safari opened</span>
             </div>
           </div>
         </div>
@@ -624,7 +609,7 @@
     <div class="section-header reveal">
       <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> First-party feel</div>
       <h2 class="section-title">Built the way Apple builds.</h2>
-      <p class="section-subtitle">Real <code>NSStatusItem</code>, Liquid Glass, Pure-Black Dark Mode. Not a wrapped web view. Not a SwiftUI afterthought.</p>
+      <p class="section-subtitle">A proper Mac app — not a web page in disguise. Native menu bar, Liquid Glass materials, and a true pure-black dark mode.</p>
     </div>
 
     <div class="native-grid reveal-stagger">
@@ -633,7 +618,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>
         </div>
         <h3>Menu bar, done right</h3>
-        <p>Left-click toggles monitoring, right-click opens the menu. Real <code>NSStatusItem</code>, not SwiftUI's <code>MenuBarExtra</code>.</p>
+        <p>Left-click toggles DoubleTap on and off. Right-click opens the menu. Behaves exactly like every other menu bar app on your Mac.</p>
       </div>
 
       <div class="native-card reveal">
@@ -641,7 +626,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 7 7 0 0 1 0 14 5 5 0 0 0 0 10 9 9 0 0 1-9-9"/><circle cx="8" cy="9" r="1.2"/><circle cx="16" cy="7" r="1.2"/><circle cx="17" cy="14" r="1.2"/></svg>
         </div>
         <h3>Liquid Glass throughout</h3>
-        <p>NavigationSplitView sidebar, translucent cards, system materials that match macOS 26 Tahoe.</p>
+        <p>Translucent sidebar, frosted cards, and system materials that match macOS 26 Tahoe.</p>
       </div>
 
       <div class="native-card reveal">
@@ -657,7 +642,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         </div>
         <h3>Launch at Login</h3>
-        <p>Managed via <code>SMAppService</code>. No LaunchDaemons, no permission prompts on re-login.</p>
+        <p>Turn it on once and DoubleTap is ready the moment you sign in. No setup prompts, no background processes to manage.</p>
       </div>
 
       <div class="native-card reveal">
@@ -672,8 +657,8 @@
         <div class="icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
         </div>
-        <h3>Metal shaders</h3>
-        <p>Custom backdrops and highlight rings for onboarding and HUDs. Respects Reduce Motion &amp; Reduce Transparency.</p>
+        <h3>Polished visual effects</h3>
+        <p>Animated backdrops and highlight rings during onboarding and alerts. Respects Reduce Motion and Reduce Transparency.</p>
       </div>
     </div>
   </div>
@@ -685,9 +670,9 @@
 <section class="site-section trust" id="trust" aria-label="Privacy and technical footprint">
   <div class="container">
     <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Technical footprint</div>
+      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Privacy & safety</div>
       <h2 class="section-title">Your keyboard. Your Mac. Your business.</h2>
-      <p class="section-subtitle">Runs locally. No analytics. Two permissions, each with live status in-app.</p>
+      <p class="section-subtitle">Runs entirely on your Mac. No tracking. Two macOS permissions, with status always visible in the app.</p>
     </div>
 
     <div class="trust-grid reveal-stagger">
@@ -717,7 +702,7 @@
         </div>
         <div>
           <h3>Two permissions, granular</h3>
-          <p>Accessibility + Input Monitoring. Requested via silent TCC registration — no Deny-trap. Live status is surfaced in the menu bar if either is revoked.</p>
+          <p>Accessibility and Input Monitoring — the standard macOS permissions any keyboard utility needs. If either is turned off, the menu bar tells you right away.</p>
         </div>
       </div>
 
@@ -726,8 +711,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
         </div>
         <div>
-          <h3>Sparkle 2 auto-updates</h3>
-          <p>EdDSA-signed updates from GitHub. 24-hour background check, plus a "Check for Updates…" menu item.</p>
+          <h3>Automatic updates</h3>
+          <p>Securely signed updates delivered straight from GitHub. Checks once a day in the background — or trigger it yourself from the menu.</p>
         </div>
       </div>
 
@@ -758,7 +743,7 @@
         <span class="sep"></span>
         <span>Apple Silicon &amp; Intel</span>
         <span class="sep"></span>
-        <span>Runs outside the App Sandbox</span>
+        <span>Needs keyboard access</span>
         <span class="sep"></span>
         <span>Sold on Gumroad</span>
       </div>
@@ -873,7 +858,7 @@
             <img src="assets/icons/icon-dark.png" alt="" width="24" height="24" role="presentation">
             <span>DoubleTap</span>
           </div>
-          <p class="footer-tagline">Tap ⌥⌥ do anything.</p>
+          <p class="footer-tagline">Tap <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> do anything.</p>
         </div>
         <ul class="footer-social" aria-label="Social links">
           <li><a href="#" aria-label="X (formerly Twitter)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></li>
