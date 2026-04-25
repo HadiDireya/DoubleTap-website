@@ -851,6 +851,33 @@ ul {
   color: var(--color-text-muted);
 }
 
+.flip-word {
+  display: inline-block;
+  perspective: 1000px;
+  vertical-align: baseline;
+  color: var(--color-accent);
+}
+
+.flip-card {
+  display: inline-grid;
+  grid-template-areas: "face";
+  transform-style: preserve-3d;
+  animation: card-flip 1s var(--ease-in-out) 0.8s forwards;
+}
+
+.flip-face {
+  grid-area: face;
+  backface-visibility: hidden;
+}
+
+.flip-twice {
+  transform: rotateX(-180deg);
+}
+
+@keyframes card-flip {
+  to { transform: rotateX(-180deg); }
+}
+
 .hero-sub {
   font-size: var(--font-size-md);
   line-height: var(--line-height-normal);
@@ -2024,6 +2051,61 @@ body.light {
 }
 
 /* =====================================
+   11.5  SHOWCASE — screenshots & tutorial videos
+   ===================================== */
+.showcase {
+  padding-block: var(--space-20);
+}
+
+.media-stage {
+  padding: var(--space-12) var(--space-8);
+  display: flex;
+  justify-content: center;
+}
+
+.media-stage-sm {
+  padding: var(--space-8);
+}
+
+.mac-shot,
+.mac-video {
+  display: block;
+  width: 100%;
+  max-width: 1100px;
+  height: auto;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-line-strong);
+  box-shadow: 0 30px 80px var(--color-shadow-strong);
+}
+
+/* Tutorial section */
+.tutorial-block {
+  margin-block-start: var(--space-16);
+}
+
+.tutorial-meta {
+  text-align: center;
+  margin-block-end: var(--space-8);
+}
+
+.tutorial-title {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-block: var(--space-2) var(--space-3);
+}
+
+.tutorial-desc {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  max-width: 540px;
+  margin-inline: auto;
+  line-height: var(--line-height-normal);
+}
+
+/* =====================================
    12. NATIVE feature cards
    ===================================== */
 .native-grid {
@@ -2801,6 +2883,15 @@ body.light {
     grid-template-columns: 1fr;
   }
 
+  .media-stage {
+    padding: var(--space-8) var(--space-4);
+    border-radius: var(--radius-xl);
+  }
+
+  .media-stage-sm {
+    padding: var(--space-5);
+  }
+
   .native-grid {
     grid-template-columns: 1fr;
   }
@@ -2932,9 +3023,12 @@ body.light {
   .hud-pill .hd,
   .hud-notch .hd,
   .kb-key.mod.target::after,
-  .tap-pulse::after {
+  .tap-pulse::after,
+  .flip-card {
     animation: none;
   }
+
+  .flip-card { transform: rotateX(-180deg); }
 }
 
 @media (prefers-contrast: more) {

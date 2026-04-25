@@ -28,6 +28,7 @@
     <div class="nav-links" id="nav-links">
       <a href="#triggers">Triggers</a>
       <a href="#actions">Actions</a>
+      <a href="#showcase">Screenshots</a>
       <a href="#fkeys">F-keys</a>
       <a href="pricing.html">Pricing</a>
       <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
@@ -60,7 +61,7 @@
       <div class="eyebrow"><span class="dot"></span> macOS 13+ · Apple Silicon &amp; Intel</div>
 
       <h1 class="hero-headline">
-        Tap <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><br>
+        Tap <span class="flip-word" aria-label="twice"><span class="flip-card"><span class="flip-face flip-once" aria-hidden="true">once</span><span class="flip-face flip-twice" aria-hidden="true">twice</span></span></span><br>
         <span class="muted">do</span> anything.
       </h1>
 
@@ -602,6 +603,44 @@
 </section>
 
 <!-- ============================================================
+     SHOWCASE — app screenshots & tutorial videos
+     ============================================================ -->
+<section class="site-section showcase" id="showcase" aria-label="See the app">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> See the app</div>
+      <h2 class="section-title">A proper Mac app, shown the Mac way.</h2>
+      <p class="section-subtitle">Real screenshots and a thirty-second tutorial. No marketing fog — just the app, on a Mac, doing what it does.</p>
+    </div>
+
+    <!-- Main app screenshot -->
+    <div class="media-stage reveal">
+      <img class="mac-shot" src="assets/media/Screenshot%202026-04-25%20at%203.09.06.png"
+           alt="DoubleTap settings window with sidebar of triggers and a mapping detail pane"
+           width="3420" height="2214" loading="lazy">
+    </div>
+
+    <!-- Tutorial video -->
+    <div class="tutorial-block reveal">
+      <div class="tutorial-meta">
+        <div class="eyebrow" style="margin-block-end: var(--space-3);"><span class="dot"></span> Tutorial</div>
+        <h3 class="tutorial-title">Add your first double-tap trigger.</h3>
+        <p class="tutorial-desc">Pick a key. Pick an action. Double-tap. Thirty seconds, start to finish.</p>
+      </div>
+
+      <div class="media-stage media-stage-sm">
+        <video class="mac-video"
+               src="assets/media/Screen%20Recording%202026-04-25%20at%201.58.25.mov"
+               poster="assets/media/tutorial-poster-placeholder.svg"
+               autoplay muted loop playsinline preload="auto"
+               width="3420" height="2214"
+               aria-label="Tutorial: how to add a double-tap trigger in DoubleTap"></video>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      NATIVE — first-party macOS feel
      ============================================================ -->
 <section class="site-section native" id="native" aria-label="macOS native">
@@ -858,7 +897,7 @@
             <img src="assets/icons/icon-dark.png" alt="" width="24" height="24" role="presentation">
             <span>DoubleTap</span>
           </div>
-          <p class="footer-tagline">Tap <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> do anything.</p>
+          <p class="footer-tagline">Tap twice do anything.</p>
         </div>
         <ul class="footer-social" aria-label="Social links">
           <li><a href="#" aria-label="X (formerly Twitter)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></li>
