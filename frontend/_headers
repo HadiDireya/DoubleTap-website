@@ -5,3 +5,14 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), interest-cohort=()
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://*.googleusercontent.com https://*.gravatar.com; connect-src 'self' https://api.doubletap-app.com; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+
+# CSS / JS — short cache so deploys propagate fast (no content hashing in build)
+/css/*
+  Cache-Control: public, max-age=300, must-revalidate
+
+/js/*
+  Cache-Control: public, max-age=300, must-revalidate
+
+# Fonts are immutable (filename never changes) so cache aggressively
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
