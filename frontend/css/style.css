@@ -5,6 +5,27 @@
    ================================================================ */
 
 /* =====================================
+   0. SELF-HOSTED FONTS (Latin subset, variable-axis)
+   ===================================== */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/outfit.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/jetbrains-mono.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* =====================================
    1. DESIGN TOKENS
    ===================================== */
 :root {
@@ -3172,3 +3193,88 @@ body.light {
     --color-text-muted: rgba(0, 0, 0, 0.8);
   }
 }
+
+/* =====================================
+   X. KEYBOARD KEY POSITIONS (auto-generated, do not hand-edit)
+   Each .kb-key[data-pos] selector positions a single key.
+   Generated to keep index.html free of inline styles for CSP.
+   ===================================== */
+.kb-key[data-pos="1"] { left: 33.0938px; top: 33.0938px; width: 172.708px; }
+.kb-key[data-pos="2"] { left: 218.212px; top: 33.0938px; }
+.kb-key[data-pos="3"] { left: 344.383px; top: 33.0938px; }
+.kb-key[data-pos="4"] { left: 470.553px; top: 33.0938px; }
+.kb-key[data-pos="5"] { left: 596.723px; top: 33.0938px; }
+.kb-key[data-pos="6"] { left: 722.893px; top: 33.0938px; }
+.kb-key[data-pos="7"] { left: 849.064px; top: 33.0938px; }
+.kb-key[data-pos="8"] { left: 975.234px; top: 33.0938px; }
+.kb-key[data-pos="9"] { left: 1101.4px; top: 33.0938px; }
+.kb-key[data-pos="10"] { left: 1227.57px; top: 33.0938px; }
+.kb-key[data-pos="11"] { left: 1353.74px; top: 33.0938px; }
+.kb-key[data-pos="12"] { left: 1479.91px; top: 33.0938px; }
+.kb-key[data-pos="13"] { left: 1606.08px; top: 33.0938px; }
+.kb-key[data-pos="14"] { left: 1732.26px; top: 33.0938px; }
+.kb-key[data-pos="15"] { left: 33.0938px; top: 158.747px; }
+.kb-key[data-pos="16"] { left: 159.264px; top: 158.747px; }
+.kb-key[data-pos="17"] { left: 285.434px; top: 158.747px; }
+.kb-key[data-pos="18"] { left: 411.605px; top: 158.747px; }
+.kb-key[data-pos="19"] { left: 537.775px; top: 158.747px; }
+.kb-key[data-pos="20"] { left: 663.945px; top: 158.747px; }
+.kb-key[data-pos="21"] { left: 790.115px; top: 158.747px; }
+.kb-key[data-pos="22"] { left: 916.285px; top: 158.747px; }
+.kb-key[data-pos="23"] { left: 1042.46px; top: 158.747px; }
+.kb-key[data-pos="24"] { left: 1168.63px; top: 158.747px; }
+.kb-key[data-pos="25"] { left: 1294.8px; top: 158.747px; }
+.kb-key[data-pos="26"] { left: 1420.97px; top: 158.747px; }
+.kb-key[data-pos="27"] { left: 1547.14px; top: 158.747px; }
+.kb-key[data-pos="28"] { left: 1673.31px; top: 158.747px; width: 173.226px; }
+.kb-key[data-pos="29"] { left: 33.0938px; top: 284.4px; width: 160.815px; }
+.kb-key[data-pos="30"] { left: 206.319px; top: 284.4px; }
+.kb-key[data-pos="31"] { left: 332.49px; top: 284.4px; }
+.kb-key[data-pos="32"] { left: 458.66px; top: 284.4px; }
+.kb-key[data-pos="33"] { left: 584.83px; top: 284.4px; }
+.kb-key[data-pos="34"] { left: 711px; top: 284.4px; }
+.kb-key[data-pos="35"] { left: 837.17px; top: 284.4px; }
+.kb-key[data-pos="36"] { left: 963.341px; top: 284.4px; }
+.kb-key[data-pos="37"] { left: 1089.51px; top: 284.4px; }
+.kb-key[data-pos="38"] { left: 1215.68px; top: 284.4px; }
+.kb-key[data-pos="39"] { left: 1341.85px; top: 284.4px; }
+.kb-key[data-pos="40"] { left: 1468.02px; top: 284.4px; }
+.kb-key[data-pos="41"] { left: 1594.19px; top: 284.4px; }
+.kb-key[data-pos="42"] { left: 33.0938px; top: 410.053px; width: 200.114px; }
+.kb-key[data-pos="43"] { left: 245.618px; top: 410.053px; }
+.kb-key[data-pos="44"] { left: 371.789px; top: 410.053px; }
+.kb-key[data-pos="45"] { left: 497.959px; top: 410.053px; }
+.kb-key[data-pos="46"] { left: 624.129px; top: 410.053px; }
+.kb-key[data-pos="47"] { left: 750.299px; top: 410.053px; }
+.kb-key[data-pos="48"] { left: 876.469px; top: 410.053px; }
+.kb-key[data-pos="49"] { left: 1002.64px; top: 410.053px; }
+.kb-key[data-pos="50"] { left: 1128.81px; top: 410.053px; }
+.kb-key[data-pos="51"] { left: 1254.98px; top: 410.053px; }
+.kb-key[data-pos="52"] { left: 1381.15px; top: 410.053px; }
+.kb-key[data-pos="53"] { left: 1507.32px; top: 410.053px; }
+.kb-key[data-pos="54"] { left: 1633.49px; top: 410.053px; }
+.kb-key[data-pos="55"] { left: 1720.36px; top: 284.4px; width: 126.18px; height: 238.896px; }
+.kb-key[data-pos="56"] { left: 33.0938px; top: 535.706px; width: 141.683px; }
+.kb-key[data-pos="57"] { left: 187.187px; top: 535.706px; }
+.kb-key[data-pos="58"] { left: 313.357px; top: 535.706px; }
+.kb-key[data-pos="59"] { left: 439.527px; top: 535.706px; }
+.kb-key[data-pos="60"] { left: 565.698px; top: 535.706px; }
+.kb-key[data-pos="61"] { left: 691.868px; top: 535.706px; }
+.kb-key[data-pos="62"] { left: 818.038px; top: 535.706px; }
+.kb-key[data-pos="63"] { left: 944.208px; top: 535.706px; }
+.kb-key[data-pos="64"] { left: 1070.38px; top: 535.706px; }
+.kb-key[data-pos="65"] { left: 1196.55px; top: 535.706px; }
+.kb-key[data-pos="66"] { left: 1322.72px; top: 535.706px; }
+.kb-key[data-pos="67"] { left: 1448.89px; top: 535.706px; }
+.kb-key[data-pos="68"] { left: 1575.06px; top: 535.706px; width: 270.439px; }
+.kb-key[data-pos="69"] { left: 33.0938px; top: 661.359px; }
+.kb-key[data-pos="70"] { left: 159.264px; top: 661.359px; }
+.kb-key[data-pos="71"] { left: 285.434px; top: 661.359px; }
+.kb-key[data-pos="72"] { left: 411.605px; top: 661.359px; width: 143.234px; }
+.kb-key[data-pos="73"] { left: 567.249px; top: 661.359px; width: 618.958px; }
+.kb-key[data-pos="74"] { left: 1198.62px; top: 661.359px; width: 143.234px; }
+.kb-key[data-pos="75"] { left: 1354.26px; top: 661.359px; }
+.kb-key[data-pos="76"] { left: 1480.43px; top: 721.859px; }
+.kb-key[data-pos="77"] { left: 1606.6px; top: 661.359px; }
+.kb-key[data-pos="78"] { left: 1606.6px; top: 719.274px; }
+.kb-key[data-pos="79"] { left: 1732.77px; top: 721.859px; }

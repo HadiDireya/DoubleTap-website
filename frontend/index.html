@@ -23,9 +23,8 @@
   <meta name="twitter:image" content="https://doubletap-app.com/assets/og/og-image.svg">
 
   <link rel="icon" type="image/png" href="assets/icons/icon-dark.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <link rel="preload" href="assets/fonts/outfit.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -114,157 +113,157 @@
         <div class="kb">
           <div class="kb-grid">
             <!-- Function row (y=33.0938) -->
-            <button type="button" class="kb-key kb-fn kb-fn-esc" style="left: 33.0938px; top: 33.0938px; width: 172.708px;"><span class="kb-sym kb-sym-bl">esc</span></button>
-            <button type="button" class="kb-key kb-fn" data-fn="F1" data-target="f1" style="left: 218.212px; top: 33.0938px;" aria-label="Double-tap F1">
+            <button type="button" class="kb-key kb-fn kb-fn-esc" data-pos="1"><span class="kb-sym kb-sym-bl">esc</span></button>
+            <button type="button" class="kb-key kb-fn" data-fn="F1" data-target="f1" data-pos="2" aria-label="Double-tap F1">
               <img class="kb-fn-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F1</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F2" data-target="f2" style="left: 344.383px; top: 33.0938px;" aria-label="Double-tap F2">
+            <button type="button" class="kb-key kb-fn" data-fn="F2" data-target="f2" data-pos="3" aria-label="Double-tap F2">
               <img class="kb-fn-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F2</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F3" data-target="f3" style="left: 470.553px; top: 33.0938px;" aria-label="Double-tap F3">
+            <button type="button" class="kb-key kb-fn" data-fn="F3" data-target="f3" data-pos="4" aria-label="Double-tap F3">
               <img class="kb-fn-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F3</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F4" data-target="f4" style="left: 596.723px; top: 33.0938px;" aria-label="Double-tap F4">
+            <button type="button" class="kb-key kb-fn" data-fn="F4" data-target="f4" data-pos="5" aria-label="Double-tap F4">
               <svg class="kb-fn-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg>
               <span class="kb-fn-label">F4</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F5" data-target="f5" style="left: 722.893px; top: 33.0938px;" aria-label="Double-tap F5">
+            <button type="button" class="kb-key kb-fn" data-fn="F5" data-target="f5" data-pos="6" aria-label="Double-tap F5">
               <img class="kb-fn-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F5</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F6" data-target="f6" style="left: 849.064px; top: 33.0938px;" aria-label="Double-tap F6">
+            <button type="button" class="kb-key kb-fn" data-fn="F6" data-target="f6" data-pos="7" aria-label="Double-tap F6">
               <img class="kb-fn-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F6</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F7" data-target="f7" style="left: 975.234px; top: 33.0938px;" aria-label="Double-tap F7">
+            <button type="button" class="kb-key kb-fn" data-fn="F7" data-target="f7" data-pos="8" aria-label="Double-tap F7">
               <img class="kb-fn-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F7</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F8" data-target="f8" style="left: 1101.4px; top: 33.0938px;" aria-label="Double-tap F8">
+            <button type="button" class="kb-key kb-fn" data-fn="F8" data-target="f8" data-pos="9" aria-label="Double-tap F8">
               <img class="kb-fn-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F8</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F9" data-target="f9" style="left: 1227.57px; top: 33.0938px;" aria-label="Double-tap F9">
+            <button type="button" class="kb-key kb-fn" data-fn="F9" data-target="f9" data-pos="10" aria-label="Double-tap F9">
               <img class="kb-fn-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F9</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F10" data-target="f10" style="left: 1353.74px; top: 33.0938px;" aria-label="Double-tap F10">
+            <button type="button" class="kb-key kb-fn" data-fn="F10" data-target="f10" data-pos="11" aria-label="Double-tap F10">
               <img class="kb-fn-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F10</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F11" data-target="f11" style="left: 1479.91px; top: 33.0938px;" aria-label="Double-tap F11">
+            <button type="button" class="kb-key kb-fn" data-fn="F11" data-target="f11" data-pos="12" aria-label="Double-tap F11">
               <img class="kb-fn-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F11</span>
             </button>
-            <button type="button" class="kb-key kb-fn" data-fn="F12" data-target="f12" style="left: 1606.08px; top: 33.0938px;" aria-label="Double-tap F12">
+            <button type="button" class="kb-key kb-fn" data-fn="F12" data-target="f12" data-pos="13" aria-label="Double-tap F12">
               <img class="kb-fn-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true">
               <span class="kb-fn-label">F12</span>
             </button>
-            <button type="button" class="kb-key kb-fn kb-touchid" style="left: 1732.26px; top: 33.0938px;" aria-label="Touch ID / Power"></button>
+            <button type="button" class="kb-key kb-fn kb-touchid" data-pos="14" aria-label="Touch ID / Power"></button>
 
             <!-- Number row (y=158.747) -->
-            <button type="button" class="kb-key kb-dual" style="left: 33.0938px; top: 158.747px;"><span class="kb-t">±</span><span class="kb-b">§</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 159.264px; top: 158.747px;"><span class="kb-t">!</span><span class="kb-b">1</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 285.434px; top: 158.747px;"><span class="kb-t">@</span><span class="kb-b">2</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 411.605px; top: 158.747px;"><span class="kb-t">#</span><span class="kb-b">3</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 537.775px; top: 158.747px;"><span class="kb-t">$</span><span class="kb-b">4</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 663.945px; top: 158.747px;"><span class="kb-t">%</span><span class="kb-b">5</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 790.115px; top: 158.747px;"><span class="kb-t">^</span><span class="kb-b">6</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 916.285px; top: 158.747px;"><span class="kb-t">&amp;</span><span class="kb-b">7</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1042.46px; top: 158.747px;"><span class="kb-t">*</span><span class="kb-b">8</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1168.63px; top: 158.747px;"><span class="kb-t">(</span><span class="kb-b">9</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1294.8px; top: 158.747px;"><span class="kb-t">)</span><span class="kb-b">0</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1420.97px; top: 158.747px;"><span class="kb-t">_</span><span class="kb-b">-</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1547.14px; top: 158.747px;"><span class="kb-t">+</span><span class="kb-b">=</span></button>
-            <button type="button" class="kb-key kb-w-delete" style="left: 1673.31px; top: 158.747px; width: 173.226px;" aria-label="delete"><img class="kb-sym-img kb-sym-br" src="assets/keys/delete.left.svg" alt=""></button>
+            <button type="button" class="kb-key kb-dual" data-pos="15"><span class="kb-t">±</span><span class="kb-b">§</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="16"><span class="kb-t">!</span><span class="kb-b">1</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="17"><span class="kb-t">@</span><span class="kb-b">2</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="18"><span class="kb-t">#</span><span class="kb-b">3</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="19"><span class="kb-t">$</span><span class="kb-b">4</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="20"><span class="kb-t">%</span><span class="kb-b">5</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="21"><span class="kb-t">^</span><span class="kb-b">6</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="22"><span class="kb-t">&amp;</span><span class="kb-b">7</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="23"><span class="kb-t">*</span><span class="kb-b">8</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="24"><span class="kb-t">(</span><span class="kb-b">9</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="25"><span class="kb-t">)</span><span class="kb-b">0</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="26"><span class="kb-t">_</span><span class="kb-b">-</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="27"><span class="kb-t">+</span><span class="kb-b">=</span></button>
+            <button type="button" class="kb-key kb-w-delete" data-pos="28" aria-label="delete"><img class="kb-sym-img kb-sym-br" src="assets/keys/delete.left.svg" alt=""></button>
 
             <!-- QWERTY row (y=284.4) -->
-            <button type="button" class="kb-key kb-w-tab" style="left: 33.0938px; top: 284.4px; width: 160.815px;" aria-label="tab"><img class="kb-sym-img kb-sym-bl" src="assets/keys/tab.svg" alt=""></button>
-            <button type="button" class="kb-key" style="left: 206.319px; top: 284.4px;">Q</button>
-            <button type="button" class="kb-key" style="left: 332.49px; top: 284.4px;">W</button>
-            <button type="button" class="kb-key" style="left: 458.66px; top: 284.4px;">E</button>
-            <button type="button" class="kb-key" style="left: 584.83px; top: 284.4px;">R</button>
-            <button type="button" class="kb-key" style="left: 711px; top: 284.4px;">T</button>
-            <button type="button" class="kb-key" style="left: 837.17px; top: 284.4px;">Y</button>
-            <button type="button" class="kb-key" style="left: 963.341px; top: 284.4px;">U</button>
-            <button type="button" class="kb-key" style="left: 1089.51px; top: 284.4px;">I</button>
-            <button type="button" class="kb-key" style="left: 1215.68px; top: 284.4px;">O</button>
-            <button type="button" class="kb-key" style="left: 1341.85px; top: 284.4px;">P</button>
-            <button type="button" class="kb-key kb-dual" style="left: 1468.02px; top: 284.4px;"><span class="kb-t">{</span><span class="kb-b">[</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1594.19px; top: 284.4px;"><span class="kb-t">}</span><span class="kb-b">]</span></button>
+            <button type="button" class="kb-key kb-w-tab" data-pos="29" aria-label="tab"><img class="kb-sym-img kb-sym-bl" src="assets/keys/tab.svg" alt=""></button>
+            <button type="button" class="kb-key" data-pos="30">Q</button>
+            <button type="button" class="kb-key" data-pos="31">W</button>
+            <button type="button" class="kb-key" data-pos="32">E</button>
+            <button type="button" class="kb-key" data-pos="33">R</button>
+            <button type="button" class="kb-key" data-pos="34">T</button>
+            <button type="button" class="kb-key" data-pos="35">Y</button>
+            <button type="button" class="kb-key" data-pos="36">U</button>
+            <button type="button" class="kb-key" data-pos="37">I</button>
+            <button type="button" class="kb-key" data-pos="38">O</button>
+            <button type="button" class="kb-key" data-pos="39">P</button>
+            <button type="button" class="kb-key kb-dual" data-pos="40"><span class="kb-t">{</span><span class="kb-b">[</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="41"><span class="kb-t">}</span><span class="kb-b">]</span></button>
 
             <!-- ASDF row (y=410.053) -->
-            <button type="button" class="kb-key kb-w-caps" style="left: 33.0938px; top: 410.053px; width: 200.114px;" aria-label="caps lock">
+            <button type="button" class="kb-key kb-w-caps" data-pos="42" aria-label="caps lock">
               <span class="kb-sym kb-sym-tl kb-sym-sm">•</span>
               <img class="kb-sym-img kb-sym-bl" src="assets/keys/capslock.svg" alt="">
             </button>
-            <button type="button" class="kb-key" style="left: 245.618px; top: 410.053px;">A</button>
-            <button type="button" class="kb-key" style="left: 371.789px; top: 410.053px;">S</button>
-            <button type="button" class="kb-key" style="left: 497.959px; top: 410.053px;">D</button>
-            <button type="button" class="kb-key" style="left: 624.129px; top: 410.053px;">F</button>
-            <button type="button" class="kb-key" style="left: 750.299px; top: 410.053px;">G</button>
-            <button type="button" class="kb-key" style="left: 876.469px; top: 410.053px;">H</button>
-            <button type="button" class="kb-key" style="left: 1002.64px; top: 410.053px;">J</button>
-            <button type="button" class="kb-key" style="left: 1128.81px; top: 410.053px;">K</button>
-            <button type="button" class="kb-key" style="left: 1254.98px; top: 410.053px;">L</button>
-            <button type="button" class="kb-key kb-dual" style="left: 1381.15px; top: 410.053px;"><span class="kb-t">:</span><span class="kb-b">;</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1507.32px; top: 410.053px;"><span class="kb-t">"</span><span class="kb-b">'</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1633.49px; top: 410.053px;"><span class="kb-t">|</span><span class="kb-b">\</span></button>
-            <button type="button" class="kb-key kb-w-return-iso" style="left: 1720.36px; top: 284.4px; width: 126.18px; height: 238.896px;" aria-label="return"><img class="kb-sym-img kb-sym-return" src="assets/keys/return.svg" alt=""></button>
+            <button type="button" class="kb-key" data-pos="43">A</button>
+            <button type="button" class="kb-key" data-pos="44">S</button>
+            <button type="button" class="kb-key" data-pos="45">D</button>
+            <button type="button" class="kb-key" data-pos="46">F</button>
+            <button type="button" class="kb-key" data-pos="47">G</button>
+            <button type="button" class="kb-key" data-pos="48">H</button>
+            <button type="button" class="kb-key" data-pos="49">J</button>
+            <button type="button" class="kb-key" data-pos="50">K</button>
+            <button type="button" class="kb-key" data-pos="51">L</button>
+            <button type="button" class="kb-key kb-dual" data-pos="52"><span class="kb-t">:</span><span class="kb-b">;</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="53"><span class="kb-t">"</span><span class="kb-b">'</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="54"><span class="kb-t">|</span><span class="kb-b">\</span></button>
+            <button type="button" class="kb-key kb-w-return-iso" data-pos="55" aria-label="return"><img class="kb-sym-img kb-sym-return" src="assets/keys/return.svg" alt=""></button>
 
             <!-- ZXCV row (y=535.706) -->
-            <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift is-target" data-target="lshift" style="left: 33.0938px; top: 535.706px; width: 141.683px;" aria-label="Double-tap left shift">
+            <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift is-target" data-target="lshift" data-pos="56" aria-label="Double-tap left shift">
               <img class="kb-sym-img kb-sym-bl" src="assets/keys/shift.svg" alt="">
             </button>
-            <button type="button" class="kb-key kb-dual" style="left: 187.187px; top: 535.706px;"><span class="kb-t">~</span><span class="kb-b">`</span></button>
-            <button type="button" class="kb-key" style="left: 313.357px; top: 535.706px;">Z</button>
-            <button type="button" class="kb-key" style="left: 439.527px; top: 535.706px;">X</button>
-            <button type="button" class="kb-key" style="left: 565.698px; top: 535.706px;">C</button>
-            <button type="button" class="kb-key" style="left: 691.868px; top: 535.706px;">V</button>
-            <button type="button" class="kb-key" style="left: 818.038px; top: 535.706px;">B</button>
-            <button type="button" class="kb-key" style="left: 944.208px; top: 535.706px;">N</button>
-            <button type="button" class="kb-key" style="left: 1070.38px; top: 535.706px;">M</button>
-            <button type="button" class="kb-key kb-dual" style="left: 1196.55px; top: 535.706px;"><span class="kb-t">&lt;</span><span class="kb-b">,</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1322.72px; top: 535.706px;"><span class="kb-t">&gt;</span><span class="kb-b">.</span></button>
-            <button type="button" class="kb-key kb-dual" style="left: 1448.89px; top: 535.706px;"><span class="kb-t">?</span><span class="kb-b">/</span></button>
-            <button type="button" class="kb-key kb-w-shift-r kb-mod kb-shift" data-target="rshift" style="left: 1575.06px; top: 535.706px; width: 270.439px;" aria-label="Double-tap right shift">
+            <button type="button" class="kb-key kb-dual" data-pos="57"><span class="kb-t">~</span><span class="kb-b">`</span></button>
+            <button type="button" class="kb-key" data-pos="58">Z</button>
+            <button type="button" class="kb-key" data-pos="59">X</button>
+            <button type="button" class="kb-key" data-pos="60">C</button>
+            <button type="button" class="kb-key" data-pos="61">V</button>
+            <button type="button" class="kb-key" data-pos="62">B</button>
+            <button type="button" class="kb-key" data-pos="63">N</button>
+            <button type="button" class="kb-key" data-pos="64">M</button>
+            <button type="button" class="kb-key kb-dual" data-pos="65"><span class="kb-t">&lt;</span><span class="kb-b">,</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="66"><span class="kb-t">&gt;</span><span class="kb-b">.</span></button>
+            <button type="button" class="kb-key kb-dual" data-pos="67"><span class="kb-t">?</span><span class="kb-b">/</span></button>
+            <button type="button" class="kb-key kb-w-shift-r kb-mod kb-shift" data-target="rshift" data-pos="68" aria-label="Double-tap right shift">
               <img class="kb-sym-img kb-sym-br" src="assets/keys/shift.svg" alt="">
             </button>
 
             <!-- Bottom row (y=661.359) + arrow cluster -->
-            <button type="button" class="kb-key kb-mod" data-target="fn" style="left: 33.0938px; top: 661.359px;" aria-label="Double-tap fn">
+            <button type="button" class="kb-key kb-mod" data-target="fn" data-pos="69" aria-label="Double-tap fn">
               <img class="kb-mod-svg" src="assets/keys/globe.svg" alt="">
               <span class="kb-mod-name">fn</span>
             </button>
-            <button type="button" class="kb-key kb-mod" data-target="lctrl" style="left: 159.264px; top: 661.359px;" aria-label="Double-tap left control">
+            <button type="button" class="kb-key kb-mod" data-target="lctrl" data-pos="70" aria-label="Double-tap left control">
               <span class="kb-mod-stack">
                 <img class="kb-mod-svg" src="assets/keys/control.svg" alt="">
                 <span class="kb-mod-name">control</span>
               </span>
             </button>
-            <button type="button" class="kb-key kb-mod" data-target="lopt" style="left: 285.434px; top: 661.359px;" aria-label="Double-tap left option">
+            <button type="button" class="kb-key kb-mod" data-target="lopt" data-pos="71" aria-label="Double-tap left option">
               <span class="kb-mod-stack">
                 <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
                 <span class="kb-mod-name">option</span>
               </span>
             </button>
-            <button type="button" class="kb-key kb-mod kb-w-cmd" data-target="lcmd" style="left: 411.605px; top: 661.359px; width: 143.234px;" aria-label="Double-tap left command">
+            <button type="button" class="kb-key kb-mod kb-w-cmd" data-target="lcmd" data-pos="72" aria-label="Double-tap left command">
               <span class="kb-mod-stack">
                 <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
                 <span class="kb-mod-name">command</span>
               </span>
             </button>
-            <button type="button" class="kb-key kb-w-space" style="left: 567.249px; top: 661.359px; width: 618.958px;" aria-label="space"><span class="sr-only">space</span></button>
-            <button type="button" class="kb-key kb-mod kb-w-cmd kb-mod-r" data-target="rcmd" style="left: 1198.62px; top: 661.359px; width: 143.234px;" aria-label="Double-tap right command">
+            <button type="button" class="kb-key kb-w-space" data-pos="73" aria-label="space"><span class="sr-only">space</span></button>
+            <button type="button" class="kb-key kb-mod kb-w-cmd kb-mod-r" data-target="rcmd" data-pos="74" aria-label="Double-tap right command">
               <span class="kb-mod-stack">
                 <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
                 <span class="kb-mod-name">command</span>
               </span>
             </button>
-            <button type="button" class="kb-key kb-mod kb-mod-r" data-target="ropt" style="left: 1354.26px; top: 661.359px;" aria-label="Double-tap right option">
+            <button type="button" class="kb-key kb-mod kb-mod-r" data-target="ropt" data-pos="75" aria-label="Double-tap right option">
               <span class="kb-mod-stack">
                 <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
                 <span class="kb-mod-name">option</span>
@@ -272,10 +271,10 @@
             </button>
 
             <!-- Arrow cluster -->
-            <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1480.43px; top: 721.859px;" aria-label="left arrow"><span aria-hidden="true">◀</span></button>
-            <button type="button" class="kb-key kb-arrow kb-arrow-up" style="left: 1606.6px; top: 661.359px;" aria-label="up arrow"><span aria-hidden="true">▲</span></button>
-            <button type="button" class="kb-key kb-arrow kb-arrow-down" style="left: 1606.6px; top: 719.274px;" aria-label="down arrow"><span aria-hidden="true">▼</span></button>
-            <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1732.77px; top: 721.859px;" aria-label="right arrow"><span aria-hidden="true">▶</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-half" data-pos="76" aria-label="left arrow"><span aria-hidden="true">◀</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-up" data-pos="77" aria-label="up arrow"><span aria-hidden="true">▲</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-down" data-pos="78" aria-label="down arrow"><span aria-hidden="true">▼</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-half" data-pos="79" aria-label="right arrow"><span aria-hidden="true">▶</span></button>
           </div>
         </div>
       </div>
@@ -636,126 +635,5 @@
 </footer>
 
 <script src="js/main.js" type="module"></script>
-
-<!-- ─────────────────────────  Tweaks  ───────────────────────── -->
-<div id="tweaks-root"></div>
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script type="text/babel" src="js/tweaks-panel.jsx"></script>
-<script type="text/babel">
-  const HERO_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "headlineSize": 96,
-    "headlineWeight": 800,
-    "tracking": -1.5,
-    "shimmerOn": true,
-    "accent": "#00e5a0",
-    "secondLine": "Launch anything.",
-    "ctaLabel": "Try DoubleTap free",
-    "showTrustLine": true,
-    "showGrid": false,
-    "glowStrength": 100
-  }/*EDITMODE-END*/;
-
-  function HeroTweaks() {
-    const [t, setTweak] = useTweaks(HERO_TWEAK_DEFAULTS);
-
-    React.useEffect(() => {
-      const root = document.documentElement;
-      root.style.setProperty('--tw-headline-max', `${t.headlineSize}px`);
-      root.style.setProperty('--tw-headline-weight', t.headlineWeight);
-      root.style.setProperty('--tw-tracking', `${t.tracking / 100}em`);
-      root.style.setProperty('--color-accent', t.accent);
-      root.style.setProperty('--color-accent-glow',
-        t.accent + Math.round(t.glowStrength * 0.18).toString(16).padStart(2,'0'));
-      // Apply to elements
-      const headline = document.querySelector('.hero-headline');
-      if (headline) {
-        headline.style.fontSize = `clamp(44px, 7vw, ${t.headlineSize}px)`;
-        headline.style.fontWeight = t.headlineWeight;
-        headline.style.letterSpacing = `${t.tracking / 100}em`;
-      }
-      const muted = document.querySelector('.hero-headline .muted');
-      if (muted) {
-        muted.textContent = t.secondLine;
-        muted.style.fontWeight = t.headlineWeight;
-        const textColor = getComputedStyle(document.body).color || '#fff';
-        if (t.shimmerOn) {
-          muted.style.animation = '';
-          muted.style.backgroundImage = `linear-gradient(100deg, ${textColor} 0%, ${textColor} 35%, ${t.accent} 55%, ${textColor} 80%)`;
-          muted.style.backgroundSize = '200% 100%';
-          muted.style.setProperty('-webkit-background-clip', 'text');
-          muted.style.backgroundClip = 'text';
-          muted.style.setProperty('-webkit-text-fill-color', 'transparent');
-          muted.style.color = 'transparent';
-        } else {
-          muted.style.animation = 'none';
-          muted.style.backgroundImage = 'none';
-          muted.style.backgroundSize = '';
-          muted.style.setProperty('-webkit-text-fill-color', textColor);
-          muted.style.color = textColor;
-        }
-      }
-      const cta = document.querySelector('.hero-ctas .btn-primary');
-      if (cta) {
-        // Preserve trailing arrow svg
-        const svg = cta.querySelector('svg');
-        cta.textContent = t.ctaLabel + ' ';
-        if (svg) cta.appendChild(svg);
-      }
-      const trust = document.querySelector('.hero-trust-line');
-      if (trust) trust.style.display = t.showTrustLine ? '' : 'none';
-
-      const hero = document.querySelector('.hero');
-      if (hero) hero.dataset.grid = t.showGrid ? '1' : '0';
-    }, [t]);
-
-    return (
-      <TweaksPanel title="Hero tweaks">
-        <TweakSection label="Headline" />
-        <TweakSlider label="Size cap" value={t.headlineSize} min={56} max={140} unit="px"
-                     onChange={(v) => setTweak('headlineSize', v)} />
-        <TweakRadio  label="Weight" value={t.headlineWeight}
-                     options={[{value:600,label:'600'},{value:700,label:'700'},{value:800,label:'800'},{value:900,label:'900'}]}
-                     onChange={(v) => setTweak('headlineWeight', v)} />
-        <TweakSlider label="Tracking" value={t.tracking} min={-6} max={2} step={0.5} unit="‱"
-                     onChange={(v) => setTweak('tracking', v)} />
-        <TweakText   label="Second line" value={t.secondLine}
-                     onChange={(v) => setTweak('secondLine', v)} />
-        <TweakToggle label="Accent shimmer" value={t.shimmerOn}
-                     onChange={(v) => setTweak('shimmerOn', v)} />
-
-        <TweakSection label="Color" />
-        <TweakColor  label="Accent" value={t.accent}
-                     onChange={(v) => setTweak('accent', v)} />
-        <TweakSlider label="Glow" value={t.glowStrength} min={0} max={100} unit="%"
-                     onChange={(v) => setTweak('glowStrength', v)} />
-
-        <TweakSection label="CTA & extras" />
-        <TweakText   label="CTA label" value={t.ctaLabel}
-                     onChange={(v) => setTweak('ctaLabel', v)} />
-        <TweakToggle label="Trust line" value={t.showTrustLine}
-                     onChange={(v) => setTweak('showTrustLine', v)} />
-        <TweakToggle label="Grid texture" value={t.showGrid}
-                     onChange={(v) => setTweak('showGrid', v)} />
-      </TweaksPanel>
-    );
-  }
-
-  function mountHeroTweaks() {
-    if (typeof useTweaks === 'function' && typeof TweaksPanel === 'function') {
-      ReactDOM.createRoot(document.getElementById('tweaks-root'))
-        .render(<HeroTweaks />);
-    } else {
-      setTimeout(mountHeroTweaks, 30);
-    }
-  }
-  mountHeroTweaks();
-</script>
-
-<style>
-  /* Tweak: grid texture toggle */
-  .hero[data-grid="0"]::after { display: none; }
-</style>
 </body>
 </html>
