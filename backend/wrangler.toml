@@ -1,0 +1,27 @@
+name = "doubletap-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# After first `wrangler deploy`, attach api.doubletap-app.com via the
+# Cloudflare dashboard (Workers → doubletap-api → Triggers → Custom Domains).
+# Or uncomment below and `wrangler deploy` will register it automatically.
+# routes = [{ pattern = "api.doubletap-app.com", custom_domain = true }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "doubletap"
+database_id = "4cb81ed6-18e9-4a07-8777-730da8349194"
+migrations_dir = "migrations"
+
+[vars]
+APP_URL = "https://doubletap-app.com"
+
+# Secrets — set via `wrangler secret put <NAME>`:
+#   BETTER_AUTH_SECRET           openssl rand -base64 32
+#   RESEND_API_KEY               https://resend.com/api-keys
+#   APPLE_CLIENT_ID              Service ID from Apple Developer
+#   APPLE_CLIENT_SECRET          generated JWT (see better-auth docs)
+#   GOOGLE_CLIENT_ID             Google Cloud Console
+#   GOOGLE_CLIENT_SECRET
+#   GUMROAD_PRODUCT_ID           from your Gumroad product settings

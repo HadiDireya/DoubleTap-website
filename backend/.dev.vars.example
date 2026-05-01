@@ -1,0 +1,8 @@
+DEV="true"
+BETTER_AUTH_SECRET="run: openssl rand -base64 32"
+RESEND_API_KEY="re_xxxxxxxxxxxxxxxxxxxxxxxx"
+APPLE_CLIENT_ID="com.doubletap.app.signin"
+APPLE_CLIENT_SECRET="apple-generated-jwt"
+GOOGLE_CLIENT_ID="xxxxxxxxxxxx.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-xxxxxxxxxxxxxxxxxxxx"
+GUMROAD_PRODUCT_ID="xxxxxxxxxxxx"
