@@ -1,6 +1,7 @@
 export type Env = {
   DB: D1Database;
   APP_URL: string;
+  API_URL: string;
   BETTER_AUTH_SECRET: string;
   RESEND_API_KEY: string;
   APPLE_CLIENT_ID: string;

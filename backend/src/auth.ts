@@ -9,7 +9,9 @@ export const createAuth = (env: Env) =>
   betterAuth({
     database: drizzleAdapter(getDb(env), { provider: "sqlite" }),
     secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.APP_URL,
+    baseURL: env.API_URL,
+    basePath: "/auth",
+    trustedOrigins: [env.APP_URL, `https://www.${env.APP_URL.replace(/^https?:\/\//, "")}`],
     socialProviders: {
       apple: {
         clientId: env.APPLE_CLIENT_ID,

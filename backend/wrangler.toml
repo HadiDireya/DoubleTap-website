@@ -16,6 +16,7 @@ migrations_dir = "migrations"
 
 [vars]
 APP_URL = "https://doubletap-app.com"
+API_URL = "https://api.doubletap-app.com"
 
 # Secrets — set via `wrangler secret put <NAME>`:
 #   BETTER_AUTH_SECRET           openssl rand -base64 32
