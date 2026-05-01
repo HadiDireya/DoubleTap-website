@@ -31,3 +31,7 @@ yarn-error.log*
 .dev.vars
 backend/dist/
 backend/node_modules/
+
+# OAuth client secrets (downloaded from Google Cloud Console etc.)
+client_secret_*.json
+*-credentials.json
