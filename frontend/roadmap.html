@@ -87,63 +87,20 @@
     </header>
 
     <!-- ============================================================
-         BOARD
+         FILTERS + FEED
          ============================================================ -->
-    <section class="roadmap-board" id="roadmap-board" aria-label="Feature board">
-      <article class="roadmap-column" data-status="suggested">
-        <header class="roadmap-column-head">
-          <span class="roadmap-column-dot" aria-hidden="true"></span>
-          <h2 class="roadmap-column-title">Suggested</h2>
-          <span class="roadmap-column-count" data-count>0</span>
-        </header>
-        <div class="roadmap-column-body" data-list>
-          <p class="roadmap-empty">Loading…</p>
-        </div>
-      </article>
+    <nav class="roadmap-filters" id="roadmap-filters" aria-label="Filter by status">
+      <button type="button" class="is-active" data-filter="all">All <span data-count>0</span></button>
+      <button type="button" data-filter="suggested">Suggested <span data-count>0</span></button>
+      <button type="button" data-filter="under_review">Under Review <span data-count>0</span></button>
+      <button type="button" data-filter="planned">Planned <span data-count>0</span></button>
+      <button type="button" data-filter="in_progress">In Progress <span data-count>0</span></button>
+      <button type="button" data-filter="shipped">Shipped <span data-count>0</span></button>
+    </nav>
 
-      <article class="roadmap-column" data-status="under_review">
-        <header class="roadmap-column-head">
-          <span class="roadmap-column-dot" aria-hidden="true"></span>
-          <h2 class="roadmap-column-title">Under Review</h2>
-          <span class="roadmap-column-count" data-count>0</span>
-        </header>
-        <div class="roadmap-column-body" data-list>
-          <p class="roadmap-empty">Nothing here yet.</p>
-        </div>
-      </article>
-
-      <article class="roadmap-column" data-status="planned">
-        <header class="roadmap-column-head">
-          <span class="roadmap-column-dot" aria-hidden="true"></span>
-          <h2 class="roadmap-column-title">Planned</h2>
-          <span class="roadmap-column-count" data-count>0</span>
-        </header>
-        <div class="roadmap-column-body" data-list>
-          <p class="roadmap-empty">Nothing here yet.</p>
-        </div>
-      </article>
-
-      <article class="roadmap-column" data-status="in_progress">
-        <header class="roadmap-column-head">
-          <span class="roadmap-column-dot" aria-hidden="true"></span>
-          <h2 class="roadmap-column-title">In Progress</h2>
-          <span class="roadmap-column-count" data-count>0</span>
-        </header>
-        <div class="roadmap-column-body" data-list>
-          <p class="roadmap-empty">Nothing here yet.</p>
-        </div>
-      </article>
-
-      <article class="roadmap-column" data-status="shipped">
-        <header class="roadmap-column-head">
-          <span class="roadmap-column-dot" aria-hidden="true"></span>
-          <h2 class="roadmap-column-title">Shipped</h2>
-          <span class="roadmap-column-count" data-count>0</span>
-        </header>
-        <div class="roadmap-column-body" data-list>
-          <p class="roadmap-empty">Nothing here yet.</p>
-        </div>
-      </article>
+    <section class="roadmap-feed" aria-label="Feedback posts">
+      <ul class="roadmap-feed-list" id="roadmap-feed-list"></ul>
+      <p class="roadmap-empty" id="roadmap-empty">Loading…</p>
     </section>
 
   </div>

@@ -16,7 +16,9 @@ const STATUS_LABELS = {
 };
 
 /* ---------- DOM (cached) ---------- */
-const board = document.getElementById('roadmap-board');
+const feedList = document.getElementById('roadmap-feed-list');
+const feedEmpty = document.getElementById('roadmap-empty');
+const filtersEl = document.getElementById('roadmap-filters');
 const authEl = document.getElementById('roadmap-auth');
 const suggestOpen = document.getElementById('suggest-open');
 
@@ -39,6 +41,8 @@ const detailBody = document.getElementById('detail-body');
 /* ---------- State ---------- */
 let session = null;
 let openDetailId = null;
+let allPosts = [];
+let currentFilter = 'all';
 
 /* ---------- API ---------- */
 const apiFetch = async (path, init = {}) => {
@@ -174,14 +178,14 @@ const verifiedBadge = () => {
   return span;
 };
 
-const voteArrow = () => {
+const heartIcon = () => {
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
-  svg.classList.add('roadmap-card-vote-arrow');
+  svg.classList.add('roadmap-card-vote-icon');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   const path = document.createElementNS(svgNS, 'path');
-  path.setAttribute('d', 'M12 4l8 10h-5v6h-6v-6H4z');
+  path.setAttribute('d', 'M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 5a5.5 5.5 0 0 1 9.5 7c-2.5 4.5-9.5 9-9.5 9z');
   svg.append(path);
   return svg;
 };
@@ -228,20 +232,26 @@ const renderAuth = () => {
 
 /* ---------- Card render ---------- */
 const renderCard = (post) => {
-  const card = el('div', { class: 'roadmap-card', attrs: { tabindex: '0', role: 'button' } });
-  card.dataset.postId = post.id;
+  const item = el('li', { class: 'roadmap-feed-item roadmap-card', attrs: { tabindex: '0', role: 'button' } });
+  item.dataset.postId = post.id;
 
   const vote = el('button', {
     class: 'roadmap-card-vote' + (post.userVoted ? ' is-active' : ''),
-    attrs: { type: 'button', 'aria-pressed': String(post.userVoted), 'aria-label': 'Vote' },
+    attrs: { type: 'button', 'aria-pressed': String(post.userVoted), 'aria-label': 'Like' },
   });
-  vote.append(voteArrow(), el('span', { class: 'roadmap-card-vote-count', text: String(post.voteCount) }));
+  vote.append(heartIcon(), el('span', { class: 'roadmap-card-vote-count', text: String(post.voteCount) }));
   vote.addEventListener('click', (e) => {
     e.stopPropagation();
     handleVote(post.id, vote);
   });
 
   const content = el('div', { class: 'roadmap-card-content' });
+  const statusChip = el('span', {
+    class: 'roadmap-card-status',
+    text: STATUS_LABELS[post.status] || post.status,
+  });
+  statusChip.dataset.status = post.status;
+  content.append(statusChip);
   content.append(el('div', { class: 'roadmap-card-title', text: post.title }));
   content.append(el('div', { class: 'roadmap-card-body', text: post.body }));
 
@@ -260,45 +270,67 @@ const renderCard = (post) => {
   }
   meta.append(el('span', { text: formatRelative(post.createdAt) }));
   content.append(meta);
-  card.append(vote, content);
+  item.append(vote, content);
 
   const open = () => openDetail(post.id);
-  card.addEventListener('click', open);
-  card.addEventListener('keydown', (e) => {
+  item.addEventListener('click', open);
+  item.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       open();
     }
   });
-  return card;
+  return item;
 };
 
-const renderColumn = (status, posts) => {
-  const column = board.querySelector(`.roadmap-column[data-status="${status}"]`);
-  if (!column) return;
-  const list = column.querySelector('[data-list]');
-  const count = column.querySelector('[data-count]');
-  count.textContent = String(posts.length);
-  list.replaceChildren();
-  if (posts.length === 0) {
-    list.append(el('p', { class: 'roadmap-empty', text: 'Nothing here yet.' }));
-    return;
+const renderFeed = () => {
+  const total = allPosts.length;
+  for (const btn of filtersEl.querySelectorAll('button[data-filter]')) {
+    const f = btn.dataset.filter;
+    const count = f === 'all' ? total : allPosts.filter((p) => p.status === f).length;
+    const countEl = btn.querySelector('[data-count]');
+    if (countEl) countEl.textContent = String(count);
   }
-  for (const p of posts) list.append(renderCard(p));
+  const list = currentFilter === 'all'
+    ? allPosts
+    : allPosts.filter((p) => p.status === currentFilter);
+  feedList.replaceChildren();
+  for (const p of list) feedList.append(renderCard(p));
+  if (list.length === 0) {
+    feedEmpty.hidden = false;
+    feedEmpty.textContent = total === 0
+      ? 'Nothing yet — be the first to suggest.'
+      : 'No posts in this filter.';
+  } else {
+    feedEmpty.hidden = true;
+  }
 };
 
 const loadBoard = async () => {
   try {
     const data = await fetchBoard();
-    for (const s of STATUSES) renderColumn(s, data[s] || []);
+    allPosts = STATUSES
+      .flatMap((s) => data[s] || [])
+      .sort((a, b) => b.voteCount - a.voteCount || b.createdAt - a.createdAt);
+    renderFeed();
   } catch (err) {
     console.error('failed to load board', err);
-    for (const s of STATUSES) {
-      const list = board.querySelector(`.roadmap-column[data-status="${s}"] [data-list]`);
-      if (list) list.replaceChildren(el('p', { class: 'roadmap-empty', text: 'Could not load.' }));
-    }
+    allPosts = [];
+    renderFeed();
+    feedEmpty.hidden = false;
+    feedEmpty.textContent = 'Could not load.';
   }
 };
+
+filtersEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-filter]');
+  if (!btn) return;
+  currentFilter = btn.dataset.filter;
+  for (const b of filtersEl.querySelectorAll('button[data-filter]')) {
+    b.classList.toggle('is-active', b === btn);
+  }
+  renderFeed();
+});
 
 /* ---------- Vote ---------- */
 const handleVote = async (postId, btn) => {
@@ -313,6 +345,8 @@ const handleVote = async (postId, btn) => {
     btn.setAttribute('aria-pressed', String(voted));
     const countEl = btn.querySelector('.roadmap-card-vote-count');
     if (countEl) countEl.textContent = String(voteCount);
+    const cached = allPosts.find((p) => p.id === postId);
+    if (cached) { cached.userVoted = voted; cached.voteCount = voteCount; }
   } catch (err) {
     if (err.status === 401) {
       session = null;
