@@ -6,6 +6,22 @@
   <title>DoubleTap — Tap any modifier key. Launch anything.</title>
   <meta name="description" content="DoubleTap turns ⌘, ⌥, ⌃, ⇧, fn, and F-keys into instant triggers for apps, Shortcuts, shell commands, and multi-step keystroke chains — built native for macOS.">
   <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="https://doubletap-app.com/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DoubleTap">
+  <meta property="og:title" content="DoubleTap — Tap any modifier key. Launch anything.">
+  <meta property="og:description" content="DoubleTap turns ⌘, ⌥, ⌃, ⇧, fn, and F-keys into instant triggers for apps, Shortcuts, shell commands, and multi-step keystroke chains — built native for macOS.">
+  <meta property="og:url" content="https://doubletap-app.com/">
+  <meta property="og:image" content="https://doubletap-app.com/assets/og/og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DoubleTap — Tap any modifier key. Launch anything.">
+  <meta name="twitter:description" content="Turn ⌘, ⌥, ⌃, ⇧, fn, and F-keys into instant triggers for apps, Shortcuts, shell commands, and multi-step keystroke chains.">
+  <meta name="twitter:image" content="https://doubletap-app.com/assets/og/og-image.svg">
+
   <link rel="icon" type="image/png" href="assets/icons/icon-dark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -440,7 +456,7 @@
     </div>
 
     <div class="media-stage reveal">
-      <img class="mac-shot" src="assets/media/Screenshot%202026-04-25%20at%203.09.06.png"
+      <img class="mac-shot" src="assets/screenshots/app-window.png"
            alt="DoubleTap settings window showing trigger and action mappings"
            width="3420" height="2214" loading="lazy">
     </div>
@@ -448,8 +464,8 @@
     <div class="tutorial-block reveal" id="tutorial">
       <div class="media-stage media-stage-sm">
         <video class="mac-video"
-               src="assets/media/Screen%20Recording%202026-04-25%20at%201.58.25.mov"
-               poster="assets/media/tutorial-poster-placeholder.svg"
+               src="assets/video/tutorial.mov"
+               poster="assets/video/tutorial-poster.svg"
                muted loop playsinline preload="metadata"
                width="3420" height="2214"
                aria-label="Tutorial: how to add a double-tap trigger in DoubleTap"></video>
@@ -626,7 +642,7 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="js/tweaks-panel.jsx"></script>
 <script type="text/babel">
   const HERO_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
     "headlineSize": 96,
@@ -726,8 +742,15 @@
     );
   }
 
-  ReactDOM.createRoot(document.getElementById('tweaks-root'))
-    .render(<HeroTweaks />);
+  function mountHeroTweaks() {
+    if (typeof useTweaks === 'function' && typeof TweaksPanel === 'function') {
+      ReactDOM.createRoot(document.getElementById('tweaks-root'))
+        .render(<HeroTweaks />);
+    } else {
+      setTimeout(mountHeroTweaks, 30);
+    }
+  }
+  mountHeroTweaks();
 </script>
 
 <style>

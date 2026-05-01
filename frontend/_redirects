@@ -1,0 +1,4 @@
+# Cloudflare Pages redirects — one rule per line.
+# Format: <source> <destination> <status>
+# Host-level redirects (www → apex) are configured in the Cloudflare dashboard,
+# not here.

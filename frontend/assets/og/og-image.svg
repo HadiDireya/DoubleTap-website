@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="key" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f1f1f"/>
+      <stop offset="100%" stop-color="#0c0c0c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g transform="translate(490 130)">
+    <rect width="100" height="100" rx="18" fill="url(#key)" stroke="#262626" stroke-width="1"/>
+    <text x="50" y="68" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="44" font-weight="600" fill="#ffffff">⌘</text>
+    <rect x="120" y="0" width="100" height="100" rx="18" fill="url(#key)" stroke="#262626" stroke-width="1"/>
+    <text x="170" y="68" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif" font-size="44" font-weight="600" fill="#ffffff">⌘</text>
+  </g>
+  <text x="600" y="370" text-anchor="middle" font-family="Outfit, -apple-system, sans-serif" font-size="120" font-weight="900" fill="#ffffff" letter-spacing="-3">DoubleTap</text>
+  <text x="600" y="440" text-anchor="middle" font-family="Outfit, -apple-system, sans-serif" font-size="34" font-weight="500" fill="#9a9a9a">Tap any modifier key. Launch anything.</text>
+  <text x="600" y="560" text-anchor="middle" font-family="Outfit, -apple-system, sans-serif" font-size="22" font-weight="500" fill="#5a5a5a" letter-spacing="2">DOUBLETAP-APP.COM</text>
+</svg>
