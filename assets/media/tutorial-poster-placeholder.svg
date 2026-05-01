@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3420 2214" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Tutorial video placeholder">
-  <rect width="3420" height="2214" fill="#0a0a0a"/>
-  <circle cx="1710" cy="1107" r="120" fill="none" stroke="#3a3a3a" stroke-width="4"/>
-  <polygon points="1685,1047 1685,1167 1770,1107" fill="#3a3a3a"/>
+  <rect width="3420" height="2214" fill="#0a0a0a"></rect>
+  <circle cx="1710" cy="1107" r="120" fill="none" stroke="#3a3a3a" stroke-width="4"></circle>
+  <polygon points="1685,1047 1685,1167 1770,1107" fill="#3a3a3a"></polygon>
   <text x="1710" y="1380" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="38" fill="#3a3a3a" letter-spacing="3">TUTORIAL VIDEO</text>
   <text x="1710" y="1430" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="18" fill="#2a2a2a">click play to watch</text>
 </svg>

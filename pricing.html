@@ -24,15 +24,16 @@
       <span>DoubleTap</span>
     </a>
     <div class="nav-links" id="nav-links">
-      <a href="index.html#triggers">Triggers</a>
-      <a href="index.html#actions">Actions</a>
-      <a href="index.html#fkeys">F-keys</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#use-cases">Use cases</a>
+      <a href="index.html#features">Features</a>
       <a href="pricing.html" aria-current="page">Pricing</a>
-      <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
-        <svg class="btn-icon" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        Download
-      </a>
+      <a href="index.html#faq">FAQ</a>
     </div>
+    <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
+      Download
+    </a>
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <span></span>
       <span></span>
@@ -54,212 +55,101 @@
      ============================================================ -->
 <section class="pricing-page" aria-label="Pricing">
   <div class="container">
-    <div class="pricing-layout">
 
-      <!-- Left: product + tiers + breakdown -->
-      <div class="pricing-left">
-        <div class="pricing-product">
-          <img src="assets/icons/icon-dark.png" alt="" width="40" height="40" role="presentation" class="pricing-product-icon">
-          <span class="pricing-product-name">DoubleTap</span>
-          <span class="pricing-lifetime-badge">Lifetime</span>
+    <div class="pricing-header">
+      <h1 class="pricing-hero-title">Pay once. Keep it forever.</h1>
+      <p class="pricing-subtitle">One-time purchase. Lifetime updates. No subscription, no account.</p>
+    </div>
+
+    <div class="pricing-cards" role="group" aria-label="License tier">
+
+      <article class="price-card" data-name="Personal" data-devices="1 Mac" data-price="9">
+        <div class="price-card-head">
+          <h2 class="price-card-name">Personal</h2>
+          <p class="price-card-devices">1 Mac</p>
         </div>
-
-        <div class="eyebrow"><span class="dot"></span> One-time purchase</div>
-
-        <h1 class="pricing-hero-title">
-          Simple pricing.<br>From <span class="amount" id="price-display">$9</span>.
-        </h1>
-
-        <p class="pricing-subtitle">Pay once, keep every future update, move it between your own Macs. No subscriptions, no version-upgrade fees, no telemetry.</p>
-
-        <!-- Tier selector -->
-        <div class="pricing-tiers" id="tier-selector" role="radiogroup" aria-label="License tier">
-          <label class="pricing-tier pricing-tier-selected">
-            <input type="radio" name="tier" value="9" data-name="Personal" data-devices="1 Mac" checked class="sr-only">
-            <span class="pricing-tier-radio" aria-hidden="true"></span>
-            <span class="pricing-tier-info">
-              <span class="pricing-tier-name">Personal</span>
-              <span class="pricing-tier-devices">1 Mac</span>
-            </span>
-            <span class="pricing-tier-price">$9</span>
-          </label>
-          <label class="pricing-tier">
-            <input type="radio" name="tier" value="14.99" data-name="Home + work" data-devices="2 Macs" class="sr-only">
-            <span class="pricing-tier-radio" aria-hidden="true"></span>
-            <span class="pricing-tier-info">
-              <span class="pricing-tier-name">Home + work</span>
-              <span class="pricing-tier-devices">2 Macs</span>
-            </span>
-            <span class="pricing-tier-price">$14.99</span>
-          </label>
-          <label class="pricing-tier">
-            <input type="radio" name="tier" value="29.99" data-name="Family" data-devices="5 Macs" class="sr-only">
-            <span class="pricing-tier-radio" aria-hidden="true"></span>
-            <span class="pricing-tier-info">
-              <span class="pricing-tier-name">Family</span>
-              <span class="pricing-tier-devices">5 Macs</span>
-            </span>
-            <span class="pricing-tier-price">$29.99</span>
-          </label>
+        <div class="price-amount">
+          <span class="price-currency">$</span>
+          <span class="price-number">9</span>
         </div>
-
-        <ul class="pricing-features">
-          <li>Every future update included — no version upgrades to pay for</li>
-          <li>14-day free trial, full-featured, no credit card</li>
-          <li>All trigger keys, action types, and F-key features</li>
-          <li>Native Apple Silicon &amp; Intel — universal binary</li>
-          <li>Move your license between your own Macs anytime</li>
-          <li>Works offline for up to 30 days between license checks</li>
-          <li>Direct email support from the maker</li>
-          <li>Zero telemetry. Mappings stored only on your Mac.</li>
+        <ul class="price-features">
+          <li>14-day free trial</li>
+          <li>Lifetime updates</li>
+          <li>Move license between Macs</li>
+          <li>No subscription, no account</li>
         </ul>
-
-        <div class="pricing-breakdown">
-          <div class="pricing-line">
-            <span>Price</span>
-            <span id="breakdown-price">$9</span>
-          </div>
-          <div class="pricing-line">
-            <span>Taxes</span>
-            <span>Calculated at checkout</span>
-          </div>
-          <div class="pricing-line total">
-            <span>Total</span>
-            <span id="breakdown-total">$9</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: CTA panel (sticky) -->
-      <div class="pricing-right">
-        <div class="pricing-cta-panel">
-          <div class="eyebrow"><span class="dot"></span> Checkout via Gumroad</div>
-          <h2 class="pricing-cta-title">Get DoubleTap</h2>
-          <p class="pricing-cta-desc">Complete your purchase on Gumroad. You'll receive a license key instantly by email.</p>
-
-          <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="btn btn-primary btn-lg pricing-buy-btn" target="_blank" rel="noopener noreferrer">Continue to Gumroad →</a>
-
-          <div class="pricing-cta-divider"><span>or</span></div>
-
-          <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="btn btn-secondary btn-lg pricing-trial-btn" target="_blank" rel="noopener noreferrer">
-            <svg class="btn-icon" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-            Start 14-day trial
+        <div class="price-actions">
+          <a class="btn btn-primary btn-lg price-card-cta" href="#" target="_blank" rel="noopener noreferrer">
+            Get Personal →
           </a>
-
-          <p class="pricing-cta-note">macOS 13+ · Apple Silicon &amp; Intel · Signed &amp; notarized · Zero telemetry</p>
         </div>
-      </div>
+      </article>
+
+      <article class="price-card is-featured" data-name="Home + work" data-devices="2 Macs" data-price="14.99">
+        <div class="price-card-badge">Most popular</div>
+        <div class="price-card-head">
+          <h2 class="price-card-name">Home + work</h2>
+          <p class="price-card-devices">2 Macs</p>
+        </div>
+        <div class="price-amount">
+          <span class="price-currency">$</span>
+          <span class="price-number">14.99</span>
+        </div>
+        <ul class="price-features">
+          <li>14-day free trial</li>
+          <li>Lifetime updates</li>
+          <li>Use on your home and work Mac</li>
+          <li>Move licenses between Macs</li>
+          <li>No subscription, no account</li>
+        </ul>
+        <div class="price-actions">
+          <a class="btn btn-primary btn-lg price-card-cta" href="#" target="_blank" rel="noopener noreferrer">
+            Get Home + work →
+          </a>
+        </div>
+      </article>
+
+      <article class="price-card" data-name="Family" data-devices="5 Macs" data-price="29.99">
+        <div class="price-card-head">
+          <h2 class="price-card-name">Family</h2>
+          <p class="price-card-devices">5 Macs</p>
+        </div>
+        <div class="price-amount">
+          <span class="price-currency">$</span>
+          <span class="price-number">29.99</span>
+        </div>
+        <ul class="price-features">
+          <li>14-day free trial</li>
+          <li>Lifetime updates</li>
+          <li>Up to 5 Macs in your household</li>
+          <li>Move licenses between Macs</li>
+          <li>No subscription, no account</li>
+        </ul>
+        <div class="price-actions">
+          <a class="btn btn-primary btn-lg price-card-cta" href="#" target="_blank" rel="noopener noreferrer">
+            Get Family →
+          </a>
+        </div>
+      </article>
 
     </div>
-  </div>
-</section>
 
-<!-- ============================================================
-     FAQ
-     ============================================================ -->
-<section class="site-section" id="faq" aria-label="Frequently asked questions">
-  <div class="container container-narrow">
-    <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> FAQ</div>
-      <h2 class="section-title">Questions?</h2>
+    <div class="pricing-trial">
+      <a class="btn btn-secondary btn-lg pricing-trial-btn" href="assets/downloads/DoubleTap.dmg" download>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download free trial
+      </a>
+      <p class="pricing-cta-note">macOS 26.2 · Apple Silicon &amp; Intel · Signed &amp; notarized · Zero telemetry</p>
     </div>
-    <div class="faq-list reveal-stagger">
-      <details class="faq-item reveal">
-        <summary class="faq-question">What happens after the 14-day trial?</summary>
-        <p class="faq-answer">Full functionality during the trial — no lockouts, no nags. From day 10 onward, a gentle daily reminder. On day 14 a pop-up invites you to buy a license. Unpaid sessions can still run without mappings firing.</p>
-      </details>
-      <details class="faq-item reveal">
-        <summary class="faq-question">Can I transfer a license to another Mac?</summary>
-        <p class="faq-answer">Yes. Deactivate the license on one Mac in Settings, then activate it on another. Each license runs on the number of Macs its tier allows, concurrently.</p>
-      </details>
-      <details class="faq-item reveal">
-        <summary class="faq-question">Is there a subscription?</summary>
-        <p class="faq-answer">No. Every tier is a one-time purchase with every future update included. Pay once, use forever.</p>
-      </details>
-      <details class="faq-item reveal">
-        <summary class="faq-question">Do I need an internet connection?</summary>
-        <p class="faq-answer">Only to activate your license key the first time and to check for updates. DoubleTap runs fine offline — up to 30 days between verifications.</p>
-      </details>
-      <details class="faq-item reveal">
-        <summary class="faq-question">What macOS versions are supported?</summary>
-        <p class="faq-answer">macOS 13 (Ventura) and later, optimized for macOS 26 Tahoe. Universal binary: Apple Silicon and Intel both.</p>
-      </details>
-      <details class="faq-item reveal">
-        <summary class="faq-question">Is my data safe?</summary>
-        <p class="faq-answer">Yes. No tracking of any kind. Your shortcuts are stored only on your Mac. DoubleTap only reaches out to the internet to verify your license and check for updates.</p>
-      </details>
-    </div>
+
   </div>
 </section>
 
 </main>
-
-<!-- ============================================================
-     FOOTER
-     ============================================================ -->
-<footer class="footer" id="footer">
-  <div class="container">
-    <div class="footer-panel">
-      <div class="footer-top">
-        <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="btn btn-secondary footer-cta" target="_blank" rel="noopener noreferrer">Get DoubleTap</a>
-      </div>
-
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h3 class="footer-col-title">Product</h3>
-          <ul class="footer-col-links">
-            <li><a href="index.html#how">How it works</a></li>
-            <li><a href="index.html#triggers">Triggers</a></li>
-            <li><a href="index.html#actions">Actions</a></li>
-            <li><a href="index.html#use-cases">Use cases</a></li>
-            <li><a href="index.html#fkeys">F-keys</a></li>
-            <li><a href="pricing.html">Pricing</a></li>
-            <li><a href="https://hadidireya.gumroad.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">Download</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3 class="footer-col-title">Support</h3>
-          <ul class="footer-col-links">
-            <li><a href="mailto:hello@doubletap.app">Contact</a></li>
-            <li><a href="mailto:hello@doubletap.app?subject=DoubleTap%20bug%20report">Report a bug</a></li>
-            <li><a href="mailto:hello@doubletap.app?subject=DoubleTap%20feature%20request">Feature request</a></li>
-            <li><a href="mailto:hello@doubletap.app?subject=License%20%26%20activation">License &amp; activation</a></li>
-            <li><a href="index.html#faq">FAQ</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-back-top">
-        <a href="#top" class="footer-back-top-link">
-          <span>Back to top</span>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
-    <div class="footer-meta">
-      <div class="footer-meta-row">
-        <div class="footer-brand">
-          <div class="footer-logo">
-            <img src="assets/icons/icon-dark.png" alt="" width="24" height="24" role="presentation">
-            <span>DoubleTap</span>
-          </div>
-          <p class="footer-tagline">Tap <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span><span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> do anything.</p>
-        </div>
-        <ul class="footer-social" aria-label="Social links">
-          <li><a href="#" aria-label="X (formerly Twitter)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></li>
-          <li><a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.648.5.5 5.648.5 12c0 5.087 3.292 9.394 7.857 10.92.575.105.785-.25.785-.555 0-.274-.01-.998-.016-1.96-3.198.695-3.872-1.54-3.872-1.54-.523-1.328-1.276-1.682-1.276-1.682-1.043-.713.08-.698.08-.698 1.154.08 1.76 1.183 1.76 1.183 1.026 1.756 2.688 1.248 3.344.954.103-.742.4-1.247.728-1.534-2.55-.29-5.234-1.276-5.234-5.679 0-1.255.448-2.28 1.18-3.085-.12-.29-.513-1.457.112-3.036 0 0 .96-.308 3.15 1.18a10.88 10.88 0 0 1 2.868-.385c.973.005 1.953.131 2.869.385 2.19-1.488 3.148-1.18 3.148-1.18.626 1.579.233 2.746.114 3.036.735.805 1.18 1.83 1.18 3.085 0 4.416-2.688 5.386-5.247 5.669.413.356.781 1.058.781 2.133 0 1.539-.014 2.78-.014 3.158 0 .308.208.667.79.553C20.21 21.39 23.5 17.087 23.5 12c0-6.352-5.148-11.5-11.5-11.5z"/></svg></a></li>
-          <li><a href="mailto:hello@doubletap.app" aria-label="Email"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 7 9-7"/></svg></a></li>
-        </ul>
-      </div>
-      <div class="footer-meta-row footer-meta-row-legal">
-        <p class="footer-copyright">&copy; 2026 Hadi Direya. All rights reserved.</p>
-      </div>
-    </div>
-  </div>
-</footer>
 
 <script src="js/pricing.js" type="module"></script>
 </body>

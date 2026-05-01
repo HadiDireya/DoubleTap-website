@@ -129,6 +129,8 @@ const kbTargets = document.querySelectorAll('.kb-key[data-target]');
 const kbHud = document.getElementById('kb-hud');
 const kbHudLabel = document.getElementById('kb-hud-label');
 
+
+
 // Lightweight synthesized chiclet click — short filtered noise burst, no asset.
 const AudioCtxCtor = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -144,42 +146,27 @@ const playClick = () => {
   if (!ctx) return;
   const now = ctx.currentTime;
 
-  // Body: damped low sine — key bottoming out.
-  const body = ctx.createOscillator();
-  body.type = 'sine';
-  body.frequency.setValueAtTime(520, now);
-  body.frequency.exponentialRampToValueAtTime(180, now + 0.05);
-  const bodyGain = ctx.createGain();
-  bodyGain.gain.setValueAtTime(0.0001, now);
-  bodyGain.gain.exponentialRampToValueAtTime(0.28, now + 0.003);
-  bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-  body.connect(bodyGain);
-  bodyGain.connect(ctx.destination);
-  body.start(now);
-  body.stop(now + 0.07);
+  // Soft pluck — tactile but not piercing.
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(360, now);
+  osc.frequency.exponentialRampToValueAtTime(140, now + 0.04);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.14, now + 0.004);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
 
-  // Tick: tiny muted noise transient for the contact.
-  const tickFrames = Math.floor(ctx.sampleRate * 0.012);
-  const tickBuf = ctx.createBuffer(1, tickFrames, ctx.sampleRate);
-  const tickData = tickBuf.getChannelData(0);
-  for (let i = 0; i < tickFrames; i += 1) {
-    tickData[i] = (Math.random() * 2 - 1) * (1 - i / tickFrames);
-  }
-  const tick = ctx.createBufferSource();
-  tick.buffer = tickBuf;
-  const tickLp = ctx.createBiquadFilter();
-  tickLp.type = 'lowpass';
-  tickLp.frequency.value = 2200;
-  tickLp.Q.value = 0.7;
-  const tickGain = ctx.createGain();
-  tickGain.gain.setValueAtTime(0.0001, now);
-  tickGain.gain.exponentialRampToValueAtTime(0.12, now + 0.001);
-  tickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
-  tick.connect(tickLp);
-  tickLp.connect(tickGain);
-  tickGain.connect(ctx.destination);
-  tick.start(now);
-  tick.stop(now + 0.02);
+  // Gentle low-pass to take the edge off
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 1400;
+  lp.Q.value = 0.6;
+
+  osc.connect(lp);
+  lp.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.11);
 };
 
 const TRIGGER_LABELS = {
@@ -245,14 +232,14 @@ if (kbGrid) {
     }
 
     playClick();
-    key.classList.add('is-pressed');
-    setTimeout(() => key.classList.remove('is-pressed'), 140);
-  });
 
-  kbGrid.addEventListener('dblclick', (e) => {
-    const key = e.target.closest('.kb-key');
-    if (!key || !key.dataset.target) return;
-    fireKey(key);
+    // Single click fires the action on any key wired with data-target.
+    if (key.dataset.target) {
+      fireKey(key);
+    } else {
+      key.classList.add('is-pressed');
+      setTimeout(() => key.classList.remove('is-pressed'), 140);
+    }
   });
 }
 
@@ -278,3 +265,51 @@ if (revealElements.length > 0 && 'IntersectionObserver' in window) {
 } else {
   revealElements.forEach((el) => el.classList.add('revealed'));
 }
+
+/* ================================================================
+   Showcase video — autoplay on enter, pause on exit. Falls back to
+   manual controls if the user prefers reduced motion.
+   ================================================================ */
+const showcaseVideos = document.querySelectorAll('.mac-video');
+
+if (showcaseVideos.length > 0 && 'IntersectionObserver' in window && !prefersReducedMotion.matches) {
+  const videoObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    },
+    { threshold: 0.25 },
+  );
+  showcaseVideos.forEach((v) => videoObserver.observe(v));
+} else if (prefersReducedMotion.matches) {
+  showcaseVideos.forEach((v) => v.setAttribute('controls', ''));
+}
+
+/* ================================================================
+   Center-scroll links (data-center-scroll) — vertically center the
+   target element in the viewport instead of pinning it to the top.
+   ================================================================ */
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('a[data-center-scroll]');
+  if (!link) return;
+  const hash = link.getAttribute('href');
+  if (!hash || !hash.startsWith('#')) return;
+  const target = document.querySelector(hash);
+  if (!target) return;
+  e.preventDefault();
+  const rect = target.getBoundingClientRect();
+  const absoluteTop = rect.top + window.pageYOffset;
+  const offset = absoluteTop - (window.innerHeight - rect.height) / 2;
+  window.scrollTo({
+    top: Math.max(0, offset),
+    behavior: prefersReducedMotion.matches ? 'auto' : 'smooth',
+  });
+  // Update the URL hash without re-triggering default jump.
+  history.replaceState(null, '', hash);
+});

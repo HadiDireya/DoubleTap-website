@@ -82,57 +82,25 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 });
 
 /* ================================================================
-   Tier selector — switch pricing + Gumroad variant
+   Pricing cards — point each card's CTA at its Gumroad variant
    ================================================================ */
 const GUMROAD_BASE_URL = 'https://hadidireya.gumroad.com/l/DoubleTap';
-const tierSelector = document.getElementById('tier-selector');
-const priceDisplay = document.getElementById('price-display');
-const breakdownPrice = document.getElementById('breakdown-price');
-const breakdownTotal = document.getElementById('breakdown-total');
-const buyBtn = document.querySelector('.pricing-buy-btn');
 
-if (tierSelector && priceDisplay && breakdownPrice && breakdownTotal) {
-  const tiers = tierSelector.querySelectorAll('.pricing-tier');
-  const radios = tierSelector.querySelectorAll('input[name="tier"]');
+document.querySelectorAll('.price-card').forEach((card) => {
+  const cta = card.querySelector('.price-card-cta');
+  if (!cta) return;
 
-  const updateTier = (selectedRadio) => {
-    const price = selectedRadio.value;
-    const formatted = `$${price}`;
+  const { name, price } = card.dataset;
+  if (!name || !price) return;
 
-    priceDisplay.textContent = formatted;
-    breakdownPrice.textContent = formatted;
-    breakdownTotal.textContent = formatted;
-
-    tiers.forEach((tier) => tier.classList.remove('pricing-tier-selected'));
-    selectedRadio.closest('.pricing-tier').classList.add('pricing-tier-selected');
-
-    if (buyBtn) {
-      const variant = selectedRadio.dataset.name || '';
-      const params = new URLSearchParams();
-      if (variant) params.set('variant', variant);
-      params.set('option', variant);
-      params.set('price', price);
-      params.set('wanted', 'true');
-      buyBtn.href = `${GUMROAD_BASE_URL}?${params.toString()}`;
-    }
-  };
-
-  radios.forEach((radio) => {
-    radio.addEventListener('change', () => updateTier(radio));
+  const params = new URLSearchParams({
+    variant: name,
+    option: name,
+    price,
+    wanted: 'true',
   });
-
-  tiers.forEach((tier) => {
-    tier.addEventListener('click', () => {
-      const radio = tier.querySelector('input[type="radio"]');
-      if (!radio) return;
-      radio.checked = true;
-      updateTier(radio);
-    });
-  });
-
-  const initialRadio = tierSelector.querySelector('input[name="tier"]:checked');
-  if (initialRadio) updateTier(initialRadio);
-}
+  cta.href = `${GUMROAD_BASE_URL}?${params.toString()}`;
+});
 
 /* ================================================================
    Scroll reveal
