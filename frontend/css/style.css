@@ -3090,15 +3090,20 @@ body.light {
   color: var(--color-text);
 }
 
-/* Board */
+/* Board — Trello-style: fixed-width columns with horizontal scroll */
 .roadmap-board {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
   gap: var(--space-4);
-  align-items: start;
+  align-items: flex-start;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-block-end: var(--space-4);
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
 }
 
 .roadmap-column {
+  flex: 0 0 300px;
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-2xl);
@@ -3107,6 +3112,7 @@ body.light {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  scroll-snap-align: start;
 }
 
 .roadmap-column-head {
@@ -3332,15 +3338,21 @@ body.light {
   cursor: pointer;
 }
 
-/* Dialog */
+/* Dialog — explicitly centered via transform (overrides default auto-margin) */
 .roadmap-dialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
   border: var(--border-width) solid var(--color-line-strong);
   border-radius: var(--radius-2xl);
   background: var(--color-bg-elevated);
   color: var(--color-text);
   padding: 0;
   max-width: 480px;
-  width: calc(100% - var(--space-8));
+  width: calc(100vw - var(--space-8));
+  max-height: calc(100vh - var(--space-8));
+  overflow: auto;
   box-shadow: var(--shadow-hud);
 }
 
@@ -3576,15 +3588,6 @@ body.light {
   letter-spacing: var(--letter-spacing-wide);
 }
 
-@media (max-width: 1100px) {
-  .roadmap-board {
-    grid-template-columns: repeat(5, minmax(280px, 1fr));
-    overflow-x: auto;
-    padding-block-end: var(--space-4);
-    scrollbar-width: thin;
-  }
-}
-
 @media (max-width: 720px) {
   .roadmap-page {
     padding-block: var(--space-12) var(--space-12);
@@ -3599,6 +3602,9 @@ body.light {
   }
   .roadmap-title {
     font-size: var(--font-size-2xl);
+  }
+  .roadmap-column {
+    flex: 0 0 280px;
   }
 }
 
