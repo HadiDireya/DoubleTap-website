@@ -387,7 +387,12 @@ suggestSubmit.addEventListener('click', async () => {
     setTimeout(() => suggestDialog.close(), 600);
     loadBoard();
   } catch (err) {
-    setMsg(suggestMsg, err.message === 'unauthorized' ? 'Please sign in.' : 'Could not submit.', 'error');
+    let msg = 'Could not submit.';
+    if (err.message === 'unauthorized') msg = 'Please sign in.';
+    else if (err.message === 'title_invalid') msg = 'Title must be 3–120 characters.';
+    else if (err.message === 'body_invalid') msg = 'Details must be 10–2000 characters.';
+    else if (err.message) msg = `Could not submit: ${err.message}`;
+    setMsg(suggestMsg, msg, 'error');
   } finally {
     suggestSubmit.disabled = false;
   }
