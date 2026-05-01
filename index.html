@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DoubleTap — Tap ⌥⌥ do anything</title>
-  <meta name="description" content="Double-tap any modifier or function key on your Mac to open an app, run a shortcut, or play back a sequence of keystrokes — without lifting your hands off the keyboard.">
+  <title>DoubleTap — Tap any modifier key. Launch anything.</title>
+  <meta name="description" content="DoubleTap turns ⌘, ⌥, ⌃, ⇧, fn, and F-keys into instant triggers for apps, Shortcuts, shell commands, and multi-step keystroke chains — built native for macOS.">
   <meta name="theme-color" content="#000000">
   <link rel="icon" type="image/png" href="assets/icons/icon-dark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,14 +26,13 @@
       <span>DoubleTap</span>
     </a>
     <div class="nav-links" id="nav-links">
-      <a href="#triggers">Triggers</a>
-      <a href="#actions">Actions</a>
-      <a href="#showcase">Screenshots</a>
-      <a href="#fkeys">F-keys</a>
-      <a href="pricing.html">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#use-cases">Use cases</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
       <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
-        <svg class="btn-icon" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        Download
+        Try free
       </a>
     </div>
     <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
@@ -53,581 +52,400 @@
 <main id="main">
 
 <!-- ============================================================
-     HERO — Terminal variant
+     HERO — centered, with the full keyboard graphic below
      ============================================================ -->
 <section class="hero" id="hero">
   <div class="hero-inner">
-    <div class="hero-left">
-      <div class="eyebrow"><span class="dot"></span> macOS 13+ · Apple Silicon &amp; Intel</div>
+    <div class="hero-copy">
+      <div class="eyebrow eyebrow-quiet">Native macOS · 13+ · Apple Silicon &amp; Intel</div>
 
       <h1 class="hero-headline">
-        Tap <span class="flip-word" aria-label="twice"><span class="flip-card"><span class="flip-face flip-once" aria-hidden="true">once</span><span class="flip-face flip-twice" aria-hidden="true">twice</span></span></span><br>
-        <span class="muted">do</span> anything.
+        Double-tap any modifier key.<br>
+        <span class="muted">Launch anything.</span>
       </h1>
 
       <p class="hero-sub">
-        Double-tap ⌘, ⌥, ⌃, ⇧, fn or any F-key and DoubleTap instantly opens an app, runs a shortcut, or plays back a sequence of keystrokes. Your pinky finally earns its keep.
+        DoubleTap turns <span class="kbd">⌘</span> <span class="kbd">⌥</span> <span class="kbd">⌃</span> <span class="kbd">⇧</span> <span class="kbd">fn</span>, and F-keys into instant triggers — for apps, Shortcuts, shell commands, and multi-step keystroke chains. Built native for macOS.
       </p>
+
+      <div class="hero-demo" aria-label="Double-tap demo">
+        <div class="key key-lg key-mod" id="tap-key" data-side="left" data-mod="option">
+          <span class="key-stack">
+            <img class="key-glyph" id="tap-key-svg" src="assets/keys/option.svg" alt="" width="22" height="22" role="presentation">
+            <span class="key-name" id="tap-key-name">option</span>
+          </span>
+        </div>
+        <span class="hero-demo-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <div class="hero-demo-action" id="action-slot" aria-live="polite">
+          <div class="action-item active">
+            <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm key-space" aria-label="space"><span class="sr-only">space</span></span>
+            <span class="note">Spotlight</span>
+          </div>
+          <div class="action-item">
+            <span class="prompt">$</span><span>open -a "Safari"</span>
+          </div>
+          <div class="action-item">
+            <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">A</span>
+            <span class="arr">→</span>
+            <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">C</span>
+          </div>
+          <div class="action-item">
+            <span class="prompt">$</span><span>shortcuts run "Focus"</span>
+          </div>
+        </div>
+      </div>
 
       <div class="hero-ctas">
         <a class="btn btn-primary btn-lg" href="https://hadidireya.gumroad.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
-          <svg class="btn-icon" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-          Download Free Trial
+          Try DoubleTap Free
         </a>
-        <a class="btn-link" href="pricing.html">See pricing →</a>
+        <a class="btn-link" href="#showcase">Watch 30-sec demo →</a>
       </div>
 
-      <div class="hero-meta">
-        <div class="hero-meta-stat"><div class="n">20</div><div class="l">Trigger keys</div></div>
-        <div class="hero-meta-stat"><div class="n">3</div><div class="l">Step sequences</div></div>
-        <div class="hero-meta-stat"><div class="n">14d</div><div class="l">Free trial</div></div>
-        <div class="hero-meta-stat"><div class="n">0</div><div class="l">Telemetry</div></div>
-      </div>
-    </div>
-
-    <div class="hero-right">
-      <div class="demo-panel">
-        <div class="panel-head">
-          <div class="left"><span class="dot"></span> Live · Listening</div>
-          <div>doubletap.app</div>
-        </div>
-
-        <div class="tap">
-          <div class="key key-lg key-mod" id="tap-key" data-side="left" data-mod="option">
-            <span class="key-stack">
-              <img class="key-glyph" id="tap-key-svg" src="assets/keys/option.svg" alt="" width="22" height="22" role="presentation">
-              <span class="key-name" id="tap-key-name">option</span>
-            </span>
-          </div>
-          <div class="tap-meta">
-            <div class="tap-label" id="tap-label">Left Option</div>
-            <div class="tap-pulses">
-              <div class="tap-pulse"></div>
-              <div class="tap-pulse"></div>
-            </div>
-            <div class="tap-sub">tap · tap · within 0.30s</div>
-          </div>
-        </div>
-
-        <div class="arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <path d="M12 4v16M6 14l6 6 6-6"/>
-          </svg>
-        </div>
-
-        <div class="action">
-          <div class="action-label">Fires</div>
-          <div class="action-slot" id="action-slot" aria-live="polite">
-            <div class="action-item active">
-              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm key-space" aria-label="space"><span class="sr-only">space</span></span>
-              <span class="note">— Spotlight</span>
-            </div>
-            <div class="action-item">
-              <span class="prompt">$</span><span>open -a "Safari"</span>
-            </div>
-            <div class="action-item">
-              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">A</span>
-              <span class="arr">→</span>
-              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm">C</span>
-              <span class="arr">→</span>
-              <span class="key key-sm key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span><span class="key key-sm key-mod" data-side="left" data-mod="tab"><span class="key-stack"><img class="key-glyph" src="assets/keys/tab.svg" alt=""><span class="key-name">tab</span></span></span>
-            </div>
-            <div class="action-item">
-              <span class="prompt">$</span><span>shortcuts run "Focus Mode"</span>
-            </div>
-          </div>
-          <div class="action-indicators" id="action-indicators" aria-hidden="true">
-            <div class="i on"></div><div class="i"></div><div class="i"></div><div class="i"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     TRIGGERS — "Your modifier keys just got a second job"
-     ============================================================ -->
-<section class="site-section triggers" id="triggers" aria-label="Triggers">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Triggers</div>
-      <h2 class="section-title">Your modifier keys just got a second job.</h2>
-      <p class="section-subtitle">DoubleTap turns <span class="key key-xs"><img class="key-glyph" src="assets/keys/command.svg" alt="command"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/control.svg" alt="control"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/shift.svg" alt="shift"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/globe.svg" alt="fn"></span> and every F-key into double-tap triggers. Left and right keys count separately, giving you twenty different triggers — no finger-twisting combinations to remember.</p>
-    </div>
-
-    <div class="triggers-stack">
-      <div class="triggers-frame reveal">
-        <div class="panel-head">
-          <div class="left"><span>◆ Keyboard map</span></div>
-          <div>Double-click a modifier or F-key to fire</div>
-        </div>
-
-        <div class="kb-stage" role="group" aria-label="Interactive Magic Keyboard">
-          <div class="kb-hud" id="kb-hud" aria-live="polite">
-            <span class="kb-hud-dot"></span>
-            <span class="kb-hud-label" id="kb-hud-label">Spotlight opened</span>
-          </div>
-
-          <div class="kb-hint" id="kb-hint" aria-hidden="true">
-            <span class="kb-hint-label">Double-click me</span>
-            <span class="kb-hint-arrow">↓</span>
-          </div>
-
-          <div class="kb">
-            <div class="kb-grid">
-              <!-- Function row (y=33.0938) -->
-              <button type="button" class="kb-key kb-fn kb-fn-esc" style="left: 33.0938px; top: 33.0938px; width: 172.708px;"><span class="kb-sym kb-sym-bl">esc</span></button>
-              <button type="button" class="kb-key kb-fn" data-fn="F1" data-target="f1" style="left: 218.212px; top: 33.0938px;" aria-label="Double-tap F1">
-                <img class="kb-fn-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F1</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F2" data-target="f2" style="left: 344.383px; top: 33.0938px;" aria-label="Double-tap F2">
-                <img class="kb-fn-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F2</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F3" data-target="f3" style="left: 470.553px; top: 33.0938px;" aria-label="Double-tap F3">
-                <img class="kb-fn-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F3</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F4" data-target="f4" style="left: 596.723px; top: 33.0938px;" aria-label="Double-tap F4">
-                <svg class="kb-fn-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg>
-                <span class="kb-fn-label">F4</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F5" data-target="f5" style="left: 722.893px; top: 33.0938px;" aria-label="Double-tap F5">
-                <img class="kb-fn-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F5</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F6" data-target="f6" style="left: 849.064px; top: 33.0938px;" aria-label="Double-tap F6">
-                <img class="kb-fn-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F6</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F7" data-target="f7" style="left: 975.234px; top: 33.0938px;" aria-label="Double-tap F7">
-                <img class="kb-fn-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F7</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F8" data-target="f8" style="left: 1101.4px; top: 33.0938px;" aria-label="Double-tap F8">
-                <img class="kb-fn-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F8</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F9" data-target="f9" style="left: 1227.57px; top: 33.0938px;" aria-label="Double-tap F9">
-                <img class="kb-fn-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F9</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F10" data-target="f10" style="left: 1353.74px; top: 33.0938px;" aria-label="Double-tap F10">
-                <img class="kb-fn-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F10</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F11" data-target="f11" style="left: 1479.91px; top: 33.0938px;" aria-label="Double-tap F11">
-                <img class="kb-fn-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F11</span>
-              </button>
-              <button type="button" class="kb-key kb-fn" data-fn="F12" data-target="f12" style="left: 1606.08px; top: 33.0938px;" aria-label="Double-tap F12">
-                <img class="kb-fn-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true">
-                <span class="kb-fn-label">F12</span>
-              </button>
-              <button type="button" class="kb-key kb-fn kb-touchid" style="left: 1732.26px; top: 33.0938px;" aria-label="Touch ID / Power"></button>
-
-              <!-- Number row (y=158.747) -->
-              <button type="button" class="kb-key kb-dual" style="left: 33.0938px; top: 158.747px;"><span class="kb-t">±</span><span class="kb-b">§</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 159.264px; top: 158.747px;"><span class="kb-t">!</span><span class="kb-b">1</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 285.434px; top: 158.747px;"><span class="kb-t">@</span><span class="kb-b">2</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 411.605px; top: 158.747px;"><span class="kb-t">#</span><span class="kb-b">3</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 537.775px; top: 158.747px;"><span class="kb-t">$</span><span class="kb-b">4</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 663.945px; top: 158.747px;"><span class="kb-t">%</span><span class="kb-b">5</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 790.115px; top: 158.747px;"><span class="kb-t">^</span><span class="kb-b">6</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 916.285px; top: 158.747px;"><span class="kb-t">&amp;</span><span class="kb-b">7</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1042.46px; top: 158.747px;"><span class="kb-t">*</span><span class="kb-b">8</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1168.63px; top: 158.747px;"><span class="kb-t">(</span><span class="kb-b">9</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1294.8px; top: 158.747px;"><span class="kb-t">)</span><span class="kb-b">0</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1420.97px; top: 158.747px;"><span class="kb-t">_</span><span class="kb-b">-</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1547.14px; top: 158.747px;"><span class="kb-t">+</span><span class="kb-b">=</span></button>
-              <button type="button" class="kb-key kb-w-delete" style="left: 1673.31px; top: 158.747px; width: 173.226px;" aria-label="delete"><img class="kb-sym-img kb-sym-br" src="assets/keys/delete.left.svg" alt=""></button>
-
-              <!-- QWERTY row (y=284.4) -->
-              <button type="button" class="kb-key kb-w-tab" style="left: 33.0938px; top: 284.4px; width: 160.815px;" aria-label="tab"><img class="kb-sym-img kb-sym-bl" src="assets/keys/tab.svg" alt=""></button>
-              <button type="button" class="kb-key" style="left: 206.319px; top: 284.4px;">Q</button>
-              <button type="button" class="kb-key" style="left: 332.49px; top: 284.4px;">W</button>
-              <button type="button" class="kb-key" style="left: 458.66px; top: 284.4px;">E</button>
-              <button type="button" class="kb-key" style="left: 584.83px; top: 284.4px;">R</button>
-              <button type="button" class="kb-key" style="left: 711px; top: 284.4px;">T</button>
-              <button type="button" class="kb-key" style="left: 837.17px; top: 284.4px;">Y</button>
-              <button type="button" class="kb-key" style="left: 963.341px; top: 284.4px;">U</button>
-              <button type="button" class="kb-key" style="left: 1089.51px; top: 284.4px;">I</button>
-              <button type="button" class="kb-key" style="left: 1215.68px; top: 284.4px;">O</button>
-              <button type="button" class="kb-key" style="left: 1341.85px; top: 284.4px;">P</button>
-              <button type="button" class="kb-key kb-dual" style="left: 1468.02px; top: 284.4px;"><span class="kb-t">{</span><span class="kb-b">[</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1594.19px; top: 284.4px;"><span class="kb-t">}</span><span class="kb-b">]</span></button>
-
-              <!-- ASDF row (y=410.053) -->
-              <button type="button" class="kb-key kb-w-caps" style="left: 33.0938px; top: 410.053px; width: 200.114px;" aria-label="caps lock">
-                <span class="kb-sym kb-sym-tl kb-sym-sm">•</span>
-                <img class="kb-sym-img kb-sym-bl" src="assets/keys/capslock.svg" alt="">
-              </button>
-              <button type="button" class="kb-key" style="left: 245.618px; top: 410.053px;">A</button>
-              <button type="button" class="kb-key" style="left: 371.789px; top: 410.053px;">S</button>
-              <button type="button" class="kb-key" style="left: 497.959px; top: 410.053px;">D</button>
-              <button type="button" class="kb-key" style="left: 624.129px; top: 410.053px;">F</button>
-              <button type="button" class="kb-key" style="left: 750.299px; top: 410.053px;">G</button>
-              <button type="button" class="kb-key" style="left: 876.469px; top: 410.053px;">H</button>
-              <button type="button" class="kb-key" style="left: 1002.64px; top: 410.053px;">J</button>
-              <button type="button" class="kb-key" style="left: 1128.81px; top: 410.053px;">K</button>
-              <button type="button" class="kb-key" style="left: 1254.98px; top: 410.053px;">L</button>
-              <button type="button" class="kb-key kb-dual" style="left: 1381.15px; top: 410.053px;"><span class="kb-t">:</span><span class="kb-b">;</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1507.32px; top: 410.053px;"><span class="kb-t">"</span><span class="kb-b">'</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1633.49px; top: 410.053px;"><span class="kb-t">|</span><span class="kb-b">\</span></button>
-              <button type="button" class="kb-key kb-w-return-iso" style="left: 1720.36px; top: 284.4px; width: 126.18px; height: 238.896px;" aria-label="return"><img class="kb-sym-img kb-sym-return" src="assets/keys/return.svg" alt=""></button>
-
-              <!-- ZXCV row (y=535.706) -->
-              <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift is-target" data-target="lshift" style="left: 33.0938px; top: 535.706px; width: 141.683px;" aria-label="Double-tap left shift">
-                <img class="kb-sym-img kb-sym-bl" src="assets/keys/shift.svg" alt="">
-              </button>
-              <button type="button" class="kb-key kb-dual" style="left: 187.187px; top: 535.706px;"><span class="kb-t">~</span><span class="kb-b">`</span></button>
-              <button type="button" class="kb-key" style="left: 313.357px; top: 535.706px;">Z</button>
-              <button type="button" class="kb-key" style="left: 439.527px; top: 535.706px;">X</button>
-              <button type="button" class="kb-key" style="left: 565.698px; top: 535.706px;">C</button>
-              <button type="button" class="kb-key" style="left: 691.868px; top: 535.706px;">V</button>
-              <button type="button" class="kb-key" style="left: 818.038px; top: 535.706px;">B</button>
-              <button type="button" class="kb-key" style="left: 944.208px; top: 535.706px;">N</button>
-              <button type="button" class="kb-key" style="left: 1070.38px; top: 535.706px;">M</button>
-              <button type="button" class="kb-key kb-dual" style="left: 1196.55px; top: 535.706px;"><span class="kb-t">&lt;</span><span class="kb-b">,</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1322.72px; top: 535.706px;"><span class="kb-t">&gt;</span><span class="kb-b">.</span></button>
-              <button type="button" class="kb-key kb-dual" style="left: 1448.89px; top: 535.706px;"><span class="kb-t">?</span><span class="kb-b">/</span></button>
-              <button type="button" class="kb-key kb-w-shift-r kb-mod kb-shift" data-target="rshift" style="left: 1575.06px; top: 535.706px; width: 270.439px;" aria-label="Double-tap right shift">
-                <img class="kb-sym-img kb-sym-br" src="assets/keys/shift.svg" alt="">
-              </button>
-
-              <!-- Bottom row (y=661.359) + arrow cluster -->
-              <button type="button" class="kb-key kb-mod" data-target="fn" style="left: 33.0938px; top: 661.359px;" aria-label="Double-tap fn">
-                <img class="kb-mod-svg" src="assets/keys/globe.svg" alt="">
-                <span class="kb-mod-name">fn</span>
-              </button>
-              <button type="button" class="kb-key kb-mod" data-target="lctrl" style="left: 159.264px; top: 661.359px;" aria-label="Double-tap left control">
-                <span class="kb-mod-stack">
-                  <img class="kb-mod-svg" src="assets/keys/control.svg" alt="">
-                  <span class="kb-mod-name">control</span>
-                </span>
-              </button>
-              <button type="button" class="kb-key kb-mod" data-target="lopt" style="left: 285.434px; top: 661.359px;" aria-label="Double-tap left option">
-                <span class="kb-mod-stack">
-                  <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
-                  <span class="kb-mod-name">option</span>
-                </span>
-              </button>
-              <button type="button" class="kb-key kb-mod kb-w-cmd" data-target="lcmd" style="left: 411.605px; top: 661.359px; width: 143.234px;" aria-label="Double-tap left command">
-                <span class="kb-mod-stack">
-                  <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
-                  <span class="kb-mod-name">command</span>
-                </span>
-              </button>
-              <button type="button" class="kb-key kb-w-space" style="left: 567.249px; top: 661.359px; width: 618.958px;" aria-label="space"><span class="sr-only">space</span></button>
-              <button type="button" class="kb-key kb-mod kb-w-cmd kb-mod-r" data-target="rcmd" style="left: 1198.62px; top: 661.359px; width: 143.234px;" aria-label="Double-tap right command">
-                <span class="kb-mod-stack">
-                  <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
-                  <span class="kb-mod-name">command</span>
-                </span>
-              </button>
-              <button type="button" class="kb-key kb-mod kb-mod-r" data-target="ropt" style="left: 1354.26px; top: 661.359px;" aria-label="Double-tap right option">
-                <span class="kb-mod-stack">
-                  <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
-                  <span class="kb-mod-name">option</span>
-                </span>
-              </button>
-
-              <!-- Arrow cluster -->
-              <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1480.43px; top: 721.859px;" aria-label="left arrow"><span aria-hidden="true">◀</span></button>
-              <button type="button" class="kb-key kb-arrow kb-arrow-up" style="left: 1606.6px; top: 661.359px;" aria-label="up arrow"><span aria-hidden="true">▲</span></button>
-              <button type="button" class="kb-key kb-arrow kb-arrow-down" style="left: 1606.6px; top: 719.274px;" aria-label="down arrow"><span aria-hidden="true">▼</span></button>
-              <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1732.77px; top: 721.859px;" aria-label="right arrow"><span aria-hidden="true">▶</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="triggers-below reveal">
-        <div class="triggers-stats">
-          <div class="cell">
-            <div class="n">8</div>
-            <div class="l">Modifier triggers</div>
-          </div>
-          <div class="cell">
-            <div class="n">12</div>
-            <div class="l">Function keys</div>
-          </div>
-          <div class="cell">
-            <div class="n">L · R</div>
-            <div class="l">Side-aware</div>
-          </div>
-          <div class="cell">
-            <div class="n">0.20–0.50s</div>
-            <div class="l">Tap window</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     ACTIONS — shortcuts, chains, shell commands
-     ============================================================ -->
-<section class="site-section actions" id="actions" aria-label="Actions">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Actions</div>
-      <h2 class="section-title">Tap twice. Do anything.</h2>
-      <p class="section-subtitle">Trigger a single shortcut, play back a sequence of keystrokes, or run any command on your Mac. Every trigger is yours to assign.</p>
-    </div>
-
-    <div class="actions-grid reveal-stagger">
-      <div class="action-card reveal">
-        <div class="action-card-info">
-          <div class="action-card-eyebrow">01 · Shortcut</div>
-          <h3 class="action-card-title">Any keyboard shortcut</h3>
-          <p class="action-card-desc">Any combination of <span class="key key-xs"><img class="key-glyph" src="assets/keys/command.svg" alt="command"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/option.svg" alt="option"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/control.svg" alt="control"></span> <span class="key key-xs"><img class="key-glyph" src="assets/keys/shift.svg" alt="shift"></span> plus a key. One shortcut per trigger — no conflicts, no modes to remember.</p>
-        </div>
-        <div class="action-card-preview">
-          <div class="line">
-            <span class="key key-md key-mod" data-side="left" data-mod="option"><span class="key-stack"><img class="key-glyph" src="assets/keys/option.svg" alt=""><span class="key-name">option</span></span></span>
-            <span class="mul">×2</span>
-            <span class="arr">→</span>
-            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="plus">+</span>
-            <span class="key key-md key-space" aria-label="space"><span class="sr-only">space</span></span>
-          </div>
-          <div class="line">
-            <span class="key key-md key-mod" data-mod="fn"><span class="key-stack"><img class="key-glyph" src="assets/keys/globe.svg" alt=""><span class="key-name">fn</span></span></span>
-            <span class="mul">×2</span>
-            <span class="arr">→</span>
-            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="plus">+</span>
-            <span class="key key-md key-mod key-w-shift" data-side="left" data-mod="shift"><span class="key-stack"><img class="key-glyph" src="assets/keys/shift.svg" alt=""><span class="key-name">shift</span></span></span>
-            <span class="plus">+</span>
-            <span class="key key-md">4</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-card reveal">
-        <div class="action-card-info">
-          <div class="action-card-eyebrow">02 · Chain</div>
-          <h3 class="action-card-title">Multi-step sequences</h3>
-          <p class="action-card-desc">One double-tap can play back up to three keystrokes in a row — each with its own modifiers. Perfect for repetitive actions like Select All → Copy → Switch window.</p>
-        </div>
-        <div class="action-card-preview">
-          <div class="line">
-            <span class="key key-md key-mod key-w-cmd" data-side="right" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="mul">×2</span>
-            <span class="arr">→</span>
-          </div>
-          <div class="line">
-            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="key key-md">A</span>
-            <span class="arr">→</span>
-            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="key key-md">C</span>
-            <span class="arr">→</span>
-            <span class="key key-md key-mod key-w-cmd" data-side="left" data-mod="command"><span class="key-stack"><img class="key-glyph" src="assets/keys/command.svg" alt=""><span class="key-name">command</span></span></span>
-            <span class="key key-md key-mod" data-side="left" data-mod="tab"><span class="key-stack"><img class="key-glyph" src="assets/keys/tab.svg" alt=""><span class="key-name">tab</span></span></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="action-card reveal">
-        <div class="action-card-info">
-          <div class="action-card-eyebrow">03 · Shell</div>
-          <h3 class="action-card-title">Run any command</h3>
-          <p class="action-card-desc">Open websites, launch apps, run a Shortcut, or execute your own script. Runs quietly in the background so nothing skips a beat.</p>
-        </div>
-        <div class="action-card-preview">
-          <div class="line"><span class="prompt">$</span> open -a "Safari"</div>
-          <div class="line"><span class="prompt">$</span> open https://apple.com</div>
-          <div class="line"><span class="prompt">$</span> shortcuts run "Toggle&nbsp;Focus"</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     F-KEYS — reclaimed when paused
-     ============================================================ -->
-<section class="site-section fkeys" id="fkeys" aria-label="F-keys reclaimed">
-  <div class="container">
-    <div class="section-header left reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> F-keys reclaimed</div>
-      <h2 class="section-title">The F-row doesn't go dumb when DoubleTap is paused.</h2>
-    </div>
-
-    <div class="fkeys-wrap">
-      <p class="fkeys-note fkeys-intro reveal">
-        <strong>Standard function keys on, media controls on — at the same time.</strong>
-        No trip to System Settings. Hold <span class="key key-xs">F1</span> <span class="key key-xs">F2</span> <span class="key key-xs">F5</span> <span class="key key-xs">F6</span> <span class="key key-xs">F11</span> <span class="key key-xs">F12</span> and it ramps at the system key-repeat cadence.
+      <p class="hero-trust-line">
+        14-day free trial · No credit card · macOS 13+ · Zero telemetry
       </p>
+    </div>
 
-      <div class="fkeys-row reveal" aria-hidden="true">
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/sun.min.svg" alt=""><span class="key-fn-label">F1</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/sun.max.svg" alt=""><span class="key-fn-label">F2</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/squares.svg" alt=""><span class="key-fn-label">F3</span></div>
-        <div class="key key-fn"><svg class="key-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg><span class="key-fn-label">F4</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/light.min.svg" alt=""><span class="key-fn-label">F5</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/light.max.svg" alt=""><span class="key-fn-label">F6</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/backward.svg" alt=""><span class="key-fn-label">F7</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/playpause.svg" alt=""><span class="key-fn-label">F8</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/forward.svg" alt=""><span class="key-fn-label">F9</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/mute.svg" alt=""><span class="key-fn-label">F10</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt=""><span class="key-fn-label">F11</span></div>
-        <div class="key key-fn"><img class="key-glyph" src="assets/keys/speaker.up.3.svg" alt=""><span class="key-fn-label">F12</span></div>
+    <!-- Keyboard graphic — preserved byte-for-byte from the original Triggers section -->
+    <div class="hero-keyboard">
+      <div class="kb-stage" role="group" aria-label="Interactive Magic Keyboard">
+        <div class="kb-hud" id="kb-hud" aria-live="polite">
+          <span class="kb-hud-dot"></span>
+          <span class="kb-hud-label" id="kb-hud-label">Spotlight opened</span>
+        </div>
+
+        <div class="kb-hint" id="kb-hint" aria-hidden="true">
+          <span class="kb-hint-label">Double-click me</span>
+          <span class="kb-hint-arrow">↓</span>
+        </div>
+
+        <div class="kb">
+          <div class="kb-grid">
+            <!-- Function row (y=33.0938) -->
+            <button type="button" class="kb-key kb-fn kb-fn-esc" style="left: 33.0938px; top: 33.0938px; width: 172.708px;"><span class="kb-sym kb-sym-bl">esc</span></button>
+            <button type="button" class="kb-key kb-fn" data-fn="F1" data-target="f1" style="left: 218.212px; top: 33.0938px;" aria-label="Double-tap F1">
+              <img class="kb-fn-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F1</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F2" data-target="f2" style="left: 344.383px; top: 33.0938px;" aria-label="Double-tap F2">
+              <img class="kb-fn-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F2</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F3" data-target="f3" style="left: 470.553px; top: 33.0938px;" aria-label="Double-tap F3">
+              <img class="kb-fn-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F3</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F4" data-target="f4" style="left: 596.723px; top: 33.0938px;" aria-label="Double-tap F4">
+              <svg class="kb-fn-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg>
+              <span class="kb-fn-label">F4</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F5" data-target="f5" style="left: 722.893px; top: 33.0938px;" aria-label="Double-tap F5">
+              <img class="kb-fn-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F5</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F6" data-target="f6" style="left: 849.064px; top: 33.0938px;" aria-label="Double-tap F6">
+              <img class="kb-fn-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F6</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F7" data-target="f7" style="left: 975.234px; top: 33.0938px;" aria-label="Double-tap F7">
+              <img class="kb-fn-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F7</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F8" data-target="f8" style="left: 1101.4px; top: 33.0938px;" aria-label="Double-tap F8">
+              <img class="kb-fn-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F8</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F9" data-target="f9" style="left: 1227.57px; top: 33.0938px;" aria-label="Double-tap F9">
+              <img class="kb-fn-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F9</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F10" data-target="f10" style="left: 1353.74px; top: 33.0938px;" aria-label="Double-tap F10">
+              <img class="kb-fn-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F10</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F11" data-target="f11" style="left: 1479.91px; top: 33.0938px;" aria-label="Double-tap F11">
+              <img class="kb-fn-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F11</span>
+            </button>
+            <button type="button" class="kb-key kb-fn" data-fn="F12" data-target="f12" style="left: 1606.08px; top: 33.0938px;" aria-label="Double-tap F12">
+              <img class="kb-fn-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true">
+              <span class="kb-fn-label">F12</span>
+            </button>
+            <button type="button" class="kb-key kb-fn kb-touchid" style="left: 1732.26px; top: 33.0938px;" aria-label="Touch ID / Power"></button>
+
+            <!-- Number row (y=158.747) -->
+            <button type="button" class="kb-key kb-dual" style="left: 33.0938px; top: 158.747px;"><span class="kb-t">±</span><span class="kb-b">§</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 159.264px; top: 158.747px;"><span class="kb-t">!</span><span class="kb-b">1</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 285.434px; top: 158.747px;"><span class="kb-t">@</span><span class="kb-b">2</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 411.605px; top: 158.747px;"><span class="kb-t">#</span><span class="kb-b">3</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 537.775px; top: 158.747px;"><span class="kb-t">$</span><span class="kb-b">4</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 663.945px; top: 158.747px;"><span class="kb-t">%</span><span class="kb-b">5</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 790.115px; top: 158.747px;"><span class="kb-t">^</span><span class="kb-b">6</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 916.285px; top: 158.747px;"><span class="kb-t">&amp;</span><span class="kb-b">7</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1042.46px; top: 158.747px;"><span class="kb-t">*</span><span class="kb-b">8</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1168.63px; top: 158.747px;"><span class="kb-t">(</span><span class="kb-b">9</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1294.8px; top: 158.747px;"><span class="kb-t">)</span><span class="kb-b">0</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1420.97px; top: 158.747px;"><span class="kb-t">_</span><span class="kb-b">-</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1547.14px; top: 158.747px;"><span class="kb-t">+</span><span class="kb-b">=</span></button>
+            <button type="button" class="kb-key kb-w-delete" style="left: 1673.31px; top: 158.747px; width: 173.226px;" aria-label="delete"><img class="kb-sym-img kb-sym-br" src="assets/keys/delete.left.svg" alt=""></button>
+
+            <!-- QWERTY row (y=284.4) -->
+            <button type="button" class="kb-key kb-w-tab" style="left: 33.0938px; top: 284.4px; width: 160.815px;" aria-label="tab"><img class="kb-sym-img kb-sym-bl" src="assets/keys/tab.svg" alt=""></button>
+            <button type="button" class="kb-key" style="left: 206.319px; top: 284.4px;">Q</button>
+            <button type="button" class="kb-key" style="left: 332.49px; top: 284.4px;">W</button>
+            <button type="button" class="kb-key" style="left: 458.66px; top: 284.4px;">E</button>
+            <button type="button" class="kb-key" style="left: 584.83px; top: 284.4px;">R</button>
+            <button type="button" class="kb-key" style="left: 711px; top: 284.4px;">T</button>
+            <button type="button" class="kb-key" style="left: 837.17px; top: 284.4px;">Y</button>
+            <button type="button" class="kb-key" style="left: 963.341px; top: 284.4px;">U</button>
+            <button type="button" class="kb-key" style="left: 1089.51px; top: 284.4px;">I</button>
+            <button type="button" class="kb-key" style="left: 1215.68px; top: 284.4px;">O</button>
+            <button type="button" class="kb-key" style="left: 1341.85px; top: 284.4px;">P</button>
+            <button type="button" class="kb-key kb-dual" style="left: 1468.02px; top: 284.4px;"><span class="kb-t">{</span><span class="kb-b">[</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1594.19px; top: 284.4px;"><span class="kb-t">}</span><span class="kb-b">]</span></button>
+
+            <!-- ASDF row (y=410.053) -->
+            <button type="button" class="kb-key kb-w-caps" style="left: 33.0938px; top: 410.053px; width: 200.114px;" aria-label="caps lock">
+              <span class="kb-sym kb-sym-tl kb-sym-sm">•</span>
+              <img class="kb-sym-img kb-sym-bl" src="assets/keys/capslock.svg" alt="">
+            </button>
+            <button type="button" class="kb-key" style="left: 245.618px; top: 410.053px;">A</button>
+            <button type="button" class="kb-key" style="left: 371.789px; top: 410.053px;">S</button>
+            <button type="button" class="kb-key" style="left: 497.959px; top: 410.053px;">D</button>
+            <button type="button" class="kb-key" style="left: 624.129px; top: 410.053px;">F</button>
+            <button type="button" class="kb-key" style="left: 750.299px; top: 410.053px;">G</button>
+            <button type="button" class="kb-key" style="left: 876.469px; top: 410.053px;">H</button>
+            <button type="button" class="kb-key" style="left: 1002.64px; top: 410.053px;">J</button>
+            <button type="button" class="kb-key" style="left: 1128.81px; top: 410.053px;">K</button>
+            <button type="button" class="kb-key" style="left: 1254.98px; top: 410.053px;">L</button>
+            <button type="button" class="kb-key kb-dual" style="left: 1381.15px; top: 410.053px;"><span class="kb-t">:</span><span class="kb-b">;</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1507.32px; top: 410.053px;"><span class="kb-t">"</span><span class="kb-b">'</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1633.49px; top: 410.053px;"><span class="kb-t">|</span><span class="kb-b">\</span></button>
+            <button type="button" class="kb-key kb-w-return-iso" style="left: 1720.36px; top: 284.4px; width: 126.18px; height: 238.896px;" aria-label="return"><img class="kb-sym-img kb-sym-return" src="assets/keys/return.svg" alt=""></button>
+
+            <!-- ZXCV row (y=535.706) -->
+            <button type="button" class="kb-key kb-w-shift-l kb-mod kb-shift is-target" data-target="lshift" style="left: 33.0938px; top: 535.706px; width: 141.683px;" aria-label="Double-tap left shift">
+              <img class="kb-sym-img kb-sym-bl" src="assets/keys/shift.svg" alt="">
+            </button>
+            <button type="button" class="kb-key kb-dual" style="left: 187.187px; top: 535.706px;"><span class="kb-t">~</span><span class="kb-b">`</span></button>
+            <button type="button" class="kb-key" style="left: 313.357px; top: 535.706px;">Z</button>
+            <button type="button" class="kb-key" style="left: 439.527px; top: 535.706px;">X</button>
+            <button type="button" class="kb-key" style="left: 565.698px; top: 535.706px;">C</button>
+            <button type="button" class="kb-key" style="left: 691.868px; top: 535.706px;">V</button>
+            <button type="button" class="kb-key" style="left: 818.038px; top: 535.706px;">B</button>
+            <button type="button" class="kb-key" style="left: 944.208px; top: 535.706px;">N</button>
+            <button type="button" class="kb-key" style="left: 1070.38px; top: 535.706px;">M</button>
+            <button type="button" class="kb-key kb-dual" style="left: 1196.55px; top: 535.706px;"><span class="kb-t">&lt;</span><span class="kb-b">,</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1322.72px; top: 535.706px;"><span class="kb-t">&gt;</span><span class="kb-b">.</span></button>
+            <button type="button" class="kb-key kb-dual" style="left: 1448.89px; top: 535.706px;"><span class="kb-t">?</span><span class="kb-b">/</span></button>
+            <button type="button" class="kb-key kb-w-shift-r kb-mod kb-shift" data-target="rshift" style="left: 1575.06px; top: 535.706px; width: 270.439px;" aria-label="Double-tap right shift">
+              <img class="kb-sym-img kb-sym-br" src="assets/keys/shift.svg" alt="">
+            </button>
+
+            <!-- Bottom row (y=661.359) + arrow cluster -->
+            <button type="button" class="kb-key kb-mod" data-target="fn" style="left: 33.0938px; top: 661.359px;" aria-label="Double-tap fn">
+              <img class="kb-mod-svg" src="assets/keys/globe.svg" alt="">
+              <span class="kb-mod-name">fn</span>
+            </button>
+            <button type="button" class="kb-key kb-mod" data-target="lctrl" style="left: 159.264px; top: 661.359px;" aria-label="Double-tap left control">
+              <span class="kb-mod-stack">
+                <img class="kb-mod-svg" src="assets/keys/control.svg" alt="">
+                <span class="kb-mod-name">control</span>
+              </span>
+            </button>
+            <button type="button" class="kb-key kb-mod" data-target="lopt" style="left: 285.434px; top: 661.359px;" aria-label="Double-tap left option">
+              <span class="kb-mod-stack">
+                <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
+                <span class="kb-mod-name">option</span>
+              </span>
+            </button>
+            <button type="button" class="kb-key kb-mod kb-w-cmd" data-target="lcmd" style="left: 411.605px; top: 661.359px; width: 143.234px;" aria-label="Double-tap left command">
+              <span class="kb-mod-stack">
+                <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
+                <span class="kb-mod-name">command</span>
+              </span>
+            </button>
+            <button type="button" class="kb-key kb-w-space" style="left: 567.249px; top: 661.359px; width: 618.958px;" aria-label="space"><span class="sr-only">space</span></button>
+            <button type="button" class="kb-key kb-mod kb-w-cmd kb-mod-r" data-target="rcmd" style="left: 1198.62px; top: 661.359px; width: 143.234px;" aria-label="Double-tap right command">
+              <span class="kb-mod-stack">
+                <img class="kb-mod-svg" src="assets/keys/command.svg" alt="">
+                <span class="kb-mod-name">command</span>
+              </span>
+            </button>
+            <button type="button" class="kb-key kb-mod kb-mod-r" data-target="ropt" style="left: 1354.26px; top: 661.359px;" aria-label="Double-tap right option">
+              <span class="kb-mod-stack">
+                <img class="kb-mod-svg" src="assets/keys/option.svg" alt="">
+                <span class="kb-mod-name">option</span>
+              </span>
+            </button>
+
+            <!-- Arrow cluster -->
+            <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1480.43px; top: 721.859px;" aria-label="left arrow"><span aria-hidden="true">◀</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-up" style="left: 1606.6px; top: 661.359px;" aria-label="up arrow"><span aria-hidden="true">▲</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-down" style="left: 1606.6px; top: 719.274px;" aria-label="down arrow"><span aria-hidden="true">▼</span></button>
+            <button type="button" class="kb-key kb-arrow kb-arrow-half" style="left: 1732.77px; top: 721.859px;" aria-label="right arrow"><span aria-hidden="true">▶</span></button>
+          </div>
+        </div>
       </div>
-
-      <p class="fkeys-note fkeys-outro reveal">
-        <span class="key key-xs">F5</span> <span class="key key-xs">F6</span> control keyboard backlight the way Control Center does — so it actually works on Apple Silicon Macs, where most apps can't touch it.
-      </p>
-
-      <div class="fkeys-list reveal">
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/sun.min.svg" alt="" aria-hidden="true"><span class="key-fn-label">F1</span></span>
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/sun.max.svg" alt="" aria-hidden="true"><span class="key-fn-label">F2</span></span>
-          </div>
-          <span class="label">Display brightness</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/squares.svg" alt="" aria-hidden="true"><span class="key-fn-label">F3</span></span>
-          </div>
-          <span class="label">Mission Control</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><svg class="key-glyph" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><line x1="15" y1="15" x2="20" y2="20"/></svg><span class="key-fn-label">F4</span></span>
-          </div>
-          <span class="label">Spotlight</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/light.min.svg" alt="" aria-hidden="true"><span class="key-fn-label">F5</span></span>
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/light.max.svg" alt="" aria-hidden="true"><span class="key-fn-label">F6</span></span>
-          </div>
-          <span class="label">Keyboard backlight</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/backward.svg" alt="" aria-hidden="true"><span class="key-fn-label">F7</span></span>
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/playpause.svg" alt="" aria-hidden="true"><span class="key-fn-label">F8</span></span>
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/forward.svg" alt="" aria-hidden="true"><span class="key-fn-label">F9</span></span>
-          </div>
-          <span class="label">Previous / Play–Pause / Next</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/mute.svg" alt="" aria-hidden="true"><span class="key-fn-label">F10</span></span>
-          </div>
-          <span class="label">Mute</span>
-        </div>
-        <div class="fkey-item">
-          <div class="k">
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/speaker.lower.1.fill.svg" alt="" aria-hidden="true"><span class="key-fn-label">F11</span></span>
-            <span class="key key-md key-fn"><img class="key-glyph" src="assets/keys/speaker.up.3.svg" alt="" aria-hidden="true"><span class="key-fn-label">F12</span></span>
-          </div>
-          <span class="label">Volume Down / Up</span>
-        </div>
-      </div>
+      <p class="hero-keyboard-caption">Try it. Double-click any modifier or F-key.</p>
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     HUD STYLES — Glass / Notch / Off
+     HOW IT WORKS — three quiet steps
      ============================================================ -->
-<section class="site-section huds" id="huds" aria-label="HUD styles">
+<section class="site-section how" id="how" aria-label="How it works">
   <div class="container">
     <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Feedback HUDs</div>
-      <h2 class="section-title">Know it fired. Your choice of style.</h2>
-      <p class="section-subtitle">Pick the confirmation style that fits your Mac. Prefer silence? That's a first-class option too.</p>
+      <div class="eyebrow eyebrow-quiet">How it works</div>
+      <h2 class="section-title">Set up in thirty seconds.</h2>
+      <p class="section-subtitle">No new shortcuts to memorize — only the keys you already use, with a second job.</p>
     </div>
 
-    <div class="hud-grid reveal-stagger">
-      <div class="hud-card reveal">
-        <div class="panel-head">
-          <div class="left"><span>◆ Glass</span></div>
-          <div>Default</div>
-        </div>
-        <div class="hud-stage">
-          <div class="hud-pill">
-            <span class="hd"></span>
-            <span>Spotlight opened</span>
-          </div>
-        </div>
-        <div>
-          <h3 class="hud-title">Glass</h3>
-          <p class="hud-desc">A centered floating indicator with a subtle animated backdrop. Stays readable on any wallpaper.</p>
-        </div>
-      </div>
+    <ol class="steps reveal-stagger">
+      <li class="step reveal">
+        <div class="step-num">01</div>
+        <h3 class="step-title">Pick a key.</h3>
+        <p class="step-body">Choose any modifier — <span class="kbd">⌘</span> <span class="kbd">⌥</span> <span class="kbd">⌃</span> <span class="kbd">⇧</span> <span class="kbd">fn</span> — or any F-key. Left and right count separately, up to twenty unique triggers.</p>
+      </li>
+      <li class="step reveal">
+        <div class="step-num">02</div>
+        <h3 class="step-title">Choose an action.</h3>
+        <p class="step-body">Open an app, run a Shortcut, fire a multi-step keystroke chain, or execute a shell command. One action per trigger — no modes, no conflicts.</p>
+      </li>
+      <li class="step reveal">
+        <div class="step-num">03</div>
+        <h3 class="step-title">Tap twice.</h3>
+        <p class="step-body">Same key, twice, within your tap window. DoubleTap fires instantly. A subtle HUD confirms it — or stay silent, your choice.</p>
+      </li>
+    </ol>
+  </div>
+</section>
 
-      <div class="hud-card reveal">
-        <div class="panel-head">
-          <div class="left"><span>◆ Notch</span></div>
-          <div>M-series Macs</div>
-        </div>
-        <div class="hud-stage">
-          <div class="hud-notch-wrap">
-            <div class="hud-notch">
-              <span class="hd"></span>
-              <span>Safari opened</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h3 class="hud-title">Notch</h3>
-          <p class="hud-desc">Anchored to the MacBook notch on supported displays. Falls back to Glass elsewhere.</p>
-        </div>
-      </div>
+<!-- ============================================================
+     USE CASES — five real things you do with a double-tap
+     ============================================================ -->
+<section class="site-section use-cases" id="use-cases" aria-label="Real use cases">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="eyebrow eyebrow-quiet">Real use cases</div>
+      <h2 class="section-title">A double-tap for every part of your day.</h2>
+      <p class="section-subtitle">Five things DoubleTap does well. Mix and match — yours will look different.</p>
+    </div>
 
-      <div class="hud-card reveal">
-        <div class="panel-head">
-          <div class="left"><span>◆ Off</span></div>
-          <div>Silent</div>
+    <div class="cases-grid reveal-stagger">
+      <article class="case reveal">
+        <div class="case-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/></svg>
         </div>
-        <div class="hud-stage">
-          <div class="hud-off">Silent · No HUD</div>
+        <h3 class="case-title">Launch apps</h3>
+        <p class="case-body">⌥⌥ opens Spotlight. ⌃⌃ opens Terminal. Whatever lived in your Dock is now keyboard-only.</p>
+      </article>
+
+      <article class="case reveal">
+        <div class="case-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
         </div>
-        <div>
-          <h3 class="hud-title">Off</h3>
-          <p class="hud-desc">Nothing shown. For when the only feedback you need is the app that just opened.</p>
+        <h3 class="case-title">Run Shortcuts</h3>
+        <p class="case-body">Fire any macOS Shortcut on a double-tap. Toggle Focus, start a timer, post a status — without lifting your hands.</p>
+      </article>
+
+      <article class="case reveal">
+        <div class="case-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 8 8 12 4 16"/><line x1="12" y1="16" x2="20" y2="16"/></svg>
         </div>
-      </div>
+        <h3 class="case-title">Execute commands</h3>
+        <p class="case-body">Any shell command. Open a URL, kick off a deploy, sync your dotfiles. Runs quietly in the background.</p>
+      </article>
+
+      <article class="case reveal">
+        <div class="case-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+        </div>
+        <h3 class="case-title">Play keyboard sequences</h3>
+        <p class="case-body">Up to three keystrokes in a row, each with its own modifiers. Select all → Copy → Switch window. One gesture.</p>
+      </article>
+
+      <article class="case reveal">
+        <div class="case-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h10"/></svg>
+        </div>
+        <h3 class="case-title">Control F-key behavior</h3>
+        <p class="case-body">Standard F-keys and media keys, both on, no trip to System Settings. Backlight too — even on Apple Silicon.</p>
+      </article>
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     SHOWCASE — app screenshots & tutorial videos
+     FEATURES — four quiet capability cards
+     ============================================================ -->
+<section class="site-section features" id="features" aria-label="Features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="eyebrow eyebrow-quiet">Features</div>
+      <h2 class="section-title">Built for the way you already type.</h2>
+      <p class="section-subtitle">Small, native, and quiet. Nothing on the screen until you ask.</p>
+    </div>
+
+    <div class="features-grid reveal-stagger">
+      <article class="feature reveal">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></svg>
+        </div>
+        <h3 class="feature-title">Modifier &amp; F-key triggers</h3>
+        <p class="feature-body">Twenty distinct triggers across left/right modifiers and F1–F12. Side-aware, conflict-free, with adjustable tap windows.</p>
+      </article>
+
+      <article class="feature reveal">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>
+        </div>
+        <h3 class="feature-title">Multi-step sequences</h3>
+        <p class="feature-body">Chain up to three keystrokes per trigger, each with their own modifiers. Repetitive macros become a single double-tap.</p>
+      </article>
+
+      <article class="feature reveal">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="8" cy="12" r="1.5"/><line x1="12" y1="12" x2="18" y2="12"/></svg>
+        </div>
+        <h3 class="feature-title">Native feedback HUDs</h3>
+        <p class="feature-body">Glass, Notch, or silent — pick the confirmation style that fits your Mac. Stays out of the way until something fires.</p>
+      </article>
+
+      <article class="feature reveal">
+        <div class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>
+        </div>
+        <h3 class="feature-title">Menu bar control</h3>
+        <p class="feature-body">Left-click toggles DoubleTap on and off. Right-click opens the menu. Behaves like every other Mac menu bar app.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SHOWCASE — one screenshot, one tutorial video
      ============================================================ -->
 <section class="site-section showcase" id="showcase" aria-label="See the app">
   <div class="container">
     <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> See the app</div>
-      <h2 class="section-title">A proper Mac app, shown the Mac way.</h2>
-      <p class="section-subtitle">Real screenshots and a thirty-second tutorial. No marketing fog — just the app, on a Mac, doing what it does.</p>
+      <div class="eyebrow eyebrow-quiet">See the app</div>
+      <h2 class="section-title">Real screenshots. No marketing fog.</h2>
+      <p class="section-subtitle">A thirty-second tutorial and the actual settings window. That's the whole interface.</p>
     </div>
 
-    <!-- Main app screenshot -->
     <div class="media-stage reveal">
       <img class="mac-shot" src="assets/media/Screenshot%202026-04-25%20at%203.09.06.png"
            alt="DoubleTap settings window with sidebar of triggers and a mapping detail pane"
            width="3420" height="2214" loading="lazy">
     </div>
 
-    <!-- Tutorial video -->
     <div class="tutorial-block reveal">
-      <div class="tutorial-meta">
-        <div class="eyebrow" style="margin-block-end: var(--space-3);"><span class="dot"></span> Tutorial</div>
-        <h3 class="tutorial-title">Add your first double-tap trigger.</h3>
-        <p class="tutorial-desc">Pick a key. Pick an action. Double-tap. Thirty seconds, start to finish.</p>
-      </div>
-
       <div class="media-stage media-stage-sm">
         <video class="mac-video"
                src="assets/media/Screen%20Recording%202026-04-25%20at%201.58.25.mov"
@@ -636,156 +454,116 @@
                width="3420" height="2214"
                aria-label="Tutorial: how to add a double-tap trigger in DoubleTap"></video>
       </div>
+      <p class="media-caption">Add your first trigger — pick a key, pick an action, double-tap. Thirty seconds, start to finish.</p>
     </div>
   </div>
 </section>
 
 <!-- ============================================================
-     NATIVE — first-party macOS feel
+     PRIVACY & TRUST — four quiet points
      ============================================================ -->
-<section class="site-section native" id="native" aria-label="macOS native">
+<section class="site-section privacy" id="privacy" aria-label="Privacy and trust">
   <div class="container">
     <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> First-party feel</div>
-      <h2 class="section-title">Built the way Apple builds.</h2>
-      <p class="section-subtitle">A proper Mac app — not a web page in disguise. Native menu bar, Liquid Glass materials, and a true pure-black dark mode.</p>
-    </div>
-
-    <div class="native-grid reveal-stagger">
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18"/></svg>
-        </div>
-        <h3>Menu bar, done right</h3>
-        <p>Left-click toggles DoubleTap on and off. Right-click opens the menu. Behaves exactly like every other menu bar app on your Mac.</p>
-      </div>
-
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 7 7 0 0 1 0 14 5 5 0 0 0 0 10 9 9 0 0 1-9-9"/><circle cx="8" cy="9" r="1.2"/><circle cx="16" cy="7" r="1.2"/><circle cx="17" cy="14" r="1.2"/></svg>
-        </div>
-        <h3>Liquid Glass throughout</h3>
-        <p>Translucent sidebar, frosted cards, and system materials that match macOS 26 Tahoe.</p>
-      </div>
-
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z"/></svg>
-        </div>
-        <h3>Pure-Black Dark Mode</h3>
-        <p>OLED-friendly solid black background, optional. Eyes thank you on external displays.</p>
-      </div>
-
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        </div>
-        <h3>Launch at Login</h3>
-        <p>Turn it on once and DoubleTap is ready the moment you sign in. No setup prompts, no background processes to manage.</p>
-      </div>
-
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l7-4 7 4v10l-7 4-7-4z"/><path d="M5 7l7 4 7-4"/><path d="M12 11v10"/></svg>
-        </div>
-        <h3>Hide from Dock &amp; Menu Bar</h3>
-        <p>Tuck the app out of sight. Open it via Spotlight — or a DoubleTap mapping of your own.</p>
-      </div>
-
-      <div class="native-card reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
-        </div>
-        <h3>Polished visual effects</h3>
-        <p>Animated backdrops and highlight rings during onboarding and alerts. Respects Reduce Motion and Reduce Transparency.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     TRUST / PRIVACY / TECHNICAL FOOTPRINT
-     ============================================================ -->
-<section class="site-section trust" id="trust" aria-label="Privacy and technical footprint">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="eyebrow" style="margin-block-end: var(--space-5);"><span class="dot"></span> Privacy & safety</div>
+      <div class="eyebrow eyebrow-quiet">Privacy &amp; trust</div>
       <h2 class="section-title">Your keyboard. Your Mac. Your business.</h2>
-      <p class="section-subtitle">Runs entirely on your Mac. No tracking. Two macOS permissions, with status always visible in the app.</p>
+      <p class="section-subtitle">Runs entirely on your Mac. No tracking, no cloud, no account.</p>
     </div>
 
-    <div class="trust-grid reveal-stagger">
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5 3.4 9.2 8 10 4.6-.8 8-5 8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-        </div>
-        <div>
-          <h3>Signed, notarized, stapled</h3>
-          <p>Every build is Developer ID signed, notarized by Apple, and stapled. No Gatekeeper workarounds.</p>
-        </div>
-      </div>
+    <div class="privacy-grid reveal-stagger">
+      <article class="privacy-item reveal">
+        <h3 class="privacy-title">Zero telemetry</h3>
+        <p class="privacy-body">No analytics, no tracking, no phone-home. The only network calls are license verification and update checks.</p>
+      </article>
 
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10 10 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5-5.9"/><path d="M9.9 4.2A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2"/><path d="M1 1l22 22"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></svg>
-        </div>
-        <div>
-          <h3>Zero telemetry</h3>
-          <p>No analytics, no tracking, no phone-home. Your mappings stay in your local Application Support folder.</p>
-        </div>
-      </div>
+      <article class="privacy-item reveal">
+        <h3 class="privacy-title">Local mappings</h3>
+        <p class="privacy-body">Your triggers and actions live in your Application Support folder. Nothing syncs anywhere unless you set it up.</p>
+      </article>
 
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <div>
-          <h3>Two permissions, granular</h3>
-          <p>Accessibility and Input Monitoring — the standard macOS permissions any keyboard utility needs. If either is turned off, the menu bar tells you right away.</p>
-        </div>
-      </div>
+      <article class="privacy-item reveal">
+        <h3 class="privacy-title">Signed &amp; notarized</h3>
+        <p class="privacy-body">Every build is Developer ID signed, notarized by Apple, and stapled. Nothing for Gatekeeper to flag.</p>
+      </article>
 
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
-        </div>
-        <div>
-          <h3>Automatic updates</h3>
-          <p>Securely signed updates delivered straight from GitHub. Checks once a day in the background — or trigger it yourself from the menu.</p>
-        </div>
-      </div>
+      <article class="privacy-item reveal">
+        <h3 class="privacy-title">Clear permissions</h3>
+        <p class="privacy-body">Two macOS permissions — Accessibility and Input Monitoring — the standard for any keyboard utility. Status is always visible in the menu bar.</p>
+      </article>
+    </div>
+  </div>
+</section>
 
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
-        </div>
-        <div>
-          <h3>14-day trial, one-time purchase</h3>
-          <p>Full functionality during the trial. No nags. Day-10 onward: a gentle daily check-in. Pop-up on expiration.</p>
-        </div>
-      </div>
-
-      <div class="trust-item reveal">
-        <div class="icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M4 12l4-4"/><path d="M4 12l4 4"/><path d="M20 12l-4-4"/><path d="M20 12l-4 4"/></svg>
-        </div>
-        <div>
-          <h3>Transfer-friendly licensing</h3>
-          <p>Deactivate on one Mac, reactivate on another. 30-day offline grace between verifications. Keychain-backed trial.</p>
-        </div>
-      </div>
+<!-- ============================================================
+     PRICING — single, clean card
+     ============================================================ -->
+<section class="site-section pricing-home" id="pricing" aria-label="Pricing">
+  <div class="container container-narrow">
+    <div class="section-header reveal">
+      <div class="eyebrow eyebrow-quiet">Pricing</div>
+      <h2 class="section-title">Try it free. Buy it once.</h2>
+      <p class="section-subtitle">Fourteen days to see if it fits. Nine dollars if it does. No subscription, ever.</p>
     </div>
 
-    <div class="reveal" style="margin-block-start: var(--space-8); display: flex; justify-content: center;">
-      <div class="meta-row">
-        <span>macOS 13+</span>
-        <span class="sep"></span>
-        <span>Apple Silicon &amp; Intel</span>
-        <span class="sep"></span>
-        <span>Needs keyboard access</span>
-        <span class="sep"></span>
-        <span>Sold on Gumroad</span>
+    <div class="price-card reveal">
+      <div class="price-card-head">
+        <div class="price-amount">
+          <span class="price-currency">$</span><span class="price-number">9</span>
+        </div>
+        <div class="price-meta">
+          <div class="price-meta-line">One-time purchase</div>
+          <div class="price-meta-sub">Lifetime updates · Single Mac</div>
+        </div>
       </div>
+
+      <ul class="price-features">
+        <li>14-day free trial — full functionality</li>
+        <li>$9 one-time purchase</li>
+        <li>No subscription, ever</li>
+        <li>No account required</li>
+        <li>Move your license between Macs</li>
+      </ul>
+
+      <div class="price-actions">
+        <a class="btn btn-primary btn-lg price-cta" href="https://hadidireya.gumroad.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+          Try DoubleTap Free
+        </a>
+        <a class="btn-link" href="pricing.html">See multi-Mac tiers →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FAQ — five sensible questions
+     ============================================================ -->
+<section class="site-section faq-home" id="faq" aria-label="Frequently asked questions">
+  <div class="container container-narrow">
+    <div class="section-header reveal">
+      <div class="eyebrow eyebrow-quiet">FAQ</div>
+      <h2 class="section-title">Sensible questions, real answers.</h2>
+    </div>
+    <div class="faq-list reveal-stagger">
+      <details class="faq-item reveal">
+        <summary class="faq-question">Does it record what I type?</summary>
+        <p class="faq-answer">No. DoubleTap watches only for double-taps on the modifier keys and F-keys you explicitly enable. It never reads, stores, or transmits the rest of your typing. Zero telemetry, zero analytics.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary class="faq-question">Why does it need Accessibility and Input Monitoring?</summary>
+        <p class="faq-answer">macOS requires Accessibility for sending synthetic keystrokes (so DoubleTap can fire a shortcut for you) and Input Monitoring for detecting key presses. These are the standard permissions every keyboard utility needs. Status is always visible in the menu bar.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary class="faq-question">Does it work offline?</summary>
+        <p class="faq-answer">Yes. Everything runs locally on your Mac. The only network activity is license verification (with a 30-day offline grace) and once-a-day update checks — both can be deferred.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary class="faq-question">Is it a subscription?</summary>
+        <p class="faq-answer">No. One-time purchase from $9. Every future update is included.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary class="faq-question">What happens after the trial?</summary>
+        <p class="faq-answer">Full functionality during the 14 days — no nags, no lockouts. From day 10 onward, a gentle daily reminder. On day 14, a pop-up invites you to buy a license. After expiration the app still launches; only mappings stop firing until you activate.</p>
+      </details>
     </div>
   </div>
 </section>
@@ -795,22 +573,13 @@
      ============================================================ -->
 <section class="final-cta" id="final-cta" aria-label="Download">
   <div class="container container-narrow">
-    <div class="eyebrow reveal" style="margin-block-end: var(--space-5); justify-content: center;"><span class="dot"></span> Free for 14 days</div>
     <h2 class="final-cta-title reveal">Tap twice. Do anything.</h2>
-    <p class="final-cta-sub reveal">No account. No credit card. A DMG and a license key — that's the whole flow.</p>
+    <p class="final-cta-sub reveal">A DMG and a license key — that's the whole flow.</p>
     <div class="final-cta-actions reveal">
       <a class="btn btn-primary btn-lg" href="https://hadidireya.gumroad.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
-        <svg class="btn-icon" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-        Download Free Trial
+        Try DoubleTap Free
       </a>
-      <a class="btn btn-secondary btn-lg" href="pricing.html">See pricing</a>
-    </div>
-    <div class="meta-row reveal" style="justify-content: center;">
-      <span>14-day trial</span>
-      <span class="sep"></span>
-      <span>$9 one-time</span>
-      <span class="sep"></span>
-      <span>macOS 13+</span>
+      <a class="btn btn-secondary btn-lg" href="#pricing">See pricing</a>
     </div>
   </div>
 </section>
@@ -822,74 +591,6 @@
      ============================================================ -->
 <footer class="footer" id="footer">
   <div class="container">
-    <div class="footer-panel">
-      <div class="footer-top">
-        <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="btn btn-secondary footer-cta" target="_blank" rel="noopener noreferrer">Get DoubleTap</a>
-        <button type="button" class="footer-lang" aria-label="Change language" aria-haspopup="listbox">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M2 12h20"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-          <span>English</span>
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-      </div>
-
-      <div class="footer-grid">
-        <div class="footer-col">
-          <h3 class="footer-col-title">Product</h3>
-          <ul class="footer-col-links">
-            <li><a href="#triggers">Triggers</a></li>
-            <li><a href="#actions">Actions</a></li>
-            <li><a href="#fkeys">F-keys</a></li>
-            <li><a href="pricing.html">Pricing</a></li>
-            <li><a href="https://hadidireya.gumroad.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">Download</a></li>
-            <li><a href="#">Changelog</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3 class="footer-col-title">Resources</h3>
-          <ul class="footer-col-links">
-            <li><a href="#">Documentation</a></li>
-            <li><a href="#">Shortcuts library</a></li>
-            <li><a href="#">Keyboard reference</a></li>
-            <li><a href="#">Release notes</a></li>
-            <li><a href="#">Roadmap</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3 class="footer-col-title">Support</h3>
-          <ul class="footer-col-links">
-            <li><a href="mailto:hello@doubletap.app">Contact</a></li>
-            <li><a href="#">Report a bug</a></li>
-            <li><a href="#">Feature request</a></li>
-            <li><a href="#">License &amp; activation</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h3 class="footer-col-title">Legal</h3>
-          <ul class="footer-col-links">
-            <li><a href="#">Privacy</a></li>
-            <li><a href="#">Terms of Service</a></li>
-            <li><a href="#">Refund Policy</a></li>
-            <li><a href="#">License Agreement</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-back-top">
-        <a href="#top" class="footer-back-top-link">
-          <span>Back to top</span>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-
     <div class="footer-meta">
       <div class="footer-meta-row">
         <div class="footer-brand">
@@ -897,23 +598,21 @@
             <img src="assets/icons/icon-dark.png" alt="" width="24" height="24" role="presentation">
             <span>DoubleTap</span>
           </div>
-          <p class="footer-tagline">Tap twice do anything.</p>
+          <p class="footer-tagline">Tap twice. Do anything.</p>
         </div>
+        <ul class="footer-mini-links" aria-label="Footer links">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="mailto:hello@doubletap.app">Contact</a></li>
+        </ul>
         <ul class="footer-social" aria-label="Social links">
           <li><a href="#" aria-label="X (formerly Twitter)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a></li>
           <li><a href="#" aria-label="GitHub"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.648.5.5 5.648.5 12c0 5.087 3.292 9.394 7.857 10.92.575.105.785-.25.785-.555 0-.274-.01-.998-.016-1.96-3.198.695-3.872-1.54-3.872-1.54-.523-1.328-1.276-1.682-1.276-1.682-1.043-.713.08-.698.08-.698 1.154.08 1.76 1.183 1.76 1.183 1.026 1.756 2.688 1.248 3.344.954.103-.742.4-1.247.728-1.534-2.55-.29-5.234-1.276-5.234-5.679 0-1.255.448-2.28 1.18-3.085-.12-.29-.513-1.457.112-3.036 0 0 .96-.308 3.15 1.18a10.88 10.88 0 0 1 2.868-.385c.973.005 1.953.131 2.869.385 2.19-1.488 3.148-1.18 3.148-1.18.626 1.579.233 2.746.114 3.036.735.805 1.18 1.83 1.18 3.085 0 4.416-2.688 5.386-5.247 5.669.413.356.781 1.058.781 2.133 0 1.539-.014 2.78-.014 3.158 0 .308.208.667.79.553C20.21 21.39 23.5 17.087 23.5 12c0-6.352-5.148-11.5-11.5-11.5z"/></svg></a></li>
           <li><a href="mailto:hello@doubletap.app" aria-label="Email"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 7 9-7"/></svg></a></li>
         </ul>
       </div>
-      <div class="footer-meta-row footer-meta-row-legal">
-        <p class="footer-copyright">&copy; 2026 Hadi Direya. All rights reserved.</p>
-        <ul class="footer-legal-links">
-          <li><a href="#">Privacy</a></li>
-          <li><a href="#">Site Terms</a></li>
-          <li><a href="#">Cookie Preferences</a></li>
-          <li><a href="#">Accessibility</a></li>
-        </ul>
-      </div>
+      <p class="footer-copyright">&copy; 2026 Hadi Direya · Made on a Mac</p>
     </div>
   </div>
 </footer>
