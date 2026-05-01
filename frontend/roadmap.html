@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roadmap — DoubleTap</title>
+  <meta name="description" content="See what's been suggested, what we're reviewing, planned, in progress, and shipped. Vote and comment on what matters to you.">
+  <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="https://doubletap-app.com/roadmap">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DoubleTap">
+  <meta property="og:title" content="Roadmap — DoubleTap">
+  <meta property="og:description" content="See what's been suggested, planned, in progress, and shipped. Vote on what matters to you.">
+  <meta property="og:url" content="https://doubletap-app.com/roadmap">
+  <meta property="og:image" content="https://doubletap-app.com/assets/og/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Roadmap — DoubleTap">
+  <meta name="twitter:description" content="See what's been suggested, planned, in progress, and shipped. Vote on what matters to you.">
+  <meta name="twitter:image" content="https://doubletap-app.com/assets/og/og-image.png">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/outfit.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jetbrains-mono.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- Nav -->
+<nav class="nav" id="nav" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <img src="assets/icons/logo.png" alt="" width="28" height="28" role="presentation">
+      <span>DoubleTap</span>
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#use-cases">Use cases</a>
+      <a href="index.html#features">Features</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="roadmap.html" aria-current="page">Roadmap</a>
+      <a href="index.html#faq">FAQ</a>
+    </div>
+    <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
+      Download
+    </a>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Theme toggle -->
+<div class="theme-toggle" role="group" aria-label="Color theme">
+  <button type="button" data-theme="dark" class="active">DARK</button>
+  <button type="button" data-theme="light">LIGHT</button>
+</div>
+
+<main id="main">
+
+<!-- ============================================================
+     ROADMAP HEADER
+     ============================================================ -->
+<section class="roadmap-page" aria-label="Roadmap">
+  <div class="container">
+
+    <header class="roadmap-header">
+      <div class="roadmap-header-text">
+        <h1 class="roadmap-title">Roadmap</h1>
+        <p class="roadmap-subtitle">What's been suggested, what's planned, and what we're shipping. Vote on what matters to you — most-voted goes first.</p>
+      </div>
+      <div class="roadmap-actions" id="roadmap-actions">
+        <button type="button" class="btn btn-primary" id="suggest-open" disabled>Suggest a feature</button>
+        <div class="roadmap-auth" id="roadmap-auth">
+          <span class="roadmap-auth-loading">…</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         BOARD
+         ============================================================ -->
+    <section class="roadmap-board" id="roadmap-board" aria-label="Feature board">
+      <article class="roadmap-column" data-status="suggested">
+        <header class="roadmap-column-head">
+          <span class="roadmap-column-dot" aria-hidden="true"></span>
+          <h2 class="roadmap-column-title">Suggested</h2>
+          <span class="roadmap-column-count" data-count>0</span>
+        </header>
+        <div class="roadmap-column-body" data-list>
+          <p class="roadmap-empty">Loading…</p>
+        </div>
+      </article>
+
+      <article class="roadmap-column" data-status="under_review">
+        <header class="roadmap-column-head">
+          <span class="roadmap-column-dot" aria-hidden="true"></span>
+          <h2 class="roadmap-column-title">Under Review</h2>
+          <span class="roadmap-column-count" data-count>0</span>
+        </header>
+        <div class="roadmap-column-body" data-list>
+          <p class="roadmap-empty">Nothing here yet.</p>
+        </div>
+      </article>
+
+      <article class="roadmap-column" data-status="planned">
+        <header class="roadmap-column-head">
+          <span class="roadmap-column-dot" aria-hidden="true"></span>
+          <h2 class="roadmap-column-title">Planned</h2>
+          <span class="roadmap-column-count" data-count>0</span>
+        </header>
+        <div class="roadmap-column-body" data-list>
+          <p class="roadmap-empty">Nothing here yet.</p>
+        </div>
+      </article>
+
+      <article class="roadmap-column" data-status="in_progress">
+        <header class="roadmap-column-head">
+          <span class="roadmap-column-dot" aria-hidden="true"></span>
+          <h2 class="roadmap-column-title">In Progress</h2>
+          <span class="roadmap-column-count" data-count>0</span>
+        </header>
+        <div class="roadmap-column-body" data-list>
+          <p class="roadmap-empty">Nothing here yet.</p>
+        </div>
+      </article>
+
+      <article class="roadmap-column" data-status="shipped">
+        <header class="roadmap-column-head">
+          <span class="roadmap-column-dot" aria-hidden="true"></span>
+          <h2 class="roadmap-column-title">Shipped</h2>
+          <span class="roadmap-column-count" data-count>0</span>
+        </header>
+        <div class="roadmap-column-body" data-list>
+          <p class="roadmap-empty">Nothing here yet.</p>
+        </div>
+      </article>
+    </section>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     SIGN-IN DIALOG
+     ============================================================ -->
+<dialog class="roadmap-dialog" id="signin-dialog" aria-labelledby="signin-title">
+  <form method="dialog" class="roadmap-dialog-form">
+    <header class="roadmap-dialog-head">
+      <h2 id="signin-title">Sign in</h2>
+      <button type="submit" class="roadmap-dialog-close" aria-label="Close" value="cancel">&times;</button>
+    </header>
+    <p class="roadmap-dialog-sub">Sign in to vote, post, and comment.</p>
+    <div class="roadmap-dialog-body">
+      <button type="button" class="btn btn-secondary roadmap-provider" data-provider="apple">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
+        Continue with Apple
+      </button>
+      <button type="button" class="btn btn-secondary roadmap-provider" data-provider="google">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.74.13-1.45.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.93l3.66-2.83z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+        Continue with Google
+      </button>
+      <div class="roadmap-divider"><span>or</span></div>
+      <label class="roadmap-field">
+        <span class="roadmap-field-label">Email</span>
+        <input type="email" id="magiclink-email" name="email" autocomplete="email" required placeholder="you@example.com">
+      </label>
+      <button type="button" class="btn btn-primary" id="magiclink-submit">Send magic link</button>
+      <p class="roadmap-dialog-msg" id="signin-msg" aria-live="polite"></p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============================================================
+     SUGGEST FEATURE DIALOG
+     ============================================================ -->
+<dialog class="roadmap-dialog" id="suggest-dialog" aria-labelledby="suggest-title">
+  <form method="dialog" class="roadmap-dialog-form" id="suggest-form">
+    <header class="roadmap-dialog-head">
+      <h2 id="suggest-title">Suggest a feature</h2>
+      <button type="submit" class="roadmap-dialog-close" aria-label="Close" value="cancel">&times;</button>
+    </header>
+    <div class="roadmap-dialog-body">
+      <label class="roadmap-field">
+        <span class="roadmap-field-label">Title</span>
+        <input type="text" id="suggest-title-input" name="title" required minlength="3" maxlength="120" placeholder="Short and specific">
+      </label>
+      <label class="roadmap-field">
+        <span class="roadmap-field-label">Details</span>
+        <textarea id="suggest-body-input" name="body" required minlength="10" maxlength="2000" rows="6" placeholder="Describe the feature, the problem it solves, and how you'd use it."></textarea>
+      </label>
+      <p class="roadmap-dialog-msg" id="suggest-msg" aria-live="polite"></p>
+      <div class="roadmap-dialog-actions">
+        <button type="submit" class="btn btn-secondary" value="cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="suggest-submit">Submit</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============================================================
+     POST DETAIL DIALOG
+     ============================================================ -->
+<dialog class="roadmap-dialog roadmap-dialog-detail" id="detail-dialog" aria-labelledby="detail-title">
+  <form method="dialog" class="roadmap-dialog-form">
+    <header class="roadmap-dialog-head">
+      <h2 id="detail-title">…</h2>
+      <button type="submit" class="roadmap-dialog-close" aria-label="Close" value="cancel">&times;</button>
+    </header>
+    <div class="roadmap-dialog-body" id="detail-body">
+      <p class="roadmap-empty">Loading…</p>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-meta">
+      <div class="footer-meta-row">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <img src="assets/icons/logo.png" alt="" width="24" height="24" role="presentation">
+            <span>DoubleTap</span>
+          </div>
+          <p class="footer-tagline">Tap twice. Do anything.</p>
+        </div>
+        <ul class="footer-mini-links" aria-label="Footer links">
+          <li><a href="index.html#how">How it works</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="roadmap.html">Roadmap</a></li>
+          <li><a href="mailto:hello@doubletap.app">Contact</a></li>
+        </ul>
+      </div>
+      <p class="footer-copyright">&copy; 2026 Hadi Direya · Made on a Mac</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js" type="module"></script>
+<script src="js/roadmap.js" type="module"></script>
+</body>
+</html>
