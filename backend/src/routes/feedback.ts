@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { and, count, desc, eq } from "drizzle-orm";
+import { Resend } from "resend";
 import { getDb } from "../db/client";
 import {
   feedbackComment,
@@ -10,11 +11,13 @@ import {
   user,
 } from "../db/schema";
 import {
+  FEEDBACK_TYPES,
   getSession,
   isAdmin,
   requireAdmin,
   requireSession,
   STATUSES,
+  type FeedbackType,
   type Status,
 } from "../lib/auth-helpers";
 import type { Env } from "../env";
@@ -28,6 +31,7 @@ type PublicAuthor = {
 
 type PublicPost = {
   id: string;
+  type: FeedbackType;
   title: string;
   body: string;
   status: Status;
@@ -42,20 +46,59 @@ type PublicPost = {
 const feedback = new Hono<{ Bindings: Env }>();
 
 const isStatus = (s: string): s is Status => (STATUSES as readonly string[]).includes(s);
+const isFeedbackType = (s: string): s is FeedbackType =>
+  (FEEDBACK_TYPES as readonly string[]).includes(s);
 
 const validateTitle = (s: unknown) => typeof s === "string" && s.trim().length >= 3 && s.length <= 120;
 const validateBody = (s: unknown, min: number, max: number) =>
   typeof s === "string" && s.trim().length >= min && s.length <= max;
 
-// GET /feedback/posts — public, grouped by status
+const escapeHtml = (s: string) =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const sendBugReportEmail = async (
+  env: Env,
+  args: { id: string; title: string; body: string; authorName: string; authorEmail: string },
+) => {
+  if (!env.RESEND_API_KEY) return;
+  const resend = new Resend(env.RESEND_API_KEY);
+  const link = `${env.APP_URL.replace(/\/$/, "")}/feedback#${args.id}`;
+  // Strip CR/LF/TAB so a malicious title can't inject extra email headers.
+  const safeSubject = args.title.replace(/[\r\n\t]+/g, " ").trim().slice(0, 120);
+  await resend.emails.send({
+    from: "DoubleTap <noreply@doubletap-app.com>",
+    to: "support@doubletap-app.com",
+    replyTo: args.authorEmail,
+    subject: `[Bug] ${safeSubject}`,
+    html: `
+      <p><strong>From:</strong> ${escapeHtml(args.authorName)} &lt;${escapeHtml(args.authorEmail)}&gt;</p>
+      <p><strong>Title:</strong> ${escapeHtml(args.title)}</p>
+      <pre style="white-space:pre-wrap;font-family:inherit">${escapeHtml(args.body)}</pre>
+      <p><a href="${link}">View on the feedback page</a></p>
+    `,
+  });
+};
+
+// GET /feedback/posts — public, grouped by status. Optional ?type=bug|feature|praise filter.
 feedback.get("/posts", async (c) => {
   const db = getDb(c.env);
   const session = await getSession(c);
   const viewerId = session?.user.id ?? null;
 
-  const rows = await db
+  const typeFilter = c.req.query("type");
+  if (typeFilter !== undefined && !isFeedbackType(typeFilter)) {
+    throw new HTTPException(400, { message: "type_invalid" });
+  }
+
+  const baseQuery = db
     .select({
       id: feedbackPost.id,
+      type: feedbackPost.type,
       title: feedbackPost.title,
       body: feedbackPost.body,
       status: feedbackPost.status,
@@ -67,6 +110,9 @@ feedback.get("/posts", async (c) => {
     })
     .from(feedbackPost)
     .innerJoin(user, eq(feedbackPost.userId, user.id));
+  const rows = await (typeFilter
+    ? baseQuery.where(eq(feedbackPost.type, typeFilter))
+    : baseQuery);
 
   const voteRows = await db
     .select({ postId: feedbackVote.postId, n: count() })
@@ -106,8 +152,10 @@ feedback.get("/posts", async (c) => {
 
   for (const r of rows) {
     const status: Status = isStatus(r.status) ? r.status : "suggested";
+    const type: FeedbackType = isFeedbackType(r.type) ? r.type : "feature";
     grouped[status].push({
       id: r.id,
+      type,
       title: r.title,
       body: r.body,
       status,
@@ -151,6 +199,7 @@ feedback.get("/posts/:id", async (c) => {
   const [postRow] = await db
     .select({
       id: feedbackPost.id,
+      type: feedbackPost.type,
       title: feedbackPost.title,
       body: feedbackPost.body,
       status: feedbackPost.status,
@@ -204,9 +253,11 @@ feedback.get("/posts/:id", async (c) => {
   );
 
   const status: Status = isStatus(postRow.status) ? postRow.status : "suggested";
+  const type: FeedbackType = isFeedbackType(postRow.type) ? postRow.type : "feature";
 
   return c.json({
     id: postRow.id,
+    type,
     title: postRow.title,
     body: postRow.body,
     status,
@@ -234,29 +285,55 @@ feedback.get("/posts/:id", async (c) => {
   });
 });
 
-// POST /feedback/posts — auth required
+// POST /feedback/posts — auth required. Optional type (default "feature").
 feedback.post("/posts", async (c) => {
   const session = await requireSession(c);
   const body = await c.req.json().catch(() => ({}));
+  const type: FeedbackType =
+    typeof body.type === "string" && isFeedbackType(body.type) ? body.type : "feature";
+  if (typeof body.type === "string" && !isFeedbackType(body.type)) {
+    throw new HTTPException(400, { message: "type_invalid" });
+  }
   if (!validateTitle(body.title)) {
     throw new HTTPException(400, { message: "title_invalid" });
   }
-  if (!validateBody(body.body, 10, 2000)) {
+  // Praise can be a short blurb; bugs and feature requests need a real description.
+  const bodyMin = type === "praise" ? 5 : 10;
+  if (!validateBody(body.body, bodyMin, 2000)) {
     throw new HTTPException(400, { message: "body_invalid" });
   }
   const db = getDb(c.env);
   const now = new Date();
   const id = crypto.randomUUID();
+  const title = body.title.trim();
+  const text = body.body.trim();
   await db.insert(feedbackPost).values({
     id,
     userId: session.user.id,
-    title: body.title.trim(),
-    body: body.body.trim(),
+    type,
+    title,
+    body: text,
     status: "suggested",
     createdAt: now,
     updatedAt: now,
   });
-  return c.json({ id }, 201);
+
+  if (type === "bug") {
+    try {
+      await sendBugReportEmail(c.env, {
+        id,
+        title,
+        body: text,
+        authorName: session.user.name,
+        authorEmail: session.user.email,
+      });
+    } catch (err) {
+      // Don't fail the user's submission if the email pipe is down — just log.
+      console.error("bug_report_email_failed", err);
+    }
+  }
+
+  return c.json({ id, type }, 201);
 });
 
 // POST /feedback/posts/:id/vote — toggle (auth required)
@@ -338,12 +415,24 @@ feedback.patch("/posts/:id", async (c) => {
   const postId = c.req.param("id");
   const body = await c.req.json().catch(() => ({}));
 
-  const updates: Partial<{ status: Status; title: string; body: string; updatedAt: Date }> = {};
+  const updates: Partial<{
+    status: Status;
+    type: FeedbackType;
+    title: string;
+    body: string;
+    updatedAt: Date;
+  }> = {};
   if (body.status !== undefined) {
     if (typeof body.status !== "string" || !isStatus(body.status)) {
       throw new HTTPException(400, { message: "status_invalid" });
     }
     updates.status = body.status;
+  }
+  if (body.type !== undefined) {
+    if (typeof body.type !== "string" || !isFeedbackType(body.type)) {
+      throw new HTTPException(400, { message: "type_invalid" });
+    }
+    updates.type = body.type;
   }
   if (body.title !== undefined) {
     if (!validateTitle(body.title)) throw new HTTPException(400, { message: "title_invalid" });

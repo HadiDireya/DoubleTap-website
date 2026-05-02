@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roadmap — DoubleTap</title>
-  <meta name="description" content="See what's been suggested, what we're reviewing, planned, in progress, and shipped. Vote and comment on what matters to you.">
+  <title>Feedback — DoubleTap</title>
+  <meta name="description" content="Report a bug, suggest a feature, or share what you love about DoubleTap. Like the posts that resonate with you.">
   <meta name="theme-color" content="#000000">
-  <link rel="canonical" href="https://doubletap-app.com/roadmap">
+  <link rel="canonical" href="https://doubletap-app.com/feedback">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="DoubleTap">
-  <meta property="og:title" content="Roadmap — DoubleTap">
-  <meta property="og:description" content="See what's been suggested, planned, in progress, and shipped. Vote on what matters to you.">
-  <meta property="og:url" content="https://doubletap-app.com/roadmap">
+  <meta property="og:title" content="Feedback — DoubleTap">
+  <meta property="og:description" content="Report a bug, suggest a feature, or share what you love. Like the posts that resonate with you.">
+  <meta property="og:url" content="https://doubletap-app.com/feedback">
   <meta property="og:image" content="https://doubletap-app.com/assets/og/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Roadmap — DoubleTap">
-  <meta name="twitter:description" content="See what's been suggested, planned, in progress, and shipped. Vote on what matters to you.">
+  <meta name="twitter:title" content="Feedback — DoubleTap">
+  <meta name="twitter:description" content="Report a bug, suggest a feature, or share what you love.">
   <meta name="twitter:image" content="https://doubletap-app.com/assets/og/og-image.png">
 
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -44,8 +44,8 @@
       <a href="index.html#use-cases">Use cases</a>
       <a href="index.html#features">Features</a>
       <a href="pricing.html">Pricing</a>
-      <a href="roadmap.html" aria-current="page">Roadmap</a>
-      <a href="feedback.html">Feedback</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="feedback.html" aria-current="page">Feedback</a>
       <a href="index.html#faq">FAQ</a>
     </div>
     <a href="https://hadidireya.gumroad.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
@@ -68,35 +68,36 @@
 
 <main id="main">
 
-<!-- ============================================================
-     ROADMAP HEADER
-     ============================================================ -->
-<section class="roadmap-page" aria-label="Roadmap">
+<section class="roadmap-page" aria-label="Feedback">
   <div class="container">
 
     <header class="roadmap-header">
       <div class="roadmap-header-text">
-        <h1 class="roadmap-title">Roadmap</h1>
-        <p class="roadmap-subtitle">What's been suggested, what's planned, and what we're shipping. Vote on what matters to you — most-voted goes first.</p>
+        <h1 class="roadmap-title">Feedback</h1>
+        <p class="roadmap-subtitle">Report a bug, suggest a feature, or just share what you love. Like the posts that resonate with you.</p>
       </div>
       <div class="roadmap-actions" id="roadmap-actions">
-        <button type="button" class="btn btn-primary" id="suggest-open" disabled>Suggest a feature</button>
+        <button type="button" class="btn btn-primary" id="suggest-open" disabled>Share feedback</button>
         <div class="roadmap-auth" id="roadmap-auth">
           <span class="roadmap-auth-loading">…</span>
         </div>
       </div>
     </header>
 
-    <!-- ============================================================
-         FILTERS + FEED
-         ============================================================ -->
-    <nav class="roadmap-filters" id="roadmap-filters" aria-label="Filter by status">
-      <button type="button" class="is-active" data-filter="all">All <span data-count>0</span></button>
-      <button type="button" data-filter="suggested">Suggested <span data-count>0</span></button>
-      <button type="button" data-filter="under_review">Under Review <span data-count>0</span></button>
-      <button type="button" data-filter="planned">Planned <span data-count>0</span></button>
-      <button type="button" data-filter="in_progress">In Progress <span data-count>0</span></button>
-      <button type="button" data-filter="shipped">Shipped <span data-count>0</span></button>
+    <nav class="roadmap-filters roadmap-filters-type" id="type-filters" aria-label="Filter by type">
+      <button type="button" class="is-active" data-type="all">All <span data-count>0</span></button>
+      <button type="button" data-type="bug">Bugs <span data-count>0</span></button>
+      <button type="button" data-type="feature">Features <span data-count>0</span></button>
+      <button type="button" data-type="praise">Praise <span data-count>0</span></button>
+    </nav>
+
+    <nav class="roadmap-filters" id="status-filters" aria-label="Filter by status">
+      <button type="button" class="is-active" data-status="all">Any status</button>
+      <button type="button" data-status="suggested">Suggested</button>
+      <button type="button" data-status="under_review">Under Review</button>
+      <button type="button" data-status="planned">Planned</button>
+      <button type="button" data-status="in_progress">In Progress</button>
+      <button type="button" data-status="shipped">Shipped</button>
     </nav>
 
     <section class="roadmap-feed" aria-label="Feedback posts">
@@ -109,16 +110,14 @@
 
 </main>
 
-<!-- ============================================================
-     SIGN-IN DIALOG
-     ============================================================ -->
+<!-- Sign-in dialog -->
 <dialog class="roadmap-dialog" id="signin-dialog" aria-labelledby="signin-title">
   <form method="dialog" class="roadmap-dialog-form">
     <header class="roadmap-dialog-head">
       <h2 id="signin-title">Sign in</h2>
       <button type="submit" formnovalidate class="roadmap-dialog-close" aria-label="Close" value="cancel">&times;</button>
     </header>
-    <p class="roadmap-dialog-sub">Sign in to vote, post, and comment.</p>
+    <p class="roadmap-dialog-sub">Sign in to like, post, and comment.</p>
     <div class="roadmap-dialog-body">
       <button type="button" class="btn btn-secondary roadmap-provider" data-provider="apple">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
@@ -139,22 +138,27 @@
   </form>
 </dialog>
 
-<!-- ============================================================
-     SUGGEST FEATURE DIALOG
-     ============================================================ -->
+<!-- Submit feedback dialog -->
 <dialog class="roadmap-dialog" id="suggest-dialog" aria-labelledby="suggest-title">
   <form method="dialog" class="roadmap-dialog-form" id="suggest-form">
     <header class="roadmap-dialog-head">
-      <h2 id="suggest-title">Suggest a feature</h2>
+      <h2 id="suggest-title">Share feedback</h2>
       <button type="submit" formnovalidate class="roadmap-dialog-close" aria-label="Close" value="cancel">&times;</button>
     </header>
     <div class="roadmap-dialog-body">
+      <fieldset class="feedback-type-picker" id="feedback-type-picker">
+        <legend class="roadmap-field-label">Type</legend>
+        <label><input type="radio" name="feedback-type" value="bug"> <span>Bug</span></label>
+        <label><input type="radio" name="feedback-type" value="feature" checked> <span>Feature idea</span></label>
+        <label><input type="radio" name="feedback-type" value="praise"> <span>Praise</span></label>
+      </fieldset>
+      <p class="feedback-type-hint" id="feedback-type-hint" hidden></p>
       <label class="roadmap-field">
-        <span class="roadmap-field-label">Title</span>
+        <span class="roadmap-field-label" id="suggest-title-label">Title</span>
         <input type="text" id="suggest-title-input" name="title" required minlength="3" maxlength="120" placeholder="Short and specific">
       </label>
       <label class="roadmap-field">
-        <span class="roadmap-field-label">Details</span>
+        <span class="roadmap-field-label" id="suggest-body-label">Details</span>
         <textarea id="suggest-body-input" name="body" required minlength="10" maxlength="2000" rows="6" placeholder="Describe the feature, the problem it solves, and how you'd use it."></textarea>
       </label>
       <p class="roadmap-dialog-msg" id="suggest-msg" aria-live="polite"></p>
@@ -166,9 +170,7 @@
   </form>
 </dialog>
 
-<!-- ============================================================
-     POST DETAIL DIALOG
-     ============================================================ -->
+<!-- Post detail dialog -->
 <dialog class="roadmap-dialog roadmap-dialog-detail" id="detail-dialog" aria-labelledby="detail-title">
   <form method="dialog" class="roadmap-dialog-form">
     <header class="roadmap-dialog-head">
@@ -181,9 +183,6 @@
   </form>
 </dialog>
 
-<!-- ============================================================
-     FOOTER
-     ============================================================ -->
 <footer class="footer" id="footer">
   <div class="container">
     <div class="footer-meta">
@@ -209,6 +208,6 @@
 </footer>
 
 <script src="js/main.js" type="module"></script>
-<script src="js/roadmap.js" type="module"></script>
+<script src="js/feedback.js" type="module"></script>
 </body>
 </html>

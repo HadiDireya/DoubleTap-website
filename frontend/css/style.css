@@ -59,6 +59,11 @@
   --color-status-progress: #6bd4f5;
   --color-status-shipped: #00e5a0;
 
+  /* Feedback type accents */
+  --color-type-bug: #ff7a6c;
+  --color-type-feature: #8b9bf7;
+  --color-type-praise: #ffd166;
+
   /* Fonts */
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, Helvetica, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -3232,12 +3237,19 @@ body.light {
   gap: var(--space-2);
 }
 
-.roadmap-card-status {
+.roadmap-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.roadmap-card-status,
+.roadmap-card-type {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   align-self: flex-start;
-  margin-block-end: var(--space-2);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   background: var(--color-surface-2);
@@ -3248,7 +3260,13 @@ body.light {
   color: var(--color-text-muted);
 }
 
-.roadmap-card-status::before {
+/* When status appears bare (not inside .roadmap-card-chips), keep its prior spacing. */
+.roadmap-card-content > .roadmap-card-status {
+  margin-block-end: var(--space-2);
+}
+
+.roadmap-card-status::before,
+.roadmap-card-type::before {
   content: '';
   width: 6px;
   height: 6px;
@@ -3261,6 +3279,10 @@ body.light {
 .roadmap-card-status[data-status="planned"]::before      { background: var(--color-status-planned); }
 .roadmap-card-status[data-status="in_progress"]::before  { background: var(--color-status-progress); }
 .roadmap-card-status[data-status="shipped"]::before      { background: var(--color-status-shipped); }
+
+.roadmap-card-type[data-type="bug"]::before     { background: var(--color-type-bug); }
+.roadmap-card-type[data-type="feature"]::before { background: var(--color-type-feature); }
+.roadmap-card-type[data-type="praise"]::before  { background: var(--color-type-praise); }
 
 .roadmap-card-title {
   font-size: var(--font-size-md);
@@ -3320,6 +3342,98 @@ body.light {
 }
 
 /* Admin status select */
+/* Feedback page — type filter row sits above status filters; tighten spacing. */
+.roadmap-filters-type {
+  margin-block-end: var(--space-3);
+}
+
+.roadmap-filters-type + .roadmap-filters {
+  margin-block-end: var(--space-6);
+}
+
+/* Type-pill chips inside filter buttons get the same color dot as cards. */
+.roadmap-filters-type button {
+  position: relative;
+}
+
+.roadmap-filters-type button[data-type="bug"]::before,
+.roadmap-filters-type button[data-type="feature"]::before,
+.roadmap-filters-type button[data-type="praise"]::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  margin-inline-end: var(--space-2);
+  vertical-align: middle;
+}
+
+.roadmap-filters-type button[data-type="bug"]::before     { background: var(--color-type-bug); }
+.roadmap-filters-type button[data-type="feature"]::before { background: var(--color-type-feature); }
+.roadmap-filters-type button[data-type="praise"]::before  { background: var(--color-type-praise); }
+
+/* Submit dialog — type picker as segmented radio. */
+.feedback-type-picker {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-3) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.feedback-type-picker > legend {
+  flex-basis: 100%;
+  margin-block-end: var(--space-2);
+}
+
+.feedback-type-picker label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: var(--transition-colors);
+}
+
+.feedback-type-picker label:has(input:checked) {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  border-color: var(--color-line-strong, var(--color-text));
+}
+
+.feedback-type-picker input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  border: var(--border-width) solid var(--color-line);
+  margin: 0;
+  display: inline-block;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.feedback-type-picker label:has(input[value="bug"]:checked) input { background: var(--color-type-bug); border-color: var(--color-type-bug); }
+.feedback-type-picker label:has(input[value="feature"]:checked) input { background: var(--color-type-feature); border-color: var(--color-type-feature); }
+.feedback-type-picker label:has(input[value="praise"]:checked) input { background: var(--color-type-praise); border-color: var(--color-type-praise); }
+
+.feedback-type-hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border-left: 3px solid var(--color-type-bug);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  margin-block-end: var(--space-3);
+  line-height: var(--line-height-normal);
+}
+
 .roadmap-admin-controls {
   display: flex;
   flex-direction: column;

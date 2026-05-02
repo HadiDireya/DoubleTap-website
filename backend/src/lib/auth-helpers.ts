@@ -18,6 +18,9 @@ export const STATUSES = [
 ] as const;
 export type Status = (typeof STATUSES)[number];
 
+export const FEEDBACK_TYPES = ["bug", "feature", "praise"] as const;
+export type FeedbackType = (typeof FEEDBACK_TYPES)[number];
+
 type AppContext = Context<{ Bindings: Env }>;
 
 export const getSession = async (c: AppContext) => {

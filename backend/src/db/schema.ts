@@ -65,6 +65,7 @@ export const feedbackPost = sqliteTable(
   {
     id: text("id").primaryKey(),
     userId: text("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+    type: text("type").notNull().default("feature"),
     title: text("title").notNull(),
     body: text("body").notNull(),
     status: text("status").notNull().default("suggested"),
@@ -73,6 +74,7 @@ export const feedbackPost = sqliteTable(
   },
   (t) => ({
     statusIdx: index("feedback_post_status_idx").on(t.status),
+    typeIdx: index("feedback_post_type_idx").on(t.type),
     userIdx: index("feedback_post_user_idx").on(t.userId),
   }),
 );
