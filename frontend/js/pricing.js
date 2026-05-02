@@ -84,7 +84,7 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 /* ================================================================
    Pricing cards — point each card's CTA at its Gumroad variant
    ================================================================ */
-const GUMROAD_BASE_URL = 'https://hadidireya.gumroad.com/l/DoubleTap';
+const GUMROAD_BASE_URL = 'https://buy.doubletap-app.com/l/DoubleTap';
 
 document.querySelectorAll('.price-card').forEach((card) => {
   const cta = card.querySelector('.price-card-cta');
