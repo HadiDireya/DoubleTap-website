@@ -45,12 +45,13 @@
       <a href="#how">How it works</a>
       <a href="#use-cases">Use cases</a>
       <a href="#features">Features</a>
+      <a href="#setup">Setup</a>
       <a href="pricing.html">Pricing</a>
       <a href="roadmap.html">Roadmap</a>
       <a href="feedback.html">Feedback</a>
       <a href="#faq">FAQ</a>
     </div>
-    <a href="https://buy.doubletap-app.com/l/DoubleTap" class="nav-links-cta" target="_blank" rel="noopener noreferrer">
+    <a href="https://github.com/HadiDireya/DoubleTap-releases/releases/latest" class="nav-links-cta" data-download-latest target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
       Download
     </a>
@@ -88,7 +89,7 @@
       </p>
 
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+        <a class="btn btn-primary btn-lg" href="https://github.com/HadiDireya/DoubleTap-releases/releases/latest" data-download-latest target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
           Try DoubleTap free
         </a>
@@ -513,6 +514,73 @@
 </section>
 
 <!-- ============================================================
+     SETUP — practical install & permissions guide
+     ============================================================ -->
+<section class="site-section setup" id="setup" aria-label="How to set it up">
+  <div class="container container-narrow">
+    <div class="section-header reveal">
+      <div class="eyebrow eyebrow-quiet">How to set it up</div>
+      <h2 class="section-title">Two permissions. Then it's out of the way.</h2>
+      <p class="section-subtitle">macOS will ask on first launch. Here's what each one does — and how to add them manually if a prompt slips by.</p>
+    </div>
+
+    <div class="setup-blocks">
+
+      <article class="setup-block reveal">
+        <h3 class="setup-block-title">Install &amp; activate</h3>
+        <ol class="setup-list">
+          <li>Open the DMG and drag DoubleTap to <strong>Applications</strong>.</li>
+          <li>Launch it — the icon appears in your menu bar.</li>
+          <li>Grant <strong>Accessibility</strong> when prompted — needed to detect modifier-key presses (<span class="kbd">⌘</span> <span class="kbd">⌥</span> <span class="kbd">⌃</span> <span class="kbd">⇧</span>).</li>
+          <li>Grant <strong>Input Monitoring</strong> when prompted — needed to detect F1–F12 keys.</li>
+          <li>Open the <strong>License</strong> tab in the sidebar and paste your key.</li>
+          <li>Click <strong>Activate</strong>. That's it.</li>
+        </ol>
+      </article>
+
+      <article class="setup-block reveal">
+        <h3 class="setup-block-title">If a permission prompt didn't appear</h3>
+        <p class="setup-block-intro">…or DoubleTap isn't in the list:</p>
+        <ol class="setup-list">
+          <li>Open <strong>System Settings → Privacy &amp; Security</strong>.</li>
+          <li>Click <strong>Accessibility</strong> (then repeat for <strong>Input Monitoring</strong>).</li>
+          <li>If DoubleTap is in the list, just toggle it <strong>ON</strong>.</li>
+          <li>If it isn't, click the <strong>+</strong> button below the list, navigate to <code>/Applications/DoubleTap.app</code>, and click <strong>Open</strong>. Then toggle it <strong>ON</strong>.</li>
+          <li>macOS will ask to relaunch DoubleTap — confirm. The permission only takes effect after the relaunch.</li>
+        </ol>
+        <p class="setup-block-note">Repeat for both Accessibility and Input Monitoring. Both are required.</p>
+      </article>
+
+      <article class="setup-block reveal">
+        <h3 class="setup-block-title">To use Fn or F-row keys as triggers</h3>
+        <p class="setup-block-intro">Skip if you only use modifier keys.</p>
+
+        <div class="setup-subblock">
+          <h4 class="setup-subblock-title">For the <span class="kbd">fn</span> / <span class="kbd">🌐</span> key</h4>
+          <ol class="setup-list">
+            <li>Open <strong>System Settings → Keyboard</strong>.</li>
+            <li>Find <strong>"Press 🌐 (or fn) key to…"</strong>.</li>
+            <li>Change it to <strong>"Do Nothing"</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="setup-subblock">
+          <h4 class="setup-subblock-title">For F1–F12 triggers</h4>
+          <ol class="setup-list">
+            <li>Open <strong>System Settings → Keyboard</strong>.</li>
+            <li>On macOS 26, click <strong>Keyboard Shortcuts… → Function Keys</strong>.</li>
+            <li>Turn <strong>"Use F1, F2, etc. keys as standard function keys"</strong> to <strong>ON</strong>. DoubleTap remaps F-keys back to volume/brightness whenever you pause it from the menu bar.</li>
+          </ol>
+        </div>
+      </article>
+
+    </div>
+
+    <p class="setup-footer-note reveal">DoubleTap's Settings tab shows live status indicators for all four — green when ready, with a quick "Fix" link when not. Stuck? Email <a href="mailto:support@doubletap-app.com">support@doubletap-app.com</a>.</p>
+  </div>
+</section>
+
+<!-- ============================================================
      PRICING — single, clean card
      ============================================================ -->
 <section class="site-section pricing-home" id="pricing" aria-label="Pricing">
@@ -543,7 +611,7 @@
       </ul>
 
       <div class="price-actions">
-        <a class="btn btn-primary btn-lg price-cta" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+        <a class="btn btn-primary btn-lg price-cta" href="https://github.com/HadiDireya/DoubleTap-releases/releases/latest" data-download-latest target="_blank" rel="noopener noreferrer">
           Try DoubleTap Free
         </a>
         <a class="btn-link" href="pricing.html">See multi-Mac tiers →</a>
@@ -594,7 +662,7 @@
     <h2 class="final-cta-title reveal">Tap twice. Do anything.</h2>
     <p class="final-cta-sub reveal">A DMG and a license key — that's the whole flow.</p>
     <div class="final-cta-actions reveal">
-      <a class="btn btn-primary btn-lg" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+      <a class="btn btn-primary btn-lg" href="https://github.com/HadiDireya/DoubleTap-releases/releases/latest" data-download-latest target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M17.564 12.882c-.024-2.452 2.005-3.628 2.097-3.689-1.143-1.671-2.92-1.9-3.553-1.926-1.515-.153-2.957.892-3.728.892-.77 0-1.957-.869-3.218-.844-1.657.024-3.184.962-4.036 2.443-1.722 2.985-.44 7.402 1.236 9.829.819 1.187 1.794 2.522 3.073 2.475 1.234-.05 1.7-.799 3.191-.799 1.49 0 1.91.799 3.218.773 1.329-.024 2.171-1.211 2.984-2.404.94-1.379 1.327-2.713 1.351-2.781-.029-.013-2.589-.994-2.615-3.969zM15.36 5.668c.683-.83 1.144-1.98 1.018-3.123-.984.041-2.176.654-2.882 1.483-.633.733-1.187 1.904-1.038 3.026 1.097.084 2.218-.557 2.902-1.386z"/></svg>
         Try DoubleTap Free
       </a>
@@ -640,5 +708,6 @@
 </footer>
 
 <script src="js/main.js" type="module"></script>
+<script src="js/download.js" type="module"></script>
 </body>
 </html>

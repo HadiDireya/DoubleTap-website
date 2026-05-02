@@ -2122,6 +2122,115 @@ body.light {
 }
 
 /* =====================================
+   14b. SETUP — install & permissions guide
+   ===================================== */
+.setup-blocks {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.setup-block {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+}
+
+.setup-block-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0 0 var(--space-4);
+}
+
+.setup-block-intro {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0 0 var(--space-4);
+}
+
+.setup-block-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: var(--space-4) 0 0;
+}
+
+.setup-list {
+  list-style: decimal;
+  padding-inline-start: var(--space-6);
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.setup-list li {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.setup-list li::marker {
+  color: var(--color-text-faint);
+}
+
+.setup-list code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface-2);
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-xs);
+  color: var(--color-text);
+}
+
+.setup-subblock {
+  margin-block-start: var(--space-5);
+}
+
+.setup-subblock:first-of-type {
+  margin-block-start: var(--space-2);
+}
+
+.setup-subblock-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--space-3);
+}
+
+.setup-subblock-title .kbd {
+  margin-inline: var(--space-1);
+}
+
+.setup-footer-note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-block-start: var(--space-8);
+  line-height: 1.6;
+}
+
+.setup-footer-note a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.setup-footer-note a:hover {
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .setup-block {
+    padding: var(--space-5);
+  }
+}
+
+/* =====================================
    15. PRICING (homepage card)
    ===================================== */
 .pricing-home .section-header {
