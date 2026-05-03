@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy DoubleTap</title>
+  <meta name="description" content="Buy a DoubleTap license. One-time purchase, lifetime updates.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/assets/checkout.css">
+</head>
+<body>
+
+<main class="wrap">
+  <header class="hdr">
+    <a class="hdr-back" href="/">← DoubleTap</a>
+    <h1>Buy DoubleTap</h1>
+    <p class="sub">One-time purchase. Lifetime updates. 14-day money-back guarantee.</p>
+  </header>
+
+  <section class="plans" aria-label="Plan picker">
+    <label class="plan" data-plan="single">
+      <input type="radio" name="plan" value="single" checked>
+      <div class="plan-body">
+        <div class="plan-name">Single Mac</div>
+        <div class="plan-price"><span class="amt">$9</span><span class="cur">USD</span></div>
+        <div class="plan-meta">1 Mac · lifetime updates</div>
+      </div>
+    </label>
+    <label class="plan" data-plan="pack3">
+      <input type="radio" name="plan" value="pack3">
+      <div class="plan-body">
+        <div class="plan-name">3-Mac Pack</div>
+        <div class="plan-price"><span class="amt">$22</span><span class="cur">USD</span></div>
+        <div class="plan-meta">3 Macs · lifetime updates · save $5</div>
+      </div>
+    </label>
+  </section>
+
+  <section id="buy-form" class="buy">
+    <label class="field">
+      <span class="field-label">Your email</span>
+      <input id="email" type="email" inputmode="email" autocomplete="email"
+             placeholder="you@example.com" required>
+      <span class="field-hint">We send your license key here.</span>
+    </label>
+
+    <button id="pay-lahza" class="btn btn-primary" type="button">
+      Continue to secure checkout →
+    </button>
+
+    <div class="trust">
+      <div class="trust-cards" aria-label="Cards accepted">
+        <span class="card-badge card-visa" aria-label="Visa">
+          <svg viewBox="0 0 48 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <text x="24" y="13" text-anchor="middle"
+                  font-family="Helvetica, Arial, sans-serif"
+                  font-weight="900" font-style="italic"
+                  font-size="14" letter-spacing="1"
+                  fill="currentColor">VISA</text>
+          </svg>
+        </span>
+        <span class="card-badge card-mc" aria-label="Mastercard">
+          <svg viewBox="0 0 36 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <circle cx="14" cy="11" r="9" fill="#EB001B"/>
+            <circle cx="22" cy="11" r="9" fill="#F79E1B"/>
+            <path d="M18 4.2a8.99 8.99 0 0 1 0 13.6 8.99 8.99 0 0 1 0-13.6z" fill="#FF5F00"/>
+          </svg>
+        </span>
+      </div>
+      <p class="trust-line">
+        <svg class="lock-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M4 7V5a4 4 0 1 1 8 0v2h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h1zm1.5 0h5V5a2.5 2.5 0 0 0-5 0v2z" fill="currentColor"/>
+        </svg>
+        Card details stay on Lahza's secure servers — DoubleTap never sees them.
+      </p>
+    </div>
+
+    <p class="alt">Prefer PayPal or another option?
+      <a id="pay-gumroad" href="https://buy.doubletap-app.com/l/DoubleTap">Pay via Gumroad →</a>
+    </p>
+
+    <p id="error" class="error" hidden></p>
+  </section>
+
+  <footer class="ftr">
+    <p>Secure checkout. Card details handled by Lahza — DoubleTap never sees them.</p>
+    <p><a href="mailto:support@doubletap-app.com">support@doubletap-app.com</a></p>
+  </footer>
+</main>
+
+<script src="/assets/checkout.js"></script>
+</body>
+</html>

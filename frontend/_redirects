@@ -2,3 +2,7 @@
 # Format: <source> <destination> <status>
 # Host-level redirects (www → apex) are configured in the Cloudflare dashboard,
 # not here.
+
+# Clean URLs for the Lahza checkout flow.
+/buy      /buy.html      200
+/success  /success.html  200

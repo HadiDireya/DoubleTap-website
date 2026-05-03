@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanks — DoubleTap</title>
+  <meta name="description" content="Your DoubleTap license is ready.">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/assets/checkout.css">
+</head>
+<body>
+
+<main class="wrap">
+  <header class="hdr">
+    <a class="hdr-back" href="/">← DoubleTap</a>
+    <h1>Thanks for buying DoubleTap.</h1>
+  </header>
+
+  <section id="state-loading" class="card">
+    <div class="spinner" aria-hidden="true"></div>
+    <h2>Issuing your license…</h2>
+    <p class="muted">This usually takes a few seconds.</p>
+  </section>
+
+  <section id="state-ready" class="card" hidden>
+    <h2>Your license key</h2>
+    <div class="key-row">
+      <code id="key" class="key">LZ-XXXXX-XXXXX-XXXXX-XXXXX</code>
+      <button id="copy" class="btn btn-secondary" type="button">Copy</button>
+    </div>
+    <p class="muted">We also emailed it to <code id="email">your address</code>.</p>
+
+    <div class="next">
+      <h3>Activate your Mac</h3>
+      <ol>
+        <li>Open DoubleTap.</li>
+        <li>Click the menu bar icon → License (or Settings → License).</li>
+        <li>Paste the key above and click Activate.</li>
+      </ol>
+    </div>
+
+    <p class="alt"><a href="https://github.com/HadiDireya/DoubleTap-releases/releases/latest">Need the latest version? Download here →</a></p>
+  </section>
+
+  <section id="state-pending" class="card" hidden>
+    <h2>Check your email</h2>
+    <p>Your license key is on its way. If it doesn't arrive in a few minutes, check spam or contact <a href="mailto:support@doubletap-app.com">support@doubletap-app.com</a> with your transaction reference.</p>
+    <p class="muted">Reference: <code id="ref-pending">—</code></p>
+  </section>
+
+  <section id="state-error" class="card" hidden>
+    <h2>Something went wrong</h2>
+    <p id="error-msg">We couldn't find your transaction.</p>
+    <p>Email <a href="mailto:support@doubletap-app.com">support@doubletap-app.com</a> with the reference below and we'll sort it out within 24 hours.</p>
+    <p class="muted">Reference: <code id="ref-error">—</code></p>
+  </section>
+
+  <footer class="ftr">
+    <p><a href="mailto:support@doubletap-app.com">support@doubletap-app.com</a></p>
+  </footer>
+</main>
+
+<script src="/assets/checkout.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), interest-cohort=()
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://*.googleusercontent.com https://*.gravatar.com; connect-src 'self' https://api.doubletap-app.com https://api.github.com; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: https://*.googleusercontent.com https://*.gravatar.com; connect-src 'self' https://api.doubletap-app.com https://api.github.com https://doubletap-license.hadidireya.workers.dev; media-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://checkout.lahza.io; upgrade-insecure-requests
 
 # CSS / JS — short cache so deploys propagate fast (no content hashing in build)
 /css/*
