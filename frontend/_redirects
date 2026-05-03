@@ -2,7 +2,8 @@
 # Format: <source> <destination> <status>
 # Host-level redirects (www → apex) are configured in the Cloudflare dashboard,
 # not here.
-
-# Clean URLs for the Lahza checkout flow.
-/buy      /buy.html      200
-/success  /success.html  200
+#
+# NOTE: Don't add /buy → /buy.html or /success → /success.html rules here.
+# Cloudflare Pages already serves *.html at the extensionless path (and 308s
+# the .html → clean URL canonically) by default. Adding explicit 200 rewrites
+# here causes an infinite loop with Pages' built-in redirect.
