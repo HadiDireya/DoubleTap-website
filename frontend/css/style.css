@@ -2482,6 +2482,67 @@ body.light {
   margin: 0;
 }
 
+/* Inline checkout form revealed inside each .price-card on CTA click */
+.price-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.price-checkout-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.price-checkout-input {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  width: 100%;
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background-color var(--duration-fast) var(--ease);
+}
+
+.price-checkout-input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
+}
+
+.price-checkout-input:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.price-checkout-pay {
+  width: 100%;
+  justify-content: center;
+}
+
+.price-checkout-error {
+  font-family: var(--font-sys);
+  font-size: var(--font-size-xs);
+  color: #ff5d5d;
+  margin: 0;
+}
+
+.price-checkout-trust {
+  font-family: var(--font-sys);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin: 0;
+}
+
 .pricing-trial {
   display: flex;
   flex-direction: column;

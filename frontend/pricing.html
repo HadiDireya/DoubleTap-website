@@ -82,14 +82,14 @@
 
     <div class="pricing-cards" role="group" aria-label="License tier">
 
-      <article class="price-card" data-name="1 Mac" data-devices="1 Mac" data-price="9">
+      <article class="price-card" data-name="Personal" data-devices="1 Mac" data-price="8.99" data-plan="single" data-cta-label="Get Personal">
         <div class="price-card-head">
           <h2 class="price-card-name">Personal</h2>
           <p class="price-card-devices">1 Mac</p>
         </div>
         <div class="price-amount">
           <span class="price-currency">$</span>
-          <span class="price-number">9</span>
+          <span class="price-number">8.99</span>
         </div>
         <ul class="price-features">
           <li>14-day free trial</li>
@@ -98,13 +98,20 @@
           <li>No subscription, no account</li>
         </ul>
         <div class="price-actions">
-          <a class="btn btn-primary btn-lg price-card-cta" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+          <button class="btn btn-primary btn-lg price-card-cta" type="button" data-action="reveal-checkout">
             Get Personal →
-          </a>
+          </button>
+          <form class="price-checkout" hidden novalidate>
+            <label class="price-checkout-label" for="email-single">Email for receipt &amp; license</label>
+            <input id="email-single" class="price-checkout-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="btn btn-primary btn-lg price-checkout-pay" type="submit">Continue to checkout →</button>
+            <p class="price-checkout-error" hidden role="alert"></p>
+            <p class="price-checkout-trust">Secure payment · Visa &amp; Mastercard via Lahza</p>
+          </form>
         </div>
       </article>
 
-      <article class="price-card is-featured" data-name="2 Macs" data-devices="2 Macs" data-price="14.99">
+      <article class="price-card is-featured" data-name="Home + work" data-devices="2 Macs" data-price="14.99" data-plan="pack2" data-cta-label="Get Home + work">
         <div class="price-card-badge">Most popular</div>
         <div class="price-card-head">
           <h2 class="price-card-name">Home + work</h2>
@@ -122,13 +129,20 @@
           <li>No subscription, no account</li>
         </ul>
         <div class="price-actions">
-          <a class="btn btn-primary btn-lg price-card-cta" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+          <button class="btn btn-primary btn-lg price-card-cta" type="button" data-action="reveal-checkout">
             Get Home + work →
-          </a>
+          </button>
+          <form class="price-checkout" hidden novalidate>
+            <label class="price-checkout-label" for="email-pack2">Email for receipt &amp; license</label>
+            <input id="email-pack2" class="price-checkout-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="btn btn-primary btn-lg price-checkout-pay" type="submit">Continue to checkout →</button>
+            <p class="price-checkout-error" hidden role="alert"></p>
+            <p class="price-checkout-trust">Secure payment · Visa &amp; Mastercard via Lahza</p>
+          </form>
         </div>
       </article>
 
-      <article class="price-card" data-name="5 Macs" data-devices="5 Macs" data-price="29.99">
+      <article class="price-card" data-name="Family" data-devices="5 Macs" data-price="29.99" data-plan="pack5" data-cta-label="Get Family">
         <div class="price-card-head">
           <h2 class="price-card-name">Family</h2>
           <p class="price-card-devices">5 Macs</p>
@@ -145,9 +159,16 @@
           <li>No subscription, no account</li>
         </ul>
         <div class="price-actions">
-          <a class="btn btn-primary btn-lg price-card-cta" href="https://buy.doubletap-app.com/l/DoubleTap" target="_blank" rel="noopener noreferrer">
+          <button class="btn btn-primary btn-lg price-card-cta" type="button" data-action="reveal-checkout">
             Get Family →
-          </a>
+          </button>
+          <form class="price-checkout" hidden novalidate>
+            <label class="price-checkout-label" for="email-pack5">Email for receipt &amp; license</label>
+            <input id="email-pack5" class="price-checkout-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="btn btn-primary btn-lg price-checkout-pay" type="submit">Continue to checkout →</button>
+            <p class="price-checkout-error" hidden role="alert"></p>
+            <p class="price-checkout-trust">Secure payment · Visa &amp; Mastercard via Lahza</p>
+          </form>
         </div>
       </article>
 
