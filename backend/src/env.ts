@@ -1,5 +1,6 @@
 export type Env = {
   DB: D1Database;
+  LICENSE_DB: D1Database;
   APP_URL: string;
   API_URL: string;
   BETTER_AUTH_SECRET: string;

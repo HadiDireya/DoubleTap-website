@@ -106,3 +106,24 @@ export const feedbackComment = sqliteTable(
     postIdx: index("feedback_comment_post_idx").on(t.postId),
   }),
 );
+
+// ── Admin ─────────────────────────────────────────────────────────────────
+// Append-only. See migrations/0002_admin_audit_log.sql for table-level
+// notes (polymorphic target_type/target_id, JSON-as-text details).
+export const adminAuditLog = sqliteTable(
+  "admin_audit_log",
+  {
+    id: text("id").primaryKey(),
+    actorEmail: text("actor_email").notNull(),
+    action: text("action").notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    details: text("details"),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (t) => ({
+    createdIdx: index("admin_audit_log_created_idx").on(t.createdAt),
+    targetIdx: index("admin_audit_log_target_idx").on(t.targetType, t.targetId),
+    actorIdx: index("admin_audit_log_actor_idx").on(t.actorEmail),
+  }),
+);

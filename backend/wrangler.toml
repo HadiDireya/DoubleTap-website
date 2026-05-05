@@ -14,6 +14,24 @@ database_name = "doubletap"
 database_id = "4cb81ed6-18e9-4a07-8777-730da8349194"
 migrations_dir = "migrations"
 
+# Read/write access to the doubletap-license Worker's database so the admin
+# panel can manage Lahza licenses, trials, and activations from one place.
+# The license-server Worker continues to own writes from the macOS app
+# (start-trial, activate, deactivate, verify); doubletap-api only touches
+# this binding for admin reads + admin-driven mutations (revoke, free slot,
+# issue comp, etc.). Schema is owned by the license-server's migrations dir
+# (../DoubleTap/license-server/migrations).
+#
+# `migrations_dir` is pinned to a non-existent path so an accidental
+# `wrangler d1 migrations apply doubletap-licenses` from this project
+# fails fast instead of running this Worker's migrations against the
+# license-server's database.
+[[d1_databases]]
+binding = "LICENSE_DB"
+database_name = "doubletap-licenses"
+database_id = "e9fae924-dfd7-428b-bf50-785583208b5e"
+migrations_dir = "migrations-license-server-do-not-apply-from-this-project"
+
 [vars]
 APP_URL = "https://doubletap-app.com"
 API_URL = "https://api.doubletap-app.com"

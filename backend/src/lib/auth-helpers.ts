@@ -1,4 +1,4 @@
-import type { Context } from "hono";
+import type { HonoRequest } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { eq } from "drizzle-orm";
 import { createAuth } from "../auth";
@@ -21,7 +21,12 @@ export type Status = (typeof STATUSES)[number];
 export const FEEDBACK_TYPES = ["bug", "feature", "praise"] as const;
 export type FeedbackType = (typeof FEEDBACK_TYPES)[number];
 
-type AppContext = Context<{ Bindings: Env }>;
+// Structural minimal type so any Hono sub-app can pass its context here
+// regardless of how it parameterised Variables (the Variables generic is
+// invariant in Hono, so a nominal Context<...> alias would reject any
+// caller whose sub-app declared its own Variables shape). The helpers
+// only ever touch env and req.raw.headers — that's all this type needs.
+type AppContext = { env: Env; req: HonoRequest };
 
 export const getSession = async (c: AppContext) => {
   const auth = createAuth(c.env);

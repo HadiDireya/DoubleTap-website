@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { createAuth } from "./auth";
+import admin from "./routes/admin";
 import feedback from "./routes/feedback";
 import gumroad from "./routes/gumroad";
 import type { Env } from "./env";
@@ -38,5 +39,6 @@ app.on(["GET", "POST"], "/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
 
 app.route("/feedback", feedback);
 app.route("/gumroad", gumroad);
+app.route("/admin", admin);
 
 export default app;
