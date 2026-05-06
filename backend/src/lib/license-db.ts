@@ -513,3 +513,182 @@ export const insertCompLicense = async (
     .run();
   return r.meta.changes > 0;
 };
+
+// ── Trials page ───────────────────────────────────────────────────────────
+// Status filters compare `deadline` against the request-time `now` (passed
+// in from the route so the unit tests / dashboards stay deterministic).
+// Active = deadline > now; expired = deadline <= now.
+
+export type TrialListRow = {
+  machine_id: string;
+  started_at: string; // ISO
+  deadline: string; // ISO
+  // Most-recent activation for this machine_id where activated_at >= started_at,
+  // i.e. the trial converted into a paid activation. NULL when the machine never
+  // converted or only had pre-trial activations (e.g. user re-trialled after
+  // deactivation — see trialConversionBetween for the same `>=` rationale).
+  converted_license_key: string | null;
+  converted_at: string | null;
+};
+
+const trialStatusClause = (status: "active" | "expired" | "all") => {
+  if (status === "active") return "AND datetime(t.deadline) > datetime(?)";
+  if (status === "expired") return "AND datetime(t.deadline) <= datetime(?)";
+  return "";
+};
+
+const trialSearchClause = (q: string | undefined) => {
+  if (!q || !q.trim()) return { sql: "", binds: [] as string[] };
+  return { sql: "AND t.machine_id LIKE ?", binds: [`%${q.trim()}%`] };
+};
+
+const trialDateRangeClause = (sinceISO: string | null, untilISO: string | null) => {
+  const parts: string[] = [];
+  const binds: string[] = [];
+  if (sinceISO) {
+    parts.push("AND datetime(t.started_at) >= datetime(?)");
+    binds.push(sinceISO);
+  }
+  if (untilISO) {
+    parts.push("AND datetime(t.started_at) < datetime(?)");
+    binds.push(untilISO);
+  }
+  return { sql: parts.join(" "), binds };
+};
+
+// "Did this machine convert?" — most-recent activation on the same machine
+// where `activated_at >= started_at`. The `>=` matters: an activation that
+// happened *before* this trial started would otherwise falsely count as a
+// conversion (e.g. user deactivated their license and started a fresh
+// trial on the same machine). Same rationale as `trialConversionBetween`.
+// Both columns are produced by the same subquery shape so the JS row
+// shape stays aligned between list and detail.
+const TRIAL_CONVERSION_LICENSE_KEY_SUBQUERY = `(
+  SELECT a.license_key FROM activations a
+  WHERE a.machine_id = t.machine_id
+    AND datetime(a.activated_at) >= datetime(t.started_at)
+  ORDER BY datetime(a.activated_at) DESC LIMIT 1
+)`;
+const TRIAL_CONVERSION_AT_SUBQUERY = `(
+  SELECT ${ISO}a.activated_at) FROM activations a
+  WHERE a.machine_id = t.machine_id
+    AND datetime(a.activated_at) >= datetime(t.started_at)
+  ORDER BY datetime(a.activated_at) DESC LIMIT 1
+)`;
+
+export const listTrialsAdmin = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    status?: "active" | "expired" | "all";
+    sinceISO?: string | null;
+    untilISO?: string | null;
+    nowISO: string;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<TrialListRow[]> => {
+  const status = opts.status ?? "all";
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  const offset = Math.max(opts.offset ?? 0, 0);
+  const search = trialSearchClause(opts.q);
+  const range = trialDateRangeClause(opts.sinceISO ?? null, opts.untilISO ?? null);
+  const sql = `
+    SELECT
+      t.machine_id,
+      ${ISO}t.started_at) AS started_at,
+      ${ISO}t.deadline) AS deadline,
+      ${TRIAL_CONVERSION_LICENSE_KEY_SUBQUERY} AS converted_license_key,
+      ${TRIAL_CONVERSION_AT_SUBQUERY} AS converted_at
+    FROM trials t
+    WHERE 1 = 1
+      ${trialStatusClause(status)}
+      ${search.sql}
+      ${range.sql}
+    ORDER BY datetime(t.started_at) DESC
+    LIMIT ? OFFSET ?`;
+
+  const statusBinds = status === "all" ? [] : [opts.nowISO];
+  const { results } = await db
+    .prepare(sql)
+    .bind(...statusBinds, ...search.binds, ...range.binds, limit, offset)
+    .all<TrialListRow>();
+  return results ?? [];
+};
+
+export const countTrialsAdmin = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    status?: "active" | "expired" | "all";
+    sinceISO?: string | null;
+    untilISO?: string | null;
+    nowISO: string;
+  },
+): Promise<number> => {
+  const status = opts.status ?? "all";
+  const search = trialSearchClause(opts.q);
+  const range = trialDateRangeClause(opts.sinceISO ?? null, opts.untilISO ?? null);
+  const sql = `
+    SELECT COUNT(*) AS n FROM trials t
+    WHERE 1 = 1
+      ${trialStatusClause(status)}
+      ${search.sql}
+      ${range.sql}`;
+  const statusBinds = status === "all" ? [] : [opts.nowISO];
+  const r = await db
+    .prepare(sql)
+    .bind(...statusBinds, ...search.binds, ...range.binds)
+    .first<{ n: number }>();
+  return r?.n ?? 0;
+};
+
+export const getTrial = async (
+  db: D1Database,
+  machineId: string,
+): Promise<TrialListRow | null> => {
+  const sql = `
+    SELECT
+      t.machine_id,
+      ${ISO}t.started_at) AS started_at,
+      ${ISO}t.deadline) AS deadline,
+      ${TRIAL_CONVERSION_LICENSE_KEY_SUBQUERY} AS converted_license_key,
+      ${TRIAL_CONVERSION_AT_SUBQUERY} AS converted_at
+    FROM trials t WHERE t.machine_id = ?`;
+  const row = await db.prepare(sql).bind(machineId).first<TrialListRow>();
+  return row ?? null;
+};
+
+export type ActivationForMachineRow = {
+  id: number;
+  license_key: string;
+  activated_at: string;
+};
+
+export const listActivationsForMachine = async (
+  db: D1Database,
+  machineId: string,
+): Promise<ActivationForMachineRow[]> => {
+  const { results } = await db
+    .prepare(
+      `SELECT id, license_key, ${ISO}activated_at) AS activated_at
+       FROM activations
+       WHERE machine_id = ?
+       ORDER BY datetime(activated_at) DESC`,
+    )
+    .bind(machineId)
+    .all<ActivationForMachineRow>();
+  return results ?? [];
+};
+
+export const setTrialDeadline = async (
+  db: D1Database,
+  machineId: string,
+  deadlineISO: string,
+): Promise<boolean> => {
+  const r = await db
+    .prepare("UPDATE trials SET deadline = ? WHERE machine_id = ?")
+    .bind(deadlineISO, machineId)
+    .run();
+  return r.meta.changes > 0;
+};

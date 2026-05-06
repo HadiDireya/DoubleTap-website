@@ -54,3 +54,23 @@ export const writeAudit = async (
     createdAt: new Date(),
   });
 };
+
+// Serializes an audit row for the JSON response. Drizzle's `createdAt`
+// can come back as a Date or as a number/string depending on driver path;
+// callers want a stable ISO string in either case.
+export const serializeAuditEntry = (e: {
+  id: string;
+  actorEmail: string;
+  action: string;
+  details: string | null;
+  createdAt: Date | number | string;
+}) => ({
+  id: e.id,
+  actor_email: e.actorEmail,
+  action: e.action,
+  details: e.details,
+  created_at:
+    e.createdAt instanceof Date
+      ? e.createdAt.toISOString()
+      : new Date(e.createdAt as Date | number | string).toISOString(),
+});

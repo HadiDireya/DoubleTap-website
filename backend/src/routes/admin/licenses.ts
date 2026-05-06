@@ -4,7 +4,7 @@ import { and, count, desc, eq, like, or } from "drizzle-orm";
 import { Resend } from "resend";
 import { getDb } from "../../db/client";
 import { adminAuditLog, gumroadLicense, user } from "../../db/schema";
-import { writeAudit } from "../../lib/audit";
+import { serializeAuditEntry, writeAudit } from "../../lib/audit";
 import { parsePositiveInt } from "../../lib/query";
 import {
   countLahzaLicenses,
@@ -291,7 +291,7 @@ licenses.get("/:key", async (c) => {
       max_uses: null,
       user_id: row.userId,
       activations,
-      audit: audit.map(serializeAudit),
+      audit: audit.map(serializeAuditEntry),
     });
   }
 
@@ -310,25 +310,8 @@ licenses.get("/:key", async (c) => {
     issued_at: row.issued_at,
     revoked_at: row.revoked_at,
     activations,
-    audit: audit.map(serializeAudit),
+    audit: audit.map(serializeAuditEntry),
   });
-});
-
-const serializeAudit = (e: {
-  id: string;
-  actorEmail: string;
-  action: string;
-  details: string | null;
-  createdAt: Date | number;
-}) => ({
-  id: e.id,
-  actor_email: e.actorEmail,
-  action: e.action,
-  details: e.details,
-  created_at:
-    e.createdAt instanceof Date
-      ? e.createdAt.toISOString()
-      : new Date(e.createdAt as unknown as number).toISOString(),
 });
 
 // Gumroad rows are read-only for now — managing them needs a

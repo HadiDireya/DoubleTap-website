@@ -3,6 +3,7 @@ import { requireAdmin } from "../../lib/auth-helpers";
 import audit from "./audit";
 import dashboard from "./dashboard";
 import licenses from "./licenses";
+import trials from "./trials";
 import type { Env } from "../../env";
 
 type Session = Awaited<ReturnType<typeof requireAdmin>>;
@@ -27,6 +28,7 @@ admin.get("/me", (c) => {
 
 admin.route("/dashboard", dashboard);
 admin.route("/licenses", licenses);
+admin.route("/trials", trials);
 admin.route("/audit", audit);
 
 export default admin;
