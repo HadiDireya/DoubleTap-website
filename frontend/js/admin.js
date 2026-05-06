@@ -18,7 +18,15 @@ const API_BASE =
     ? "http://localhost:8787"
     : "https://api.doubletap-app.com";
 
-const ADMIN_EMAIL = "hadidireya@gmail.com";
+// Mirrors backend/src/lib/auth-helpers.ts → ADMIN_EMAILS. The SPA gate
+// below is defence-in-depth (server already 403s a non-admin); keeping
+// it list-aware means a second admin doesn't get stuck on the gate even
+// when the backend would let them in. ADMIN_EMAIL retained as a derived
+// alias for in-page demo fixtures (signed-in identity, audit actor); it
+// is not a configuration knob — edit the array.
+const ADMIN_EMAILS = ["hadidireya@gmail.com"];
+const ADMIN_EMAILS_LOWER = ADMIN_EMAILS.map((e) => e.toLowerCase());
+const ADMIN_EMAIL = ADMIN_EMAILS[0];
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 // OAuth host allowlist matches the rest of the site (roadmap.js, feedback.js).
@@ -418,7 +426,39 @@ const demoFixture = (path) => {
               author: { id: "u_admin", name: "Hadi", email: ADMIN_EMAIL } },
           ]
         : [],
-      audit: [],
+      // Match the response shape after the audit-detail enrichment fix
+      // — feedback.update_status now snapshots author_email/author_name
+      // alongside from/to/title for parity with delete-post.
+      audit: [
+        { id: "fa1", actor_email: ADMIN_EMAIL, action: "feedback.update_status",
+          target_type: "feedback_post", target_id: id,
+          details: JSON.stringify({
+            from: "suggested",
+            to: "under_review",
+            title: isBug
+              ? "Double-tap of right ⌘ doesn't fire the action"
+              : isPraise
+                ? "Switching from BetterTouchTool — DoubleTap nailed it"
+                : "Per-app trigger overrides for Spotlight remap",
+            author_email: "alice@example.com",
+            author_name: "Alice Demo",
+          }),
+          created_at: new Date(now - 2 * 86400_000).toISOString() },
+        ...(isWithComments
+          ? [
+              { id: "fa2", actor_email: ADMIN_EMAIL, action: "feedback.delete_comment",
+                target_type: "feedback_comment", target_id: "c_old",
+                details: JSON.stringify({
+                  post_id: id,
+                  author_user_id: "u_spam",
+                  author_email: "spammer@example.com",
+                  author_name: "Spammer",
+                  body_preview: "Buy crypto on shadyexchange.example…",
+                }),
+                created_at: new Date(now - 3 * 86400_000).toISOString() },
+            ]
+          : []),
+      ],
     };
   }
   if (path.startsWith("/admin/feedback")) {
@@ -3765,6 +3805,10 @@ const renderFeedback = async (canvas, { params }) => {
       sinceInput,
       untilInput,
     ),
+    el("div", { class: "lic-toolbar-help" },
+      el("small", { class: "lic-toolbar-hint" },
+        "End date is exclusive — pick tomorrow to include today."),
+    ),
   );
 
   if (focusedSelector) {
@@ -3837,7 +3881,7 @@ const renderFeedbackTable = (data, { page, limit }) => {
       (row.type || "").toUpperCase());
     const authorCell = row.author
       ? el("a", {
-          class: "audit-target-link",
+          class: "lic-pivot-link",
           href: `#/customers?u=${encodeURIComponent(row.author.id)}`,
           onclick: (e) => e.stopPropagation(),
         }, truncateEmail(row.author.email || row.author.name || row.author.id, 28))
@@ -3977,7 +4021,7 @@ const paintFeedbackDrawer = (data) => {
   if (data.author) {
     addMeta("Author",
       el("a", {
-        class: "audit-target-link",
+        class: "lic-pivot-link",
         href: `#/customers?u=${encodeURIComponent(data.author.id)}`,
       }, data.author.name || data.author.email || data.author.id));
     addMeta("Author email", data.author.email);
@@ -4022,8 +4066,10 @@ const paintFeedbackDrawer = (data) => {
   );
 
   // Status change controls + danger actions.
+  const statusSelectId = `feedback-status-${data.id}`;
   const statusSel = el("select", {
-    class: "audit-select", "aria-label": "Change status",
+    id: statusSelectId,
+    class: "audit-select",
     onchange: async (e) => {
       const next = e.target.value;
       if (next === data.status) return;
@@ -4038,10 +4084,58 @@ const paintFeedbackDrawer = (data) => {
         } else {
           showToast(`Status → ${next.replace(/_/g, " ")}`);
         }
-        // Banner update + re-fetch the drawer so audit timeline picks
-        // up the new entry. Banner is announced via aria-live.
+        // Optimistic in-place update — avoid a full re-fetch + re-paint so
+        // the aria-live banner survives for screen readers (a fresh open
+        // would `clear(feedbackDrawerEl)` and wipe it before announcement).
+        // Append a synthesized audit row so the timeline reflects the
+        // change locally; the next genuine open fetches canonical rows
+        // from the server. statusSel is re-enabled because we keep the
+        // existing DOM node — no rebuild, so its disabled flag would leak.
+        const prevStatus = data.status;
+        data.status = next;
+        // Mirror the backend snapshot shape so renderAuditItem prints the
+        // same one-liner the server would after a refresh (see fix #3).
+        const localAuditEntry = {
+          id: `local-${Date.now()}`,
+          actor_email: document.querySelector(".admin-topbar-email")?.textContent || "you",
+          action: "feedback.update_status",
+          target_type: "feedback_post",
+          target_id: data.id,
+          details: JSON.stringify({
+            from: prevStatus,
+            to: next,
+            title: data.title,
+            author_email: data.author?.email ?? null,
+            author_name: data.author?.name ?? null,
+          }),
+          created_at: new Date().toISOString(),
+        };
+        data.audit = [localAuditEntry, ...(data.audit || [])];
+        // Update the status badge in the drawer header so it matches.
+        const headerBadge = feedbackDrawerEl?.querySelector(
+          ".lic-drawer-badges .lic-badge:not([class*='fb-type-'])",
+        );
+        if (headerBadge) {
+          headerBadge.className = `lic-badge ${FEEDBACK_STATUS_BADGE[next] || "status-expired"}`;
+          headerBadge.textContent = (next || "").replace(/_/g, " ").toUpperCase();
+        }
+        // Prepend the new audit entry to the audit timeline list, scoped
+        // to .feedback-audit-section so we don't collide with the comments
+        // section's own empty placeholder.
+        const auditSection = feedbackDrawerEl?.querySelector(".feedback-audit-section");
+        const auditList = auditSection?.querySelector(".lic-audit-list");
+        if (auditList) {
+          auditList.prepend(renderAuditItem(localAuditEntry));
+        } else if (auditSection) {
+          const emptyPlaceholder = auditSection.querySelector(".lic-empty");
+          if (emptyPlaceholder) {
+            const newList = el("div", { class: "lic-audit-list" });
+            newList.append(renderAuditItem(localAuditEntry));
+            emptyPlaceholder.replaceWith(newList);
+          }
+        }
         banner.textContent = `Status set to ${next.replace(/_/g, " ")}.`;
-        openFeedbackDrawer(data.id);
+        statusSel.disabled = false;
       } catch (err) {
         statusSel.disabled = false;
         statusSel.value = data.status;
@@ -4056,7 +4150,7 @@ const paintFeedbackDrawer = (data) => {
 
   const actions = el("div", { class: "lic-actions" });
   actions.append(
-    el("label", { class: "feedback-status-label" },
+    el("label", { class: "feedback-status-label", for: statusSelectId },
       el("span", {}, "Set status"),
       statusSel,
     ),
@@ -4073,17 +4167,17 @@ const paintFeedbackDrawer = (data) => {
         try {
           await apiFetch(`/admin/feedback/${encodeURIComponent(data.id)}`, { method: "DELETE" });
           showToast("Post deleted");
-          // Force the list to re-fetch — drawer's gone, list filter sig
-          // stays valid but the row itself is now stale.
-          lastFeedbackFilterSig = null;
+          // Close drawer first (which strips ?id= via replaceState and
+          // re-caches lastFeedbackFilterSig), then explicitly invalidate
+          // the sig and re-render renderFeedback directly. Hash-driven
+          // re-render doesn't fire when the new hash equals the current
+          // one, so calling renderFeedback is the only reliable path to
+          // drop the now-stale row.
+          const canvas = document.querySelector(".admin-canvas");
           closeFeedbackDrawer();
-          // Trigger a re-render via hash navigation.
-          const { path, params } = parseHash();
-          if (path === "/feedback") {
-            const qs = params.toString();
-            window.location.hash = `#${path}${qs ? `?${qs}` : ""}`;
-            // Above is a no-op (same hash); fall back to direct re-render.
-          }
+          lastFeedbackFilterSig = null;
+          const { params: freshParams } = parseHash();
+          if (canvas) renderFeedback(canvas, { params: freshParams });
         } catch (err) {
           showToast(err.message || "Couldn't delete", "error");
         }
@@ -4110,7 +4204,7 @@ const paintFeedbackDrawer = (data) => {
     for (const cm of comments) {
       const authorLink = cm.author
         ? el("a", {
-            class: "audit-target-link",
+            class: "lic-pivot-link",
             href: `#/customers?u=${encodeURIComponent(cm.author.id)}`,
           }, cm.author.name || cm.author.email || cm.author.id)
         : el("span", { class: "lic-meta" }, "— (account deleted)");
@@ -4155,8 +4249,11 @@ const paintFeedbackDrawer = (data) => {
   body.append(commentsSection);
 
   // Audit timeline — reuse renderAuditItem so feedback/license/trial
-  // timelines all render the same way.
-  const auditSection = el("div", {},
+  // timelines all render the same way. The wrapper carries a class so
+  // the optimistic-update path in the status onchange handler can find
+  // and mutate this section without colliding with the comments section's
+  // own .lic-empty placeholder.
+  const auditSection = el("div", { class: "feedback-audit-section" },
     el("div", { class: "lic-section-title" },
       "Audit timeline",
       " · ",
@@ -4257,11 +4354,16 @@ const renderSettingsAdminsCard = (admins) => {
 
   const list = el("ul", { class: "settings-list" });
   for (const a of admins) {
+    // a.source is hardcoded "code" server-side today, but if it ever
+    // becomes DB-driven an unsanitized value would flow into a class
+    // name. Validate against the small enum on render so a stray value
+    // can't smuggle CSS via the className.
+    const safeSource = a.source === "code" || a.source === "db" ? a.source : "unknown";
     list.append(
       el("li", { class: "settings-list-row" },
         el("span", { class: "settings-list-primary" }, a.email),
-        el("span", { class: `lic-badge settings-source-${a.source}` },
-          (a.source || "code").toUpperCase()),
+        el("span", { class: `lic-badge settings-source-${safeSource}` },
+          safeSource.toUpperCase()),
       ),
     );
   }
@@ -4334,24 +4436,45 @@ const renderSettingsMaintenanceCard = (maintenance) => {
           "a 503 with the configured message."),
   );
 
-  // Disabled toggle row — visible affordance, ignored input. Once the
-  // migration lands, replace `disabled: true` with a click handler that
-  // PATCHes /admin/settings/maintenance and refetches.
+  // Toggle row — visible affordance whose handler is gated on
+  // `unimplemented`. Once the admin_settings migration lands and the
+  // server clears the flag, attach a click handler that PATCHes
+  // /admin/settings/maintenance and refetches.
+  //
+  // While unimplemented: tabindex=-1 keeps it out of tab order even on
+  // Safari (which has historically stripped `disabled` from tab order
+  // inconsistently for role="switch" buttons), and aria-disabled mirrors
+  // the disabled attribute so AT announces the state instead of the
+  // toggle reading as a live control.
   const toggleRow = el("div", { class: "settings-toggle-row" });
   const toggle = el("button", {
     type: "button",
-    class: "settings-toggle is-disabled",
+    class: unimplemented ? "settings-toggle is-disabled" : "settings-toggle",
     role: "switch",
     "aria-checked": maintenance && maintenance.enabled ? "true" : "false",
-    "aria-disabled": "true",
-    disabled: unimplemented || true,
-    "aria-label": "Maintenance mode toggle (deferred)",
+    "aria-disabled": unimplemented ? "true" : "false",
+    disabled: unimplemented,
+    tabindex: unimplemented ? "-1" : "0",
+    "aria-label": unimplemented
+      ? "Maintenance mode toggle (deferred)"
+      : "Maintenance mode toggle",
   }, el("span", { class: "settings-toggle-knob" }));
   toggleRow.append(
     el("span", { class: "settings-toggle-label" }, "Enable maintenance mode"),
     toggle,
   );
   card.append(toggleRow);
+
+  if (unimplemented) {
+    card.append(
+      el("p", { class: "settings-card-foot" },
+        "Wiring deferred — edit ",
+        el("code", { class: "settings-inline-code" }, "backend/src/routes/admin/settings.ts"),
+        " and add the ",
+        el("code", { class: "settings-inline-code" }, "admin_settings"),
+        " migration to enable."),
+    );
+  }
 
   if (maintenance && maintenance.message) {
     card.append(
@@ -4598,8 +4721,9 @@ const boot = async () => {
   }
 
   // Guard against stale session bound to a non-admin email (defence-in-depth;
-  // server already enforces this).
-  if (me.email !== ADMIN_EMAIL) {
+  // server already enforces this). Case-insensitive list match mirrors the
+  // backend's requireAdmin so a second admin doesn't get stuck client-side.
+  if (!me.email || !ADMIN_EMAILS_LOWER.includes(me.email.toLowerCase())) {
     renderGate(root, "forbidden");
     return;
   }

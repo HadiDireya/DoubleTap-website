@@ -2057,7 +2057,12 @@ body.admin {
 
 /* aria-live banner inside the drawer so a status change announces to
    screen readers without focus-stealing. Empty state collapses to zero
-   height — only the post-action announcement carries content. */
+   height — only the post-action announcement carries content.
+   The :empty selector here is intentional and load-bearing: the JS only
+   ever sets `textContent` on this element (never appends children, never
+   sets innerHTML), so :empty is a reliable proxy for "no announcement
+   yet". If a future change appends DOM nodes here, swap to an explicit
+   `.is-hidden` toggle. */
 .feedback-status-banner {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
@@ -2065,6 +2070,20 @@ body.admin {
 
 .feedback-status-banner:empty {
   display: none;
+}
+
+/* Toolbar helper line — surfaces non-obvious filter semantics (e.g. the
+   "End date is exclusive" caveat for the feedback page's date pickers).
+   Sits under the toolbar row with a small muted style so it doesn't
+   compete with the controls themselves. */
+.lic-toolbar-help {
+  margin-block-end: var(--space-5);
+  margin-block-start: calc(-1 * var(--space-3));
+}
+
+.lic-toolbar-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
 }
 
 /* Drawer body — feedback posts can run a few paragraphs, so we wrap and
@@ -2265,17 +2284,33 @@ body.admin {
   border-color: var(--color-accent-dim);
 }
 
+/* Passive "not configured" — a Worker secret name being absent is
+   informational, not a bug-state. Muted gray reads as "stale/unset"
+   without the alarm of bug-red (which is reserved for active error
+   states like .lic-badge.status-revoked). */
 .settings-status-pill.is-missing {
-  color: var(--color-type-bug);
-  background: var(--admin-color-bug-soft);
+  color: var(--color-text-faint);
+  background: var(--color-surface-2);
   border-color: var(--color-line);
 }
 
 /* Toggle row + iOS-style switch. Disabled today (deferred until the
    admin_settings migration); the click handler isn't wired. The visual
    affordance is still rendered so the user knows where the toggle will
-   live once it works. */
+   live once it works.
+
+   Toggle dimensions are hoisted to local custom properties on the row
+   so the raw px values that drive the switch geometry (track size,
+   knob size, knob inset, knob travel) live in one place instead of
+   being scattered across rules. Scoped to the row rather than :root
+   because nothing outside this control needs them. */
 .settings-toggle-row {
+  --settings-toggle-track-w: 44px;
+  --settings-toggle-track-h: 24px;
+  --settings-toggle-knob-size: 18px;
+  --settings-toggle-knob-inset: 2px;
+  --settings-toggle-knob-travel: 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2294,8 +2329,8 @@ body.admin {
 
 .settings-toggle {
   position: relative;
-  width: 44px;
-  height: 24px;
+  width: var(--settings-toggle-track-w);
+  height: var(--settings-toggle-track-h);
   border-radius: var(--radius-full);
   background: var(--color-surface-2);
   border: var(--border-width) solid var(--color-line);
@@ -2306,10 +2341,10 @@ body.admin {
 
 .settings-toggle .settings-toggle-knob {
   position: absolute;
-  inset-block-start: 2px;
-  inset-inline-start: 2px;
-  width: 18px;
-  height: 18px;
+  inset-block-start: var(--settings-toggle-knob-inset);
+  inset-inline-start: var(--settings-toggle-knob-inset);
+  width: var(--settings-toggle-knob-size);
+  height: var(--settings-toggle-knob-size);
   border-radius: var(--radius-full);
   background: var(--color-text);
   transition: transform var(--duration-fast) var(--ease);
@@ -2321,7 +2356,7 @@ body.admin {
 }
 
 .settings-toggle[aria-checked="true"] .settings-toggle-knob {
-  transform: translateX(20px);
+  transform: translateX(var(--settings-toggle-knob-travel));
   background: var(--color-bg);
 }
 
