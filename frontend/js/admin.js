@@ -333,31 +333,46 @@ const demoFixture = (path) => {
     // a Gumroad row (no email), and a revoked-license activation.
     const sharedMac = "MAC-AAAA1111-BBBB2222-CCCC3333";
     const hotKey = "LZ-XY34-WV56-UV78-TS90";
+    const revokedAt = new Date(now - 1 * 86400_000).toISOString();
     const rows = [
       { id: 51, license_key: "LZ-AB12-CD34-EF56-GH78", machine_id: sharedMac,
         activated_at: new Date(now - 5 * 60_000).toISOString(),
-        email: "alice@example.com", source: "lahza", license_revoked: false, shared_count: 2 },
+        email: "alice@example.com", source: "lahza",
+        license_revoked_at: null, license_missing: false, shared_count: 2 },
       { id: 50, license_key: hotKey, machine_id: "MAC-RAPID-A1B2",
         activated_at: new Date(now - 25 * 60_000).toISOString(),
-        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+        email: "charlie@example.com", source: "lahza",
+        license_revoked_at: null, license_missing: false, shared_count: 1 },
       { id: 49, license_key: hotKey, machine_id: "MAC-RAPID-C3D4",
         activated_at: new Date(now - 2 * 3600_000).toISOString(),
-        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+        email: "charlie@example.com", source: "lahza",
+        license_revoked_at: null, license_missing: false, shared_count: 1 },
       { id: 48, license_key: hotKey, machine_id: "MAC-RAPID-E5F6",
         activated_at: new Date(now - 5 * 3600_000).toISOString(),
-        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+        email: "charlie@example.com", source: "lahza",
+        license_revoked_at: null, license_missing: false, shared_count: 1 },
       { id: 47, license_key: "LZ-FRIEND-OF-ALICE-7890", machine_id: sharedMac,
         activated_at: new Date(now - 26 * 3600_000).toISOString(),
-        email: "alice2@example.com", source: "lahza", license_revoked: false, shared_count: 2 },
+        email: "alice2@example.com", source: "lahza",
+        license_revoked_at: null, license_missing: false, shared_count: 2 },
       { id: 46, license_key: "ABCD1234-EFGH5678", machine_id: "MAC-GUMROAD-LEGACY",
         activated_at: new Date(now - 4 * 86400_000).toISOString(),
-        email: null, source: "gumroad", license_revoked: false, shared_count: 1 },
+        email: null, source: "gumroad",
+        license_revoked_at: null, license_missing: false, shared_count: 1 },
       { id: 45, license_key: "LZ-DEAD-BEEF-CAFE-FOOD", machine_id: "MAC-REVOKED-1234",
         activated_at: new Date(now - 6 * 86400_000).toISOString(),
-        email: "bob@example.com", source: "lahza", license_revoked: true, shared_count: 1 },
+        email: "bob@example.com", source: "lahza",
+        license_revoked_at: revokedAt, license_missing: false, shared_count: 1 },
+      // Orphan: stale activation pointing at a Lahza row that no longer
+      // exists in LICENSE_DB.licenses (cleanup race / hard-delete).
+      { id: 43, license_key: "LZ-GHOST-DELETED-FROM-DB", machine_id: "MAC-ORPHAN-7777",
+        activated_at: new Date(now - 8 * 86400_000).toISOString(),
+        email: null, source: "lahza",
+        license_revoked_at: null, license_missing: true, shared_count: 1 },
       { id: 44, license_key: "LZ-COMP-9XYZ8-WV7TU", machine_id: "MAC-PRESS-RIG",
         activated_at: new Date(now - 9 * 86400_000).toISOString(),
-        email: "press@example.com", source: "comp", license_revoked: false, shared_count: 1 },
+        email: "press@example.com", source: "comp",
+        license_revoked_at: null, license_missing: false, shared_count: 1 },
     ];
     return {
       rows, page: 1, limit: 50, total: rows.length,
@@ -2927,7 +2942,7 @@ const renderActivations = async (canvas, { params }) => {
       el("div", {},
         el("h1", { class: "admin-page-title" }, "Activations"),
         el("p", { class: "admin-page-subtitle" },
-          "Every (license, machine) pair. Spot a single machine on multiple keys, or a key with rapid repeat activations."),
+          "Every (license, machine) pair. Spot a single machine on multiple keys, or a key with rapid repeat activations. Click the license or machine cell to drill in."),
       ),
     ),
   );
@@ -2958,7 +2973,10 @@ const renderActivations = async (canvas, { params }) => {
       : el("span", {}, "Filtered to machine ",
           el("span", { class: "lic-key" }, machineIdPivot));
     canvas.append(
-      el("div", { class: "lic-pivot-banner" },
+      // aria-live so screen readers announce the active pivot when it
+      // mounts; aria-atomic so the whole banner reads together rather
+      // than just the changed bit (the key/id span).
+      el("div", { class: "lic-pivot-banner", role: "status", "aria-live": "polite", "aria-atomic": "true" },
         pivotLabel,
         el("button", {
           type: "button", class: "lic-page-btn",
@@ -3109,14 +3127,29 @@ const renderActivationsTable = (data, { page, limit }) => {
       href: `#/trials?machine=${encodeURIComponent(row.machine_id)}`,
     }, row.machine_id);
 
-    const sharedBadge = row.shared_count >= 2
-      ? el("span", { class: "lic-badge status-revoked", title: `Activated on ${row.shared_count} different license keys` },
+    // Null-guard: if a future backend or fixture drift returns no
+    // shared_count, render "—" instead of silently swallowing the row.
+    const sharedBadge = typeof row.shared_count === "number" && row.shared_count >= 2
+      ? el("span", { class: "lic-badge status-shared", title: `Activated on ${row.shared_count} different license keys` },
           `SHARED · ${row.shared_count}`)
       : el("span", { class: "lic-meta" }, "—");
 
     const licenseCell = el("td", { class: "act-license-cell" }, licenseLink);
-    if (row.license_revoked) {
+    // REVOKED if the license has a revoked_at timestamp. ORPHAN if the
+    // license_key has no row in LICENSE_DB.licenses AND it's not a
+    // Gumroad-prefixed key (which is *expected* to be missing because
+    // Gumroad licenses live in the website D1). The two are mutually
+    // exclusive — a missing row can't carry a revoked_at — so we render
+    // at most one badge.
+    if (row.license_revoked_at) {
       licenseCell.append(el("span", { class: "lic-badge status-revoked" }, "REVOKED"));
+    } else if (row.license_missing) {
+      licenseCell.append(
+        el("span", {
+          class: "lic-badge status-revoked",
+          title: "License row no longer exists in LICENSE_DB. Likely a stale activation; consider freeing the seat.",
+        }, "ORPHAN"),
+      );
     }
     tr.append(
       licenseCell,

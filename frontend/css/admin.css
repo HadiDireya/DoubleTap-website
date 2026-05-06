@@ -1224,6 +1224,17 @@ body.admin {
   color: var(--color-type-praise);
 }
 
+/* "Shared" flags an activation whose machine_id appears on ≥2 distinct
+   license keys — a fraud signal worth investigating. Praise-soft (yellow)
+   keeps it visually distinct from `status-revoked` (red admin action),
+   so a row carrying both REVOKED and SHARED reads as two separate flags
+   rather than one big red blob. Same yellow as `.converted` because both
+   are "look at this" markers; the `SHARED · n` text disambiguates. */
+.lic-badge.status-shared {
+  background: var(--admin-color-praise-soft);
+  color: var(--color-type-praise);
+}
+
 /* Pagination */
 .lic-pagination {
   display: flex;
@@ -1982,7 +1993,10 @@ body.admin {
 
 /* Visible callout for a pivot filter (e.g. "filtered to license LZ-…")
    so users notice why some rows are missing. Mirrors the muted-surface
-   look of `.lic-empty` but as a single line above the toolbar. */
+   look of `.lic-empty` but as a single line above the toolbar. The
+   accent-coloured leading edge differentiates it from a normal toolbar
+   row at a glance — without it, a screen-skim reads as "the page just
+   has fewer rows today" rather than "you're filtered". */
 .lic-pivot-banner {
   display: flex;
   align-items: center;
@@ -1992,6 +2006,7 @@ body.admin {
   padding-block: var(--space-3);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
+  border-inline-start: var(--admin-rail-width) solid var(--color-accent);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
