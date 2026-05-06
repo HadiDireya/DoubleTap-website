@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { and, count, desc, gte, lt } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { gumroadLicense, user, feedbackPost } from "../../db/schema";
+import { toISO } from "../../lib/dates";
 import {
   avgActivationsPerLicense,
   countActiveLahzaLicenses,
@@ -139,7 +140,7 @@ dashboard.get("/", async (c) => {
     })),
     ...feedbackEvents.map<FeedItem>((p) => ({
       kind: "feedback",
-      at: (p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt as unknown as number)).toISOString(),
+      at: toISO(p.createdAt),
       postId: p.id,
       title: p.title,
       type: p.type,

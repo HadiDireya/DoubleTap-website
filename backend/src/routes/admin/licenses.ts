@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { getDb } from "../../db/client";
 import { adminAuditLog, gumroadLicense, user } from "../../db/schema";
 import { serializeAuditEntry, writeAudit } from "../../lib/audit";
+import { toISO } from "../../lib/dates";
 import { parsePositiveInt } from "../../lib/query";
 import {
   countLahzaLicenses,
@@ -206,10 +207,7 @@ licenses.get("/", async (c) => {
       // the list view. The detail endpoint hydrates it on demand.
       max_uses: null,
       tx_reference: r.saleId ?? null,
-      issued_at:
-        r.verifiedAt instanceof Date
-          ? r.verifiedAt.toISOString()
-          : new Date(r.verifiedAt as Date | number | string).toISOString(),
+      issued_at: toISO(r.verifiedAt),
       revoked_at: null,
       active_activations: gumroadActivationCounts.get(r.licenseKey) ?? 0,
       status: "active",
@@ -283,10 +281,7 @@ licenses.get("/:key", async (c) => {
       email: row.email ?? null,
       product_id: row.productId,
       sale_id: row.saleId,
-      issued_at:
-        row.verifiedAt instanceof Date
-          ? row.verifiedAt.toISOString()
-          : new Date(row.verifiedAt as Date | number | string).toISOString(),
+      issued_at: toISO(row.verifiedAt),
       revoked_at: null,
       max_uses: null,
       user_id: row.userId,

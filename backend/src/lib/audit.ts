@@ -1,5 +1,6 @@
 import { getDb } from "../db/client";
 import { adminAuditLog } from "../db/schema";
+import { toISO } from "./dates";
 import type { Env } from "../env";
 
 // Structural type so any sub-app can pass its typed Hono context here
@@ -55,9 +56,9 @@ export const writeAudit = async (
   });
 };
 
-// Serializes an audit row for the JSON response. Drizzle's `createdAt`
-// can come back as a Date or as a number/string depending on driver path;
-// callers want a stable ISO string in either case.
+// Serializes an audit row for the JSON response. `toISO` handles the
+// Date|number|string surface area that Drizzle exposes for timestamp
+// columns across driver paths.
 export const serializeAuditEntry = (e: {
   id: string;
   actorEmail: string;
@@ -69,8 +70,5 @@ export const serializeAuditEntry = (e: {
   actor_email: e.actorEmail,
   action: e.action,
   details: e.details,
-  created_at:
-    e.createdAt instanceof Date
-      ? e.createdAt.toISOString()
-      : new Date(e.createdAt as Date | number | string).toISOString(),
+  created_at: toISO(e.createdAt),
 });

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { and, count, desc, eq, gte, like, lt, or, type SQL } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { adminAuditLog } from "../../db/schema";
+import { toISO } from "../../lib/dates";
 import { parsePositiveInt } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
@@ -98,10 +99,7 @@ audit.get("/", async (c) => {
       target_type: e.targetType,
       target_id: e.targetId,
       details: e.details,
-      created_at:
-        e.createdAt instanceof Date
-          ? e.createdAt.toISOString()
-          : new Date(e.createdAt as Date | number | string).toISOString(),
+      created_at: toISO(e.createdAt),
     })),
     page,
     limit,

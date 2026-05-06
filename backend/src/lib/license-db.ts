@@ -692,3 +692,38 @@ export const setTrialDeadline = async (
     .run();
   return r.meta.changes > 0;
 };
+
+// ── Customers page ────────────────────────────────────────────────────────
+// Soft email-based lookup of Lahza / comp licenses for a given user. The
+// Lahza schema doesn't carry a userId, so we match on email — the same
+// email a user signed up with is the one their Lahza purchase was issued
+// to (set by the /lahza/key flow). Globally-unique emails on user.email
+// make this safe; if a future Lahza row's email diverges from any user's
+// it simply doesn't appear under any customer.
+//
+// Case-insensitive compare: license-server's insert path lowercases the
+// buyer email, but Better Auth's `user.email` preserves whatever the
+// provider returned (Apple/Google can return mixed case, magic-link uses
+// what the user typed). SQLite `=` is case-sensitive on TEXT, so a mixed-
+// case `user.email` would silently produce zero matches. `lower()` on
+// both sides is the cheapest defence; the licenses table is small enough
+// that the lost-index cost is irrelevant.
+export const listLicensesByEmail = async (
+  db: D1Database,
+  email: string,
+): Promise<LahzaLicenseListRow[]> => {
+  const sql = `
+    SELECT
+      l.license_key,
+      l.email,
+      l.max_uses,
+      l.tx_reference,
+      ${ISO}l.issued_at) AS issued_at,
+      CASE WHEN l.revoked_at IS NULL THEN NULL ELSE ${ISO}l.revoked_at) END AS revoked_at,
+      (SELECT COUNT(*) FROM activations a WHERE a.license_key = l.license_key) AS active_activations
+    FROM licenses l
+    WHERE lower(l.email) = lower(?)
+    ORDER BY datetime(l.issued_at) DESC`;
+  const { results } = await db.prepare(sql).bind(email).all<LahzaLicenseListRow>();
+  return results ?? [];
+};
