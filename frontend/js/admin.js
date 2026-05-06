@@ -219,6 +219,31 @@ const demoFixture = (path) => {
       ],
     };
   }
+  if (path === "/admin/backup/status") {
+    const now = Date.now();
+    return {
+      configured: true,
+      repo: "HadiDireya/doubletap-license-backups",
+      workflow: "backup.yml",
+      runs: [
+        { id: 100, status: "completed", conclusion: "success",
+          created_at: new Date(now - 5 * 3600_000).toISOString(),
+          updated_at: new Date(now - 5 * 3600_000 + 25_000).toISOString(),
+          run_started_at: new Date(now - 5 * 3600_000).toISOString(),
+          html_url: "https://github.com/HadiDireya/doubletap-license-backups/actions/runs/100",
+          event: "schedule" },
+        { id: 99, status: "completed", conclusion: "failure",
+          created_at: new Date(now - 30 * 3600_000).toISOString(),
+          updated_at: new Date(now - 30 * 3600_000 + 900_000).toISOString(),
+          run_started_at: new Date(now - 30 * 3600_000).toISOString(),
+          html_url: "https://github.com/HadiDireya/doubletap-license-backups/actions/runs/99",
+          event: "schedule" },
+      ],
+    };
+  }
+  if (path === "/admin/backup/run") {
+    return { ok: true };
+  }
   if (path.startsWith("/admin/users/")) {
     const id = decodeURIComponent(path.slice("/admin/users/".length).split("?")[0]);
     const now = Date.now();
@@ -867,7 +892,197 @@ const renderDashboard = async (canvas, { range = "30d" } = {}) => {
     }),
   );
 
+  // Backup card hydrates independently — GitHub's API can be slow and a
+  // sluggish status fetch shouldn't block the rest of the dashboard.
+  const backupCard = renderBackupCard();
+  bento.append(backupCard);
+  hydrateBackupCard(backupCard);
+
   canvas.append(bento);
+};
+
+// ── Backup card ───────────────────────────────────────────────────────────
+// Shows the most recent run from the doubletap-license-backups workflow,
+// with a "Run now" button that fires GitHub workflow_dispatch. Used to be
+// a daily-only schedule with no in-product visibility — moving it here so
+// a runner-allocation failure (which still emails GitHub Actions
+// notifications) can be re-kicked from the admin without dropping into
+// the GitHub UI.
+
+const renderBackupCard = () => {
+  const card = el("div", { class: "admin-card span-12 backup-card" });
+  card.dataset.state = "loading";
+  card.append(
+    el("div", { class: "backup-header" },
+      el("div", { class: "backup-title" },
+        icon("shield", 14), " Database backup",
+      ),
+      el("div", { class: "backup-actions" },
+        el("a", {
+          class: "backup-link", href: "#", target: "_blank", rel: "noopener noreferrer",
+          // href is rewritten in hydrate once we know the workflow URL
+          "data-role": "open-github",
+        }, "Open in GitHub", icon("arrow-up-right", 12)),
+        el("button", {
+          class: "backup-run-btn", type: "button", disabled: true,
+          "data-role": "run-now",
+        }, icon("refresh", 14), " Run now"),
+      ),
+    ),
+    el("div", { class: "backup-body", "data-role": "body" },
+      el("div", { class: "admin-loading" }, "Loading backup status…"),
+    ),
+  );
+  return card;
+};
+
+// Pulls /admin/backup/status, paints the card. Called once on initial
+// dashboard render and again after a manual run-now to refresh state.
+const hydrateBackupCard = async (card) => {
+  const body = card.querySelector('[data-role="body"]');
+  const runBtn = card.querySelector('[data-role="run-now"]');
+  const ghLink = card.querySelector('[data-role="open-github"]');
+
+  let data;
+  try {
+    data = await apiFetch("/admin/backup/status");
+  } catch (err) {
+    clear(body);
+    body.append(
+      el("div", { class: "backup-error" },
+        `Couldn't load backup status: ${err.message || err}`),
+    );
+    return;
+  }
+
+  if (!data.configured) {
+    clear(body);
+    body.append(renderBackupUnconfigured());
+    runBtn.disabled = true;
+    return;
+  }
+
+  // Best run = most recent in the list. GitHub returns newest-first.
+  const latest = data.runs[0] || null;
+  const lastSuccess = data.runs.find((r) => r.conclusion === "success") || null;
+  const lastFailure = data.runs.find((r) => r.conclusion === "failure") || null;
+
+  const ghWorkflowUrl =
+    `https://github.com/${data.repo}/actions/workflows/${data.workflow}`;
+  ghLink.setAttribute("href", ghWorkflowUrl);
+
+  // Stale = no successful run in the last 36 hours. Catches "fail
+  // yesterday + fail today" scenarios where the daily cadence broke.
+  const staleThresholdMs = 36 * 60 * 60 * 1000;
+  const lastSuccessAge = lastSuccess
+    ? Date.now() - new Date(lastSuccess.run_started_at).getTime()
+    : Infinity;
+  const isStale = lastSuccessAge > staleThresholdMs;
+
+  clear(body);
+  body.append(renderBackupSummary({
+    latest, lastSuccess, lastFailure, isStale, repo: data.repo,
+  }));
+
+  // The "Run now" button is enabled unless a run is currently in flight
+  // (status="in_progress"/"queued"/"requested") to prevent duplicate
+  // dispatches racing in the same workflow run.
+  const inFlight = !!latest && (latest.status === "in_progress" ||
+                                latest.status === "queued" ||
+                                latest.status === "requested" ||
+                                latest.status === "waiting");
+  runBtn.disabled = inFlight;
+  runBtn.onclick = inFlight ? null : async () => {
+    runBtn.disabled = true;
+    showToast("Backup started — refreshing in 5s");
+    try {
+      await apiFetch("/admin/backup/run", { method: "POST" });
+      // GitHub takes a beat to register the dispatch. Refresh after 5s
+      // so the user sees the "queued" state without manual reload.
+      setTimeout(() => hydrateBackupCard(card), 5000);
+    } catch (err) {
+      runBtn.disabled = false;
+      showToast(err.message || "Couldn't start backup", "error");
+    }
+  };
+};
+
+const renderBackupUnconfigured = () =>
+  el("div", { class: "backup-unconfigured" },
+    el("div", { class: "backup-status-line" },
+      icon("settings", 14), " Backup token not configured"),
+    el("p", { class: "backup-help" },
+      "Set the BACKUP_GH_TOKEN secret on the API Worker to enable backup status + manual runs. ",
+      "Use a fine-grained PAT with Actions: read+write on HadiDireya/doubletap-license-backups."),
+  );
+
+const renderBackupSummary = ({ latest, lastSuccess, lastFailure, isStale, repo }) => {
+  const wrap = el("div", { class: "backup-summary" });
+
+  if (!latest) {
+    wrap.append(
+      el("div", { class: "backup-status-line" },
+        icon("clock", 14), " No runs recorded yet"),
+    );
+    return wrap;
+  }
+
+  // Headline state — derived from the most recent run + freshness window.
+  let stateClass, stateLabel;
+  if (latest.status === "in_progress" || latest.status === "queued" ||
+      latest.status === "requested" || latest.status === "waiting") {
+    stateClass = "is-running";
+    stateLabel = "Running…";
+  } else if (latest.conclusion === "success") {
+    stateClass = isStale ? "is-warn" : "is-ok";
+    stateLabel = isStale ? "Stale" : "Healthy";
+  } else if (latest.conclusion === "failure") {
+    stateClass = "is-fail";
+    stateLabel = "Last run failed";
+  } else if (latest.conclusion === "cancelled") {
+    stateClass = "is-fail";
+    stateLabel = "Last run cancelled";
+  } else {
+    stateClass = "is-warn";
+    stateLabel = latest.conclusion || latest.status;
+  }
+
+  wrap.append(
+    el("div", { class: `backup-state ${stateClass}` },
+      el("span", { class: "backup-state-dot" }),
+      el("span", { class: "backup-state-label" }, stateLabel),
+    ),
+  );
+
+  const detail = el("dl", { class: "backup-detail-grid" });
+  const addRow = (label, value) =>
+    detail.append(el("dt", {}, label), el("dd", {}, value));
+
+  addRow("Last run",
+    el("a", {
+      href: latest.html_url, target: "_blank", rel: "noopener noreferrer",
+      class: "backup-run-link",
+    }, fmtRelative(latest.run_started_at), " · ", latest.event));
+  if (lastSuccess) {
+    addRow("Last success", fmtRelative(lastSuccess.run_started_at));
+  } else {
+    addRow("Last success", "never");
+  }
+  if (lastFailure && lastFailure.id !== latest.id) {
+    addRow("Last failure",
+      el("a", {
+        href: lastFailure.html_url, target: "_blank", rel: "noopener noreferrer",
+        class: "backup-run-link",
+      }, fmtRelative(lastFailure.run_started_at)));
+  }
+  addRow("Repo",
+    el("a", {
+      href: `https://github.com/${repo}`, target: "_blank", rel: "noopener noreferrer",
+      class: "backup-run-link",
+    }, repo));
+
+  wrap.append(detail);
+  return wrap;
 };
 
 // ── Toast (transient feedback for actions) ───────────────────────────────

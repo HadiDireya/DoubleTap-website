@@ -10,7 +10,7 @@ import type { Env } from "../env";
 // writeAudit only needs c.env.
 type AppContext = { env: Env };
 
-export type AuditTargetType = "license" | "trial" | "activation" | "user" | "feedback_post" | "feedback_comment";
+export type AuditTargetType = "license" | "trial" | "activation" | "user" | "feedback_post" | "feedback_comment" | "backup";
 
 export type AuditAction =
   | "license.revoke"
@@ -32,7 +32,8 @@ export type AuditAction =
   | "feedback.delete_post"
   | "feedback.delete_comment"
   | "feedback.pin"
-  | "feedback.unpin";
+  | "feedback.unpin"
+  | "backup.trigger";
 
 export const writeAudit = async (
   c: AppContext,

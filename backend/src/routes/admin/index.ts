@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { requireAdmin } from "../../lib/auth-helpers";
 import audit from "./audit";
+import backup from "./backup";
 import dashboard from "./dashboard";
 import licenses from "./licenses";
 import trials from "./trials";
@@ -32,5 +33,6 @@ admin.route("/licenses", licenses);
 admin.route("/trials", trials);
 admin.route("/users", users);
 admin.route("/audit", audit);
+admin.route("/backup", backup);
 
 export default admin;

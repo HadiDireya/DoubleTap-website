@@ -643,6 +643,187 @@ body.admin {
 }
 
 /* =====================================
+   10b. BACKUP CARD
+   System-status row at the bottom of the dashboard. Surfaces the
+   doubletap-license-backups workflow's most recent run + manual dispatch.
+   ===================================== */
+.backup-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.backup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.backup-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.backup-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.backup-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease),
+              background var(--duration-fast) var(--ease);
+}
+
+.backup-link:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
+}
+
+.backup-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  border: var(--border-width) solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+              opacity var(--duration-fast) var(--ease);
+}
+
+.backup-run-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.backup-run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.backup-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.backup-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.backup-state-dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-text-muted);
+}
+
+.backup-state.is-ok { color: var(--color-accent); }
+.backup-state.is-ok .backup-state-dot { background: var(--color-accent); }
+.backup-state.is-warn { color: var(--color-type-praise); }
+.backup-state.is-warn .backup-state-dot { background: var(--color-type-praise); }
+.backup-state.is-fail { color: var(--color-type-bug); }
+.backup-state.is-fail .backup-state-dot { background: var(--color-type-bug); }
+.backup-state.is-running { color: var(--color-text); }
+.backup-state.is-running .backup-state-dot {
+  background: var(--color-text);
+  animation: backup-pulse var(--duration-slow) ease-in-out infinite;
+}
+
+@keyframes backup-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.backup-detail-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.backup-detail-grid dt {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+}
+
+.backup-detail-grid dd {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.backup-run-link {
+  color: var(--color-text);
+  text-decoration: none;
+  border-block-end: var(--border-width) dotted var(--color-line);
+  transition: color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+}
+
+.backup-run-link:hover {
+  color: var(--color-accent);
+  border-block-end-color: var(--color-accent);
+}
+
+.backup-status-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.backup-help {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-snug);
+}
+
+.backup-error {
+  font-size: var(--font-size-sm);
+  color: var(--color-type-bug);
+}
+
+/* =====================================
    11. STATES — loading, empty, error
    ===================================== */
 .admin-loading,
