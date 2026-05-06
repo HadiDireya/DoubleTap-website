@@ -46,13 +46,19 @@ const settings = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 // they render in the UI. `c.env[name]` truthy → "configured"; we never
 // surface the value. Adding a new secret here is the only edit needed
 // when /admin/settings should report on it.
+//
+// Scope is intentionally limited to operationally-rotated secrets — the
+// kind a human admin would touch via `wrangler secret put` as part of
+// routine work (rotating a Resend key, refreshing the GitHub backup
+// token). App-config-time secrets bound once at deploy
+// (BETTER_AUTH_SECRET, OAuth client secrets) are deliberately kept out:
+// surfacing the names widens recon for nothing the admin panel needs to
+// act on. OAuth *client IDs* stay because they're public values worth
+// knowing are wired. Add a payment-provider secret here when one ships.
 const TRACKED_SECRETS = [
-  "BETTER_AUTH_SECRET",
   "RESEND_API_KEY",
   "APPLE_CLIENT_ID",
-  "APPLE_CLIENT_SECRET",
   "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
   "GUMROAD_PRODUCT_ID",
   "BACKUP_GH_TOKEN",
 ] as const;
@@ -75,7 +81,13 @@ const TRACKED_SECRETS = [
 settings.get("/", (c) => {
   const admins = ADMIN_EMAILS.map((email) => ({ email, source: "code" as const }));
 
-  const env = c.env as unknown as Record<string, unknown>;
+  // Wrangler secrets surface as plain strings on the env binding at runtime,
+  // but `Env` also carries non-string D1 bindings, so a direct cast to a
+  // string-valued record fails structurally. The `unknown` hop keeps the
+  // indexed read typed correctly for *secret* lookups specifically — every
+  // TRACKED_SECRETS entry is a wrangler secret, which is always
+  // string|undefined at runtime.
+  const env = c.env as unknown as Record<string, string | undefined>;
   const secrets = TRACKED_SECRETS.map((name) => ({
     name,
     configured: Boolean(env[name]),
