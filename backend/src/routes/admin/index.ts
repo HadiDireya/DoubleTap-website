@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { requireAdmin } from "../../lib/auth-helpers";
 import dashboard from "./dashboard";
+import licenses from "./licenses";
 import type { Env } from "../../env";
 
 type Session = Awaited<ReturnType<typeof requireAdmin>>;
@@ -24,5 +25,6 @@ admin.get("/me", (c) => {
 });
 
 admin.route("/dashboard", dashboard);
+admin.route("/licenses", licenses);
 
 export default admin;

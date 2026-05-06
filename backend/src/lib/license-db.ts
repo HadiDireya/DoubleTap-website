@@ -283,3 +283,233 @@ export const trialConversionBetween = async (
   const c = converted?.n ?? 0;
   return { started: s, converted: c, pct: s === 0 ? 0 : c / s };
 };
+
+// ── Licenses page ─────────────────────────────────────────────────────────
+// Queries for the admin /licenses list + detail. The admin can filter on
+// source (lahza vs comp — distinguished by the LZ-COMP- prefix) and status
+// (active vs revoked). `q` does a simple LIKE on email / license_key /
+// tx_reference; we accept the implicit table scan because the admin panel
+// is single-user and the table size is in the hundreds.
+
+export type LahzaLicenseListRow = LahzaLicenseRow & {
+  active_activations: number;
+};
+
+const lahzaSourceClause = (source: "lahza" | "comp" | "all") => {
+  if (source === "comp") return "AND license_key LIKE 'LZ-COMP-%'";
+  if (source === "lahza") return "AND license_key NOT LIKE 'LZ-COMP-%'";
+  return "";
+};
+
+const lahzaStatusClause = (status: "active" | "revoked" | "all") => {
+  if (status === "active") return "AND revoked_at IS NULL";
+  if (status === "revoked") return "AND revoked_at IS NOT NULL";
+  return "";
+};
+
+const lahzaSearchClause = (q: string | undefined) => {
+  if (!q || !q.trim()) return { sql: "", binds: [] as string[] };
+  const pat = `%${q.trim()}%`;
+  return {
+    sql: "AND (email LIKE ? OR license_key LIKE ? OR tx_reference LIKE ?)",
+    binds: [pat, pat, pat],
+  };
+};
+
+export const listLahzaLicenses = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    source?: "lahza" | "comp" | "all";
+    status?: "active" | "revoked" | "all";
+    limit?: number;
+    offset?: number;
+  },
+): Promise<LahzaLicenseListRow[]> => {
+  const source = opts.source ?? "all";
+  const status = opts.status ?? "all";
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  const offset = Math.max(opts.offset ?? 0, 0);
+  const search = lahzaSearchClause(opts.q);
+
+  // Subquery counts only currently-bound activations (no machine-level
+  // soft-delete flag exists). issued_at is normalised to ISO so the merge
+  // sort with Gumroad rows uses a uniform string-ordering key.
+  const sql = `
+    SELECT
+      l.license_key,
+      l.email,
+      l.max_uses,
+      l.tx_reference,
+      ${ISO}l.issued_at) AS issued_at,
+      CASE WHEN l.revoked_at IS NULL THEN NULL ELSE ${ISO}l.revoked_at) END AS revoked_at,
+      (SELECT COUNT(*) FROM activations a WHERE a.license_key = l.license_key) AS active_activations
+    FROM licenses l
+    WHERE 1 = 1
+      ${lahzaSourceClause(source)}
+      ${lahzaStatusClause(status)}
+      ${search.sql}
+    ORDER BY datetime(l.issued_at) DESC
+    LIMIT ? OFFSET ?`;
+
+  const { results } = await db
+    .prepare(sql)
+    .bind(...search.binds, limit, offset)
+    .all<LahzaLicenseListRow>();
+  return results ?? [];
+};
+
+export const countLahzaLicenses = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    source?: "lahza" | "comp" | "all";
+    status?: "active" | "revoked" | "all";
+  },
+): Promise<number> => {
+  const source = opts.source ?? "all";
+  const status = opts.status ?? "all";
+  const search = lahzaSearchClause(opts.q);
+  const sql = `
+    SELECT COUNT(*) AS n FROM licenses l
+    WHERE 1 = 1
+      ${lahzaSourceClause(source)}
+      ${lahzaStatusClause(status)}
+      ${search.sql}`;
+  const r = await db.prepare(sql).bind(...search.binds).first<{ n: number }>();
+  return r?.n ?? 0;
+};
+
+export const getLahzaLicense = async (
+  db: D1Database,
+  licenseKey: string,
+): Promise<LahzaLicenseListRow | null> => {
+  const sql = `
+    SELECT
+      l.license_key,
+      l.email,
+      l.max_uses,
+      l.tx_reference,
+      ${ISO}l.issued_at) AS issued_at,
+      CASE WHEN l.revoked_at IS NULL THEN NULL ELSE ${ISO}l.revoked_at) END AS revoked_at,
+      (SELECT COUNT(*) FROM activations a WHERE a.license_key = l.license_key) AS active_activations
+    FROM licenses l WHERE l.license_key = ?`;
+  const row = await db.prepare(sql).bind(licenseKey).first<LahzaLicenseListRow>();
+  return row ?? null;
+};
+
+export type ActivationListRow = {
+  id: number;
+  machine_id: string;
+  activated_at: string; // ISO 8601 with Z suffix
+};
+
+export const listActivationsForKey = async (
+  db: D1Database,
+  licenseKey: string,
+): Promise<ActivationListRow[]> => {
+  const { results } = await db
+    .prepare(
+      `SELECT id, machine_id, ${ISO}activated_at) AS activated_at
+       FROM activations
+       WHERE license_key = ?
+       ORDER BY datetime(activated_at) DESC`,
+    )
+    .bind(licenseKey)
+    .all<ActivationListRow>();
+  return results ?? [];
+};
+
+export const revokeLahzaLicense = async (db: D1Database, licenseKey: string) => {
+  const r = await db
+    .prepare("UPDATE licenses SET revoked_at = datetime('now') WHERE license_key = ? AND revoked_at IS NULL")
+    .bind(licenseKey)
+    .run();
+  return r.meta.changes > 0;
+};
+
+export const unrevokeLahzaLicense = async (db: D1Database, licenseKey: string) => {
+  const r = await db
+    .prepare("UPDATE licenses SET revoked_at = NULL WHERE license_key = ? AND revoked_at IS NOT NULL")
+    .bind(licenseKey)
+    .run();
+  return r.meta.changes > 0;
+};
+
+export const deleteActivationById = async (
+  db: D1Database,
+  licenseKey: string,
+  id: number,
+): Promise<ActivationListRow | null> => {
+  // Read-then-delete so we can return the freed row's machine_id for the
+  // audit log without a follow-up select.
+  const row = await db
+    .prepare(
+      `SELECT id, machine_id, ${ISO}activated_at) AS activated_at
+       FROM activations WHERE license_key = ? AND id = ?`,
+    )
+    .bind(licenseKey, id)
+    .first<ActivationListRow>();
+  if (!row) return null;
+  await db
+    .prepare("DELETE FROM activations WHERE license_key = ? AND id = ?")
+    .bind(licenseKey, id)
+    .run();
+  return row;
+};
+
+export const deleteAllActivationsForKey = async (
+  db: D1Database,
+  licenseKey: string,
+): Promise<ActivationListRow[]> => {
+  // RETURNING collapses the read-then-delete pair into one round-trip, so
+  // the audit log can record the freed machine_ids without a follow-up
+  // SELECT. Timestamps are normalised to ISO via strftime for the same
+  // reason as the rest of this module — see the file header note.
+  const { results } = await db
+    .prepare(
+      `DELETE FROM activations WHERE license_key = ?
+       RETURNING id, machine_id, ${ISO}activated_at) AS activated_at`,
+    )
+    .bind(licenseKey)
+    .all<ActivationListRow>();
+  return results ?? [];
+};
+
+export const updateLahzaLicenseFields = async (
+  db: D1Database,
+  licenseKey: string,
+  patch: { email?: string; max_uses?: number },
+): Promise<boolean> => {
+  const sets: string[] = [];
+  const binds: (string | number)[] = [];
+  if (typeof patch.email === "string") {
+    sets.push("email = ?");
+    binds.push(patch.email);
+  }
+  if (typeof patch.max_uses === "number") {
+    sets.push("max_uses = ?");
+    binds.push(patch.max_uses);
+  }
+  if (sets.length === 0) return false;
+  binds.push(licenseKey);
+  const r = await db
+    .prepare(`UPDATE licenses SET ${sets.join(", ")} WHERE license_key = ?`)
+    .bind(...binds)
+    .run();
+  return r.meta.changes > 0;
+};
+
+export const insertCompLicense = async (
+  db: D1Database,
+  args: { license_key: string; email: string; max_uses: number; tx_reference: string },
+): Promise<boolean> => {
+  const r = await db
+    .prepare(
+      `INSERT OR IGNORE INTO licenses (license_key, email, max_uses, tx_reference)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .bind(args.license_key, args.email, args.max_uses, args.tx_reference)
+    .run();
+  return r.meta.changes > 0;
+};
