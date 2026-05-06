@@ -936,8 +936,17 @@ const renderBackupCard = () => {
   return card;
 };
 
-// Pulls /admin/backup/status, paints the card. Called once on initial
-// dashboard render and again after a manual run-now to refresh state.
+// In-flight if GitHub hasn't moved the run past the queue yet — see the
+// list of states the API can report at
+// https://docs.github.com/en/rest/actions/workflow-runs.
+const RUN_IN_FLIGHT_STATES = new Set([
+  "in_progress", "queued", "requested", "waiting", "pending",
+]);
+
+// Pulls /admin/backup/status, paints the card, returns whether the
+// latest run is still in flight (so a poller knows whether to keep
+// going). Called on initial dashboard render and on each poll tick
+// after a manual dispatch.
 const hydrateBackupCard = async (card) => {
   const body = card.querySelector('[data-role="body"]');
   const runBtn = card.querySelector('[data-role="run-now"]');
@@ -952,14 +961,14 @@ const hydrateBackupCard = async (card) => {
       el("div", { class: "backup-error" },
         `Couldn't load backup status: ${err.message || err}`),
     );
-    return;
+    return false;
   }
 
   if (!data.configured) {
     clear(body);
     body.append(renderBackupUnconfigured());
     runBtn.disabled = true;
-    return;
+    return false;
   }
 
   // Best run = most recent in the list. GitHub returns newest-first.
@@ -984,27 +993,57 @@ const hydrateBackupCard = async (card) => {
     latest, lastSuccess, lastFailure, isStale, repo: data.repo,
   }));
 
-  // The "Run now" button is enabled unless a run is currently in flight
-  // (status="in_progress"/"queued"/"requested") to prevent duplicate
-  // dispatches racing in the same workflow run.
-  const inFlight = !!latest && (latest.status === "in_progress" ||
-                                latest.status === "queued" ||
-                                latest.status === "requested" ||
-                                latest.status === "waiting");
+  // The "Run now" button is disabled while a run is in flight, both to
+  // prevent duplicate dispatches and to communicate that something is
+  // already happening.
+  const inFlight = !!latest && RUN_IN_FLIGHT_STATES.has(latest.status);
   runBtn.disabled = inFlight;
   runBtn.onclick = inFlight ? null : async () => {
     runBtn.disabled = true;
-    showToast("Backup started — refreshing in 5s");
+    showToast("Backup started — watching for completion");
     try {
       await apiFetch("/admin/backup/run", { method: "POST" });
-      // GitHub takes a beat to register the dispatch. Refresh after 5s
-      // so the user sees the "queued" state without manual reload.
-      setTimeout(() => hydrateBackupCard(card), 5000);
+      // GitHub workflow_dispatch is fire-and-forget; the run takes a
+      // moment to register, then runs ~25-60s. Poll every 5s until the
+      // run completes (status leaves the in-flight set) so the user
+      // doesn't need to refresh, capped at 3 min total in case GitHub
+      // gets stuck and we'd otherwise poll forever.
+      pollBackupUntilComplete(card);
     } catch (err) {
       runBtn.disabled = false;
       showToast(err.message || "Couldn't start backup", "error");
     }
   };
+
+  return inFlight;
+};
+
+// Poll loop after a manual dispatch. Each tick re-hydrates the card,
+// which both repaints the visible state and tells us whether the run
+// is still in flight. Stops on completion or after the safety cap.
+const pollBackupUntilComplete = (card) => {
+  const startedAt = Date.now();
+  const maxDurationMs = 3 * 60 * 1000;
+  const intervalMs = 5000;
+  // First tick after 3s — GitHub takes ~1-3s to register a fresh
+  // workflow_dispatch in the runs list, so polling immediately would
+  // just show stale data.
+  const tick = async () => {
+    if (Date.now() - startedAt > maxDurationMs) {
+      showToast("Backup poll timed out — refresh to check status", "error");
+      return;
+    }
+    const stillRunning = await hydrateBackupCard(card);
+    if (stillRunning) {
+      setTimeout(tick, intervalMs);
+    } else {
+      // Final state landed — surface a quick confirmation. The card's
+      // own state dot already shows healthy/failed; toast just makes
+      // the transition unmissable.
+      showToast("Backup finished");
+    }
+  };
+  setTimeout(tick, 3000);
 };
 
 const renderBackupUnconfigured = () =>
