@@ -27,6 +27,20 @@ import type { D1Database } from "@cloudflare/workers-types";
 // datetime expression — same shape as JS `Date#toISOString()`.
 const ISO = "strftime('%Y-%m-%dT%H:%M:%fZ', ";
 
+// ── Source classification ─────────────────────────────────────────────────
+// Single source-of-truth for the `comp / lahza / gumroad` taxonomy. Lives
+// here so the licenses route, the activations route, and any future
+// section that reads activation/license rows agree on the prefix
+// convention without local re-implementations drifting.
+//   "comp"    — admin-issued, LZ-COMP- prefix; row in LICENSE_DB.licenses
+//   "lahza"   — paid, LZ- prefix without COMP; row in LICENSE_DB.licenses
+//   "gumroad" — Gumroad-issued, no LZ- convention; row in DB.gumroad_license
+
+export type LicenseSource = "comp" | "lahza" | "gumroad";
+
+export const sourceFor = (key: string): LicenseSource =>
+  key.startsWith("LZ-COMP-") ? "comp" : key.startsWith("LZ-") ? "lahza" : "gumroad";
+
 // ── Row types ─────────────────────────────────────────────────────────────
 
 export type LahzaLicenseRow = {
@@ -749,9 +763,21 @@ export type ActivationAdminRow = {
   activated_at: string; // ISO 8601 with Z
   email: string | null; // null when license is Gumroad (lives in website D1)
   license_revoked_at: string | null; // ISO when revoked, null when active OR Gumroad
+  // 0/1 from SQLite — true when the LEFT JOIN with licenses produced a row.
+  // Gumroad activations always come back 0 (their license rows live in the
+  // website D1, not LICENSE_DB), so the route classifies "actually
+  // orphaned" by combining license_present === 0 with `source !== 'gumroad'`.
+  // Lets the UI flag a stale activation pointing at a deleted Lahza row
+  // separately from a normal Gumroad activation.
+  license_present: 0 | 1;
   // Distinct license_keys this machine_id has ever activated against. ≥2
   // marks the row as "shared" — surfaced as a badge in the UI even when
   // the filter is off, since it's the load-bearing fraud signal.
+  //
+  // Intentionally NOT filter-aware: counts every key the machine has
+  // ever touched, regardless of since/until/q. The signal is "has this
+  // machine ever shared seats" — narrowing it to the date window would
+  // hide the cross-window fraud pattern that this row exists to surface.
   shared_count: number;
 };
 
@@ -824,6 +850,11 @@ export const listActivationsAdmin = async (
   const pivot = activationPivotClause(opts.licenseKey, opts.machineId);
   const shared = activationSharedClause(opts.sharedOnly === true);
 
+  // `license_present` is 0/1 because SQLite doesn't have a native bool — the
+  // route maps it to a real boolean for the JSON response. This lets the
+  // client distinguish a stale activation pointing at a deleted Lahza row
+  // (license_present=0 AND prefix=LZ-) from a normal Gumroad activation
+  // (license_present=0 AND prefix not LZ-) without a second round-trip.
   const sql = `
     SELECT
       a.id,
@@ -832,6 +863,7 @@ export const listActivationsAdmin = async (
       ${ISO}a.activated_at) AS activated_at,
       l.email AS email,
       CASE WHEN l.revoked_at IS NULL THEN NULL ELSE ${ISO}l.revoked_at) END AS license_revoked_at,
+      CASE WHEN l.license_key IS NULL THEN 0 ELSE 1 END AS license_present,
       (SELECT COUNT(DISTINCT a2.license_key) FROM activations a2 WHERE a2.machine_id = a.machine_id) AS shared_count
     FROM activations a
     LEFT JOIN licenses l ON l.license_key = a.license_key

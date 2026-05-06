@@ -16,22 +16,21 @@ import {
   listActivationsForKey,
   listLahzaLicenses,
   revokeLahzaLicense,
+  sourceFor,
   unrevokeLahzaLicense,
   updateLahzaLicenseFields,
+  type LicenseSource,
 } from "../../lib/license-db";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
 const licenses = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 
-// Source taxonomy:
-//   "comp"    — admin-issued comp keys (LZ-COMP- prefix; row in LICENSE_DB.licenses)
-//   "lahza"   — paid Lahza keys (LZ- prefix without COMP; row in LICENSE_DB.licenses)
-//   "gumroad" — Gumroad-issued keys (no prefix convention; row in DB.gumroad_license)
-type Source = "comp" | "lahza" | "gumroad";
-
-const sourceFor = (key: string): Source =>
-  key.startsWith("LZ-COMP-") ? "comp" : key.startsWith("LZ-") ? "lahza" : "gumroad";
+// Source classification (`Source` / `sourceFor`) lives in lib/license-db.ts
+// so this route, the activations route, and any future section that touches
+// the prefix convention all read from one place. Re-export the type alias
+// locally only for backwards-compat with existing call sites in this file.
+type Source = LicenseSource;
 
 // Crockford base32 (no I/L/O/U) — same alphabet license-server uses for
 // paid Lahza keys, so admin-issued comps look visually consistent.

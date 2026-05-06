@@ -4,6 +4,7 @@ import {
   activationStats,
   countActivationsAdmin,
   listActivationsAdmin,
+  sourceFor,
 } from "../../lib/license-db";
 import { parsePositiveInt } from "../../lib/query";
 import type { AdminVariables } from "./index";
@@ -25,9 +26,8 @@ const activations = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 // not filter-respecting — so the user always sees the fraud surface area
 // regardless of what they're currently searching for.
 //
-// Source classification is left to the frontend: `LZ-COMP-` → comp, `LZ-`
-// → lahza, anything else → gumroad. This mirrors `licenses.ts`'s
-// `sourceFor` so we don't drift on the convention.
+// Source classification uses the shared `sourceFor` helper so this route
+// can't drift from licenses.ts on the prefix convention.
 activations.get("/", async (c) => {
   const q = c.req.query("q") ?? "";
   // Same pre-stringified-ISO contract as trials/licenses — the SQL wraps
@@ -65,22 +65,29 @@ activations.get("/", async (c) => {
   ]);
 
   return c.json({
-    rows: rows.map((r) => ({
-      id: r.id,
-      license_key: r.license_key,
-      machine_id: r.machine_id,
-      activated_at: r.activated_at,
-      email: r.email,
-      // sourceFor: keep parity with licenses.ts. Doing it server-side means
-      // the frontend doesn't have to repeat the prefix logic for the badge.
-      source: r.license_key.startsWith("LZ-COMP-")
-        ? ("comp" as const)
-        : r.license_key.startsWith("LZ-")
-          ? ("lahza" as const)
-          : ("gumroad" as const),
-      license_revoked: r.license_revoked_at != null,
-      shared_count: r.shared_count,
-    })),
+    rows: rows.map((r) => {
+      const source = sourceFor(r.license_key);
+      // license_missing distinguishes "stale activation pointing at a
+      // deleted Lahza/comp row" from "Gumroad activation, license lives
+      // in the website D1 (not LICENSE_DB)". Both produce a NULL join,
+      // but only the first is an orphan worth flagging in the UI.
+      const licenseMissing = r.license_present === 0 && source !== "gumroad";
+      return {
+        id: r.id,
+        license_key: r.license_key,
+        machine_id: r.machine_id,
+        activated_at: r.activated_at,
+        email: r.email,
+        source,
+        // ISO timestamp when the license was admin-revoked, else null. The
+        // earlier `license_revoked: bool` shape collapsed Gumroad rows
+        // (always null because they have no LICENSE_DB.licenses row) into
+        // the same value as "Lahza, active", which lost information.
+        license_revoked_at: r.license_revoked_at,
+        license_missing: licenseMissing,
+        shared_count: r.shared_count,
+      };
+    }),
     page,
     limit,
     total,
