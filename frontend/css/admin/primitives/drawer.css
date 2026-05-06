@@ -1,0 +1,311 @@
+/* =====================================
+   14. LICENSE DETAIL DRAWER
+   ===================================== */
+.lic-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(var(--admin-blur-md));
+  -webkit-backdrop-filter: blur(var(--admin-blur-md));
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.lic-drawer-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lic-drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(560px, 100vw);
+  background: var(--color-bg-elevated);
+  border-inline-start: var(--border-width) solid var(--color-line);
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 240ms var(--ease);
+}
+
+.lic-drawer.is-open {
+  transform: translateX(0);
+}
+
+.lic-drawer-header {
+  padding: var(--space-6);
+  border-block-end: var(--border-width) solid var(--color-line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.lic-drawer-key {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text);
+  word-break: break-all;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Prose variant for drawers whose header identifies a human (Customer name)
+   rather than an ID (license_key, machine_id). Mono is wrong for "Alice
+   Demo"; this variant drops mono + tracking and bumps to base size since
+   names don't break-all the way IDs do. */
+.lic-drawer-key.is-prose {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  letter-spacing: normal;
+  word-break: normal;
+}
+
+.lic-drawer-badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+.lic-drawer-key-copy {
+  background: transparent;
+  border: none;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-xs);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.lic-drawer-key-copy:hover {
+  color: var(--color-text);
+}
+
+.lic-drawer-close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.lic-drawer-close:hover {
+  color: var(--color-text);
+}
+
+.lic-drawer-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.lic-section-title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-3);
+}
+
+.lic-meta-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-3) var(--space-5);
+}
+
+.lic-meta-grid dt {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+}
+
+.lic-meta-grid dd {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  margin: 0;
+  word-break: break-all;
+}
+
+/* Meta row variant that pairs an identifier with a copy button. The
+   button reuses .lic-drawer-key-copy for visual consistency with the
+   header copy affordance. Used for the user.id row in the customer
+   drawer; future drawers that surface paste-relevant IDs can opt in. */
+.lic-meta-grid dd.lic-meta-copyable {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lic-meta-mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.lic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.lic-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease),
+              background var(--duration-fast) var(--ease);
+}
+
+.lic-action-btn:hover:not([disabled]) {
+  color: var(--color-text);
+  border-color: var(--color-line-strong);
+}
+
+.lic-action-btn.is-danger:hover:not([disabled]) {
+  color: var(--color-type-bug);
+  border-color: var(--color-type-bug);
+}
+
+.lic-action-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.lic-activations-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.lic-activation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.lic-activation-machine {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+/* Free-form text title shown inside a `.lic-activation` row — feedback
+   post titles in the customers drawer use this. Sans-serif (matches the
+   surrounding text), normal size, primary text color. Distinct from
+   `.lic-activation-machine` which is mono and tuned for ID-shaped strings. */
+.feedback-post-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-snug);
+}
+
+/* Mono-styled cross-link used in drawer activation rows when the leading
+   identifier (machine_id from licenses → trials, license_key from trials
+   → licenses) pivots to another resource. Mirrors `.audit-target-link`'s
+   dotted-underline-on-hover treatment but in mono so it sits naturally
+   alongside identifier text. */
+.lic-pivot-link {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text);
+  word-break: break-all;
+  text-decoration: none;
+  border-block-end: var(--border-width) dotted var(--color-line);
+  transition: color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+}
+
+.lic-pivot-link:hover {
+  color: var(--color-accent);
+  border-block-end-color: var(--color-accent);
+}
+
+.lic-activation-meta {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+  margin-block-start: var(--space-1);
+}
+
+.lic-activation-free {
+  background: transparent;
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+  flex-shrink: 0;
+}
+
+.lic-activation-free:hover {
+  color: var(--color-type-bug);
+  border-color: var(--color-type-bug);
+}
+
+.lic-audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.lic-audit-item {
+  padding-inline: var(--space-3);
+  padding-block: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+}
+
+.lic-audit-item strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.lic-audit-meta {
+  margin-block-start: var(--space-1);
+  color: var(--color-text-faint);
+}
+

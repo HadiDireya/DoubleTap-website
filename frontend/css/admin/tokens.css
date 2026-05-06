@@ -1,0 +1,22 @@
+/* =====================================
+   1. ADMIN-LOCAL TOKENS
+   Layout dimensions + alpha variants of style.css colors. The admin is
+   never exposed to light theme so these don't need a counterpart override.
+   ===================================== */
+:root {
+  --admin-sidebar-width: 240px;
+  --admin-topbar-height: 56px;
+  --admin-canvas-max: 1440px;
+  --admin-color-topbar-bg: rgba(10, 10, 10, 0.85);
+  --admin-color-bug-soft: rgba(255, 122, 108, 0.1);
+  --admin-color-feature-soft: rgba(139, 155, 247, 0.1);
+  --admin-color-praise-soft: rgba(255, 209, 102, 0.12);
+  /* The active-nav rail is 2px so it reads at small icon sizes;
+     plain --border-width (1px) disappears against the muted text. */
+  --admin-rail-width: 2px;
+  --admin-blur-md: 12px;
+  /* Inset for the segmented range selector — tighter than --space-1
+     to keep the pill heights flush with adjacent KPI cards. */
+  --admin-inset-xxs: 4px;
+}
+

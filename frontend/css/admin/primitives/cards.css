@@ -1,0 +1,37 @@
+/* =====================================
+   6. BENTO GRID + CARDS
+   ===================================== */
+.admin-bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--space-5);
+}
+
+.admin-card {
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-card.span-3 { grid-column: span 3; }
+.admin-card.span-4 { grid-column: span 4; }
+.admin-card.span-6 { grid-column: span 6; }
+.admin-card.span-8 { grid-column: span 8; }
+.admin-card.span-12 { grid-column: span 12; }
+
+@media (max-width: 1024px) {
+  .admin-card.span-3 { grid-column: span 6; }
+  .admin-card.span-4 { grid-column: span 6; }
+  .admin-card.span-8 { grid-column: span 12; }
+}
+
+@media (max-width: 640px) {
+  .admin-card.span-3,
+  .admin-card.span-4,
+  .admin-card.span-6,
+  .admin-card.span-8 { grid-column: span 12; }
+}
+

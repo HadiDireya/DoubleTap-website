@@ -1,0 +1,30 @@
+/* =====================================
+   11. STATES — loading, empty, error
+   ===================================== */
+.admin-loading,
+.admin-empty,
+.admin-error {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.admin-error {
+  color: var(--color-type-bug);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface) 0%, var(--color-surface-2) 50%, var(--color-surface) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+

@@ -1,0 +1,326 @@
+/* =====================================
+   13. LICENSES PAGE
+   ===================================== */
+
+/* Toolbar — search + filters + primary action */
+.lic-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-5);
+}
+
+.lic-search {
+  flex: 1 1 320px;
+  max-width: 480px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.lic-search:focus-within {
+  border-color: var(--color-line-strong);
+}
+
+.lic-search .icon {
+  color: var(--color-text-faint);
+  flex-shrink: 0;
+}
+
+.lic-search input {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  padding: 0;
+}
+
+.lic-search input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.lic-search input:focus {
+  outline: none;
+}
+
+.lic-filters {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.lic-chip {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+}
+
+.lic-chip:hover {
+  color: var(--color-text);
+  border-color: var(--color-line-strong);
+}
+
+.lic-chip.is-active {
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+  border-color: transparent;
+}
+
+.lic-chip-count {
+  margin-inline-start: var(--space-2);
+  color: var(--color-text-faint);
+}
+
+.lic-chip.is-active .lic-chip-count {
+  color: var(--color-accent);
+  opacity: 0.7;
+}
+
+.lic-toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.lic-toolbar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.lic-toolbar-action:hover { opacity: 0.85; }
+
+/* Table */
+.lic-table-card {
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.lic-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.lic-table thead {
+  background: var(--color-surface);
+}
+
+.lic-table th {
+  text-align: start;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding-inline: var(--space-5);
+  padding-block: var(--space-3);
+  border-block-end: var(--border-width) solid var(--color-line);
+  white-space: nowrap;
+}
+
+.lic-table td {
+  padding-inline: var(--space-5);
+  padding-block: var(--space-4);
+  border-block-end: var(--border-width) solid var(--color-line);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.lic-table tr:last-child td {
+  border-block-end: none;
+}
+
+.lic-table tbody tr {
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.lic-table tbody tr:hover {
+  background: var(--color-surface);
+}
+
+.lic-key {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text);
+}
+
+.lic-email {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lic-meta {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+}
+
+/* Source + status badges */
+.lic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.lic-badge.src-lahza {
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.lic-badge.src-comp {
+  background: var(--admin-color-feature-soft);
+  color: var(--color-type-feature);
+}
+
+.lic-badge.src-gumroad {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+.lic-badge.status-active {
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.lic-badge.status-revoked {
+  background: var(--admin-color-bug-soft);
+  color: var(--color-type-bug);
+}
+
+/* "Expired" is a passive time-based state, not an admin action like
+   `revoked`. Muted gray reads as "stale" without the alarm of red. */
+.lic-badge.status-expired {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+/* "Converted" tags a trial whose machine_id later activated a license.
+   Praise-soft (yellow) reads as a positive milestone and stays visually
+   distinct from `status-active` (accent) and `src-comp` (feature/purple). */
+.lic-badge.converted {
+  background: var(--admin-color-praise-soft);
+  color: var(--color-type-praise);
+}
+
+/* "Shared" flags an activation whose machine_id appears on ≥2 distinct
+   license keys — a fraud signal worth investigating. Praise-soft (yellow)
+   keeps it visually distinct from `status-revoked` (red admin action),
+   so a row carrying both REVOKED and SHARED reads as two separate flags
+   rather than one big red blob. Same yellow as `.converted` because both
+   are "look at this" markers; the `SHARED · n` text disambiguates. */
+.lic-badge.status-shared {
+  background: var(--admin-color-praise-soft);
+  color: var(--color-type-praise);
+}
+
+/* Pagination */
+.lic-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.lic-pagination-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.lic-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+
+.lic-page-btn:hover:not([disabled]) {
+  color: var(--color-text);
+  border-color: var(--color-line-strong);
+}
+
+.lic-page-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.lic-empty {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+

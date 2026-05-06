@@ -1,0 +1,155 @@
+/* Range selector — segmented control */
+.admin-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: var(--admin-inset-xxs);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+}
+
+.admin-range button {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-xs);
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+
+.admin-range button:hover {
+  color: var(--color-text);
+}
+
+.admin-range button.is-active {
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+}
+
+/* =====================================
+   7. KPI CARD
+   ===================================== */
+.kpi-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-3);
+}
+
+.kpi-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+.kpi-breakdown {
+  display: flex;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.kpi-breakdown span strong {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-start: var(--space-5);
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.kpi-delta.is-up {
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+}
+
+.kpi-delta.is-down {
+  background: var(--admin-color-bug-soft);
+  color: var(--color-type-bug);
+}
+
+.kpi-delta.is-neutral {
+  background: var(--color-surface);
+  color: var(--color-text-faint);
+}
+
+.kpi-delta-suffix {
+  margin-inline-start: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.kpi-delta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.kpi-ghost {
+  position: absolute;
+  inset-block-start: var(--space-3);
+  inset-inline-end: var(--space-3);
+  width: 64px;
+  height: 64px;
+  color: var(--color-text);
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+/* =====================================
+   10. SMALL STAT CARD
+   ===================================== */
+.stat-card-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-3);
+}
+
+.stat-card-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+.stat-card-foot {
+  margin-block-start: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+

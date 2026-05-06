@@ -1,0 +1,263 @@
+/* =====================================
+   2. SHELL
+   ===================================== */
+.admin-icon-sprite {
+  display: none;
+}
+
+body.admin {
+  background: var(--color-bg);
+  font-family: var(--font-display);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: block;
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: var(--admin-sidebar-width) 1fr;
+  min-height: 100vh;
+}
+
+/* =====================================
+   3. SIDEBAR
+   ===================================== */
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  background: var(--color-bg-elevated);
+  border-inline-end: var(--border-width) solid var(--color-line);
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--space-5);
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-5);
+  padding-block-end: var(--space-8);
+}
+
+.admin-brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.admin-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: var(--line-height-tight);
+}
+
+.admin-brand-text strong {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.admin-brand-text span {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-accent);
+  margin-block-start: var(--space-1);
+  text-transform: uppercase;
+}
+
+.admin-nav {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+  overflow-y: auto;
+}
+
+.admin-nav-section-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-3) var(--space-2);
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  border-inline-start: var(--admin-rail-width) solid transparent;
+  transition: background var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-nav-item:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.admin-nav-item.is-active {
+  background: var(--color-accent-glow);
+  color: var(--color-accent);
+  border-inline-start-color: var(--color-accent);
+}
+
+.admin-nav-item.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-nav-item.is-disabled:hover {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.admin-nav-item .icon {
+  flex-shrink: 0;
+}
+
+.admin-nav-item .label {
+  flex: 1 1 auto;
+}
+
+.admin-nav-item .pill {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text-faint);
+}
+
+.admin-sidebar-footer {
+  padding-inline: var(--space-4);
+  padding-block-start: var(--space-4);
+  border-block-start: var(--border-width) solid var(--color-line);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* =====================================
+   4. TOP BAR + MAIN CANVAS
+   ===================================== */
+.admin-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: var(--admin-topbar-height);
+  background: var(--admin-color-topbar-bg);
+  backdrop-filter: blur(var(--admin-blur-md));
+  -webkit-backdrop-filter: blur(var(--admin-blur-md));
+  border-block-end: var(--border-width) solid var(--color-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-6);
+}
+
+.admin-topbar-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+}
+
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.admin-topbar-email {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+}
+
+.admin-topbar-signout {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+
+.admin-topbar-signout:hover {
+  border-color: var(--color-line-strong);
+  color: var(--color-text);
+}
+
+.admin-canvas {
+  flex: 1 1 auto;
+  padding: var(--space-8) var(--space-8) var(--space-12);
+  max-width: var(--admin-canvas-max);
+  width: 100%;
+  margin-inline: auto;
+}
+
+/* =====================================
+   5. PAGE HEADER (per-view)
+   ===================================== */
+.admin-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-end: var(--space-8);
+}
+
+.admin-page-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  margin-block-end: var(--space-1);
+}
+
+.admin-page-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}

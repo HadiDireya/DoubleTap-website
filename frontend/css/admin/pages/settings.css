@@ -1,0 +1,234 @@
+/* =====================================
+   23. SETTINGS PAGE (PR12)
+   Read-only v1 — admins, secrets, maintenance (deferred), feature
+   flags (placeholder), API tokens (placeholder). Reuses .admin-card,
+   .admin-bento, .lic-section-title, .lic-empty, .lic-badge.
+   ===================================== */
+
+.settings-card .lic-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: 0;
+}
+
+.settings-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-block-end: var(--space-3);
+}
+
+.settings-card-help {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: var(--line-height-normal);
+  margin: 0 0 var(--space-5) 0;
+}
+
+.settings-card-foot {
+  margin-block-start: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+}
+
+/* Inline code chips inside help text — match the mono-id treatment used
+   elsewhere (e.g. .lic-activation-machine) but render inline, not block. */
+.settings-inline-code {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-xs);
+  padding-inline: var(--space-2);
+  padding-block: 0;
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Pill in the card head — neutral by default, accent when state="on". */
+.settings-pill {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-full);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-1);
+}
+
+.settings-pill.is-on {
+  color: var(--color-accent);
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent-dim);
+}
+
+/* Generic vertical list inside a settings card. Each row has a primary
+   identifier on the left + a status/action affordance on the right. */
+.settings-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.settings-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.settings-list-primary {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.settings-secret-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.settings-source-code {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+/* Status pill rendered inside settings list rows (configured / missing,
+   feature-flag on / off). Smaller than .lic-badge — sits flush with the
+   row text without growing the row height. */
+.settings-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border: var(--border-width) solid var(--color-line);
+}
+
+.settings-status-pill.is-ok {
+  color: var(--color-accent);
+  background: var(--color-accent-dim);
+  border-color: var(--color-accent-dim);
+}
+
+/* Passive "not configured" — a Worker secret name being absent is
+   informational, not a bug-state. Muted gray reads as "stale/unset"
+   without the alarm of bug-red (which is reserved for active error
+   states like .lic-badge.status-revoked). */
+.settings-status-pill.is-missing {
+  color: var(--color-text-faint);
+  background: var(--color-surface-2);
+  border-color: var(--color-line);
+}
+
+/* Toggle row + iOS-style switch. Disabled today (deferred until the
+   admin_settings migration); the click handler isn't wired. The visual
+   affordance is still rendered so the user knows where the toggle will
+   live once it works.
+
+   Toggle dimensions are hoisted to local custom properties on the row
+   so the raw px values that drive the switch geometry (track size,
+   knob size, knob inset, knob travel) live in one place instead of
+   being scattered across rules. Scoped to the row rather than :root
+   because nothing outside this control needs them. */
+.settings-toggle-row {
+  --settings-toggle-track-w: 44px;
+  --settings-toggle-track-h: 24px;
+  --settings-toggle-knob-size: 18px;
+  --settings-toggle-knob-inset: 2px;
+  --settings-toggle-knob-travel: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  padding-inline: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.settings-toggle-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.settings-toggle {
+  position: relative;
+  width: var(--settings-toggle-track-w);
+  height: var(--settings-toggle-track-h);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  border: var(--border-width) solid var(--color-line);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease);
+  flex: 0 0 auto;
+}
+
+.settings-toggle .settings-toggle-knob {
+  position: absolute;
+  inset-block-start: var(--settings-toggle-knob-inset);
+  inset-inline-start: var(--settings-toggle-knob-inset);
+  width: var(--settings-toggle-knob-size);
+  height: var(--settings-toggle-knob-size);
+  border-radius: var(--radius-full);
+  background: var(--color-text);
+  transition: transform var(--duration-fast) var(--ease);
+}
+
+.settings-toggle[aria-checked="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.settings-toggle[aria-checked="true"] .settings-toggle-knob {
+  transform: translateX(var(--settings-toggle-knob-travel));
+  background: var(--color-bg);
+}
+
+.settings-toggle.is-disabled,
+.settings-toggle[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.settings-message-preview {
+  margin-block-start: var(--space-4);
+}
+
+.settings-message-body {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-block: var(--space-2) 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+}

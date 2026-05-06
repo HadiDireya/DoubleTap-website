@@ -1,0 +1,115 @@
+/* =====================================
+   N. FEEDBACK PAGE
+   Type badges (bug/feature/praise) reuse the existing soft-color tokens
+   in `:root` so they read consistent with the dashboard's feedback feed.
+   The drawer body, comment rows, and status banner are layout-only
+   wrappers — every color, size, and radius pulls from style.css tokens.
+   ===================================== */
+.lic-badge.fb-type-bug {
+  background: var(--admin-color-bug-soft);
+  color: var(--color-type-bug);
+}
+
+.lic-badge.fb-type-feature {
+  background: var(--admin-color-feature-soft);
+  color: var(--color-type-feature);
+}
+
+.lic-badge.fb-type-praise {
+  background: var(--admin-color-praise-soft);
+  color: var(--color-type-praise);
+}
+
+/* aria-live banner inside the drawer so a status change announces to
+   screen readers without focus-stealing. Empty state collapses to zero
+   height — only the post-action announcement carries content.
+   The :empty selector here is intentional and load-bearing: the JS only
+   ever sets `textContent` on this element (never appends children, never
+   sets innerHTML), so :empty is a reliable proxy for "no announcement
+   yet". If a future change appends DOM nodes here, swap to an explicit
+   `.is-hidden` toggle. */
+.feedback-status-banner {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.feedback-status-banner:empty {
+  display: none;
+}
+
+/* Toolbar helper line — surfaces non-obvious filter semantics (e.g. the
+   "End date is exclusive" caveat for the feedback page's date pickers).
+   Sits under the toolbar row with a small muted style so it doesn't
+   compete with the controls themselves. */
+.lic-toolbar-help {
+  margin-block-end: var(--space-5);
+  margin-block-start: calc(-1 * var(--space-3));
+}
+
+.lic-toolbar-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+}
+
+/* Drawer body — feedback posts can run a few paragraphs, so we wrap and
+   preserve newlines without letting an oversized paste blow the drawer
+   width. `word-break: break-word` keeps a long URL from overflowing. */
+.feedback-post-body {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+/* Inline label+select pair for the "Set status" control in the drawer
+   actions row — keeps the select snug to its label without an inline
+   style or a fresh flex token. */
+.feedback-status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* Comment row — overrides `.lic-activation`'s default centered layout to
+   put the body underneath the author/timestamp and align the delete
+   button to the top-right of the row. */
+.lic-activation.feedback-comment {
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.feedback-comment-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.feedback-comment-meta {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.feedback-comment-body {
+  margin-block-start: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-normal);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Compact delete button per-comment so the row stays scannable; uses
+   the existing danger button styling (red on hover) without growing to
+   the default action-button size. */
+.feedback-comment-delete {
+  flex: 0 0 auto;
+}
+

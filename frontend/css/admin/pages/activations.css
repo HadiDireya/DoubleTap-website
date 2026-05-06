@@ -1,0 +1,53 @@
+/* =====================================
+   N. ACTIVATIONS PAGE
+   Stats banner above the table (3 cards), pivot banner shown when the
+   page was opened from a license/trial drawer drilldown, and a small
+   tweak so a REVOKED badge can sit inline next to the license link
+   without an inline style. The table itself is plain `.lic-table`.
+   ===================================== */
+.activations-stats {
+  margin-block-end: var(--space-5);
+}
+
+/* Visible callout for a pivot filter (e.g. "filtered to license LZ-…")
+   so users notice why some rows are missing. Mirrors the muted-surface
+   look of `.lic-empty` but as a single line above the toolbar. The
+   accent-coloured leading edge differentiates it from a normal toolbar
+   row at a glance — without it, a screen-skim reads as "the page just
+   has fewer rows today" rather than "you're filtered". */
+.lic-pivot-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
+  padding-block: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-inline-start: var(--admin-rail-width) solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-4);
+}
+
+/* Activations row "License" cell can carry a trailing REVOKED badge next
+   to the license link. Inline-flex with a small gap keeps the badge
+   pinned to the link without an inline style. */
+.act-license-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* `.lic-pivot-link` defaults to a dotted underline because in the drawer
+   activation lists it sits next to plain text, where the underline is
+   the only affordance saying "this is clickable". Inside the activations
+   table, the dotted underline doubles up against the row separator and
+   reads as a stray solid line under one row. Drop it here; the cursor
+   + accent-on-hover remain as the affordance. */
+.lic-table .lic-pivot-link {
+  border-block-end: none;
+}
+
