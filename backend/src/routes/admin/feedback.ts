@@ -275,8 +275,14 @@ feedback.patch("/:id/status", async (c) => {
 
   const db = getDb(c.env);
   const before = await db
-    .select({ status: feedbackPost.status, title: feedbackPost.title })
+    .select({
+      status: feedbackPost.status,
+      title: feedbackPost.title,
+      authorEmail: user.email,
+      authorName: user.name,
+    })
     .from(feedbackPost)
+    .leftJoin(user, eq(feedbackPost.userId, user.id))
     .where(eq(feedbackPost.id, id))
     .limit(1)
     .then((r) => r[0]);
@@ -299,7 +305,16 @@ feedback.patch("/:id/status", async (c) => {
     action: "feedback.update_status",
     targetType: "feedback_post",
     targetId: id,
-    details: { from: before.status, to: next, title: before.title },
+    // Include author_email/author_name for parity with the delete-post
+    // audit details — a follow-up "who's filing all the bugs" trail
+    // should read consistently across status changes and deletions.
+    details: {
+      from: before.status,
+      to: next,
+      title: before.title,
+      author_email: before.authorEmail ?? null,
+      author_name: before.authorName ?? null,
+    },
   });
   return c.json({ ok: true });
 });
@@ -320,6 +335,7 @@ feedback.delete("/:id", async (c) => {
       type: feedbackPost.type,
       status: feedbackPost.status,
       authorEmail: user.email,
+      authorName: user.name,
     })
     .from(feedbackPost)
     .leftJoin(user, eq(feedbackPost.userId, user.id))
@@ -340,6 +356,7 @@ feedback.delete("/:id", async (c) => {
       type: before.type,
       status: before.status,
       author_email: before.authorEmail ?? null,
+      author_name: before.authorName ?? null,
     },
   });
   return c.json({ ok: true });
@@ -360,7 +377,9 @@ feedback.delete("/:id/comments/:commentId", async (c) => {
     .select({
       postId: feedbackComment.postId,
       body: feedbackComment.body,
+      authorUserId: feedbackComment.userId,
       authorEmail: user.email,
+      authorName: user.name,
     })
     .from(feedbackComment)
     .leftJoin(user, eq(feedbackComment.userId, user.id))
@@ -381,7 +400,13 @@ feedback.delete("/:id/comments/:commentId", async (c) => {
     targetId: commentId,
     details: {
       post_id: postId,
+      // Snapshot the author's userId alongside email/name. The userId
+      // survives even if the user record is later deleted, so a "this
+      // user keeps posting trash" investigation can still pivot from the
+      // audit trail back to a (possibly-gone) account.
+      author_user_id: before.authorUserId ?? null,
       author_email: before.authorEmail ?? null,
+      author_name: before.authorName ?? null,
       // Snapshot a body preview so the audit row is meaningful after the
       // comment is gone. Cap at 200 chars — full body is on the audit
       // row's details if needed, but the 1-line preview is what matters.
