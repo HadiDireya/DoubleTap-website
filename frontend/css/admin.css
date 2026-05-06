@@ -1567,7 +1567,7 @@ body.admin {
   border-color: var(--color-accent);
 }
 
-.audit-date {
+.audit-input {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   letter-spacing: var(--letter-spacing-wide);
@@ -1579,7 +1579,7 @@ body.admin {
   color: var(--color-text);
 }
 
-.audit-date:focus {
+.audit-input:focus {
   outline: none;
   border-color: var(--color-accent);
 }

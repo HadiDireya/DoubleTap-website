@@ -1553,11 +1553,40 @@ const fmtAuditAction = (raw) => raw.replace(/^[a-z_]+\./, "").replace(/[._]/g, "
 const auditActionClass = (action) => {
   // Map any action into one of the small valence buckets in admin.css —
   // green (issue/unrevoke/unban), red (revoke/delete/ban/terminate),
-  // blue (update/change/extend), default surface for everything else.
+  // blue (mutation: update/change/extend/regenerate, plus pin/unpin as
+  // moderation state-change). Pure side-effects (resend_email) stay
+  // neutral. Keep these patterns in sync with the AuditAction union in
+  // backend/src/lib/audit.ts.
   if (/(\.issue|\.unrevoke|\.unban)/.test(action)) return "is-issue";
   if (/(\.revoke|\.delete|\.ban|\.terminate)/.test(action)) return "is-revoke";
-  if (/(\.update|\.change|\.extend)/.test(action)) return "is-update";
+  if (/(\.update|\.change|\.extend|\.regenerate|\.pin|\.unpin)/.test(action)) return "is-update";
   return "";
+};
+
+// Date pickers (`<input type="date">`) speak YYYY-MM-DD. URL state needs
+// a full ISO so the backend can filter inclusive of the user's local
+// wall-clock day, not UTC midnight. Both helpers below use the user's
+// local timezone — picking "2026-05-06" in Tokyo means 2026-05-06 00:00
+// JST, which serialises to 2026-05-05T15:00:00.000Z; a Pacific user
+// picking the same date gets 2026-05-06T07:00:00.000Z. This keeps the
+// SINCE/UNTIL filter aligned with what the user sees in the picker.
+
+const dateInputValueFromISO = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const localMidnightISO = (yyyymmdd) => {
+  if (!yyyymmdd) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(yyyymmdd);
+  if (!m) return "";
+  const [, y, mo, d] = m;
+  return new Date(parseInt(y, 10), parseInt(mo, 10) - 1, parseInt(d, 10)).toISOString();
 };
 
 const buildAuditQuery = (params) => {
@@ -1570,10 +1599,18 @@ const buildAuditQuery = (params) => {
 };
 
 const renderAudit = async (canvas, { params }) => {
-  // Preserve search-input focus across re-renders, same as licenses page.
-  const prevSearch = canvas.querySelector?.(".lic-search input");
-  const wasFocused = prevSearch && document.activeElement === prevSearch;
-  const caret = wasFocused ? prevSearch.selectionStart : null;
+  // Preserve focus on whichever toolbar input the user was typing in
+  // across re-renders. Filter changes (date pickers, dropdowns) trigger
+  // a hash update → re-render, which would otherwise drop the caret out
+  // of the search / target-id inputs and break the typing flow.
+  const focusedSelector = (() => {
+    const a = document.activeElement;
+    if (!a || !canvas.contains(a)) return null;
+    if (a.matches?.(".lic-search input")) return ".lic-search input";
+    if (a.matches?.(".audit-target-id-input")) return ".audit-target-id-input";
+    return null;
+  })();
+  const caret = focusedSelector ? document.activeElement.selectionStart : null;
 
   clear(canvas);
   canvas.append(
@@ -1631,7 +1668,7 @@ const renderAudit = async (canvas, { params }) => {
   }
 
   const targetIdInput = el("input", {
-    type: "search", class: "audit-date", placeholder: "Target id contains…",
+    type: "search", class: "audit-input audit-target-id-input", placeholder: "Target id contains…",
     value: targetIdVal, autocomplete: "off", spellcheck: "false",
     "aria-label": "Filter by target id",
   });
@@ -1642,18 +1679,23 @@ const renderAudit = async (canvas, { params }) => {
   });
 
   const sinceInput = el("input", {
-    type: "date", class: "audit-date", value: sinceVal.slice(0, 10),
+    type: "date", class: "audit-input", value: dateInputValueFromISO(sinceVal),
     "aria-label": "From date",
-    onchange: (e) => setParam("since", e.target.value ? new Date(e.target.value).toISOString() : ""),
+    onchange: (e) => setParam("since", localMidnightISO(e.target.value)),
   });
   const untilInput = el("input", {
-    type: "date", class: "audit-date", value: untilVal.slice(0, 10),
+    type: "date", class: "audit-input", value: dateInputValueFromISO(untilVal),
     "aria-label": "Until date (exclusive)",
-    onchange: (e) => setParam("until", e.target.value ? new Date(e.target.value).toISOString() : ""),
+    onchange: (e) => setParam("until", localMidnightISO(e.target.value)),
   });
 
   const searchInput = el("input", {
-    type: "search", placeholder: "Search target / action / details…",
+    // The hint reminds the user that q substring-matches the JSON details
+    // blob too, so a query like "to" lights up every change_email row
+    // (because `"to"` is a key in that event's details JSON, not just a
+    // value). Knowing that up-front beats wondering why the result set
+    // looks weird.
+    type: "search", placeholder: "Search target id, action, or details JSON…",
     value: qVal, autocomplete: "off", spellcheck: "false",
     "aria-label": "Free-text search",
   });
@@ -1683,10 +1725,13 @@ const renderAudit = async (canvas, { params }) => {
     ),
   );
 
-  if (wasFocused) {
-    searchInput.focus();
-    if (caret != null) {
-      try { searchInput.setSelectionRange(caret, caret); } catch (_) { /* noop */ }
+  if (focusedSelector) {
+    const restored = canvas.querySelector(focusedSelector);
+    if (restored) {
+      restored.focus();
+      if (caret != null) {
+        try { restored.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support setSelectionRange in some engines */ }
+      }
     }
   }
 
@@ -1705,7 +1750,18 @@ const renderAudit = async (canvas, { params }) => {
   }
 
   clear(tableMount);
-  tableMount.append(renderAuditTable(data, { page, limit, expand: params.get("expand") || "" }));
+  const expand = params.get("expand") || "";
+  tableMount.append(renderAuditTable(data, { page, limit, expand }));
+
+  // When the page boots with ?expand=<id> in the URL — typically a deep
+  // link from the licenses drawer or a previous session reload — scroll
+  // the expanded row into view so the user lands on it directly. Without
+  // this, an event below the fold gets its panel inserted but the
+  // viewport stays at the top and the click feels broken.
+  if (expand) {
+    const target = tableMount.querySelector(`tr.audit-row-details[data-expand-id="${CSS.escape(expand)}"]`);
+    if (target) requestAnimationFrame(() => target.scrollIntoView({ block: "center", behavior: "smooth" }));
+  }
 };
 
 const renderAuditTable = (data, { page, limit, expand }) => {
@@ -1792,7 +1848,7 @@ const renderAuditDetailsRow = (row) => {
     const text = typeof details === "string" ? details : JSON.stringify(details, null, 2);
     body = el("pre", { class: "audit-details-pre" }, text);
   }
-  return el("tr", { class: "audit-row-details" },
+  return el("tr", { class: "audit-row-details", "data-expand-id": row.id },
     el("td", { colspan: "4" },
       el("div", { class: "lic-section-title" },
         "Event ", row.id, " · ", fmtDateTime(row.created_at),
