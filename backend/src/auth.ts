@@ -11,7 +11,15 @@ export const createAuth = (env: Env) =>
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.API_URL,
     basePath: "/auth",
-    trustedOrigins: [env.APP_URL, `https://www.${env.APP_URL.replace(/^https?:\/\//, "")}`],
+    // Localhost origins are added only in dev (env.DEV === "true"), mirroring
+    // the Hono CORS list in index.ts — Better Auth maintains its own origin
+    // allow-list and would otherwise 403 sign-in POSTs from a localhost
+    // frontend even though CORS already let the request through.
+    trustedOrigins: [
+      env.APP_URL,
+      `https://www.${env.APP_URL.replace(/^https?:\/\//, "")}`,
+      ...(env.DEV === "true" ? ["http://localhost:8000", "http://127.0.0.1:8000"] : []),
+    ],
     socialProviders: {
       apple: {
         clientId: env.APPLE_CLIENT_ID,
