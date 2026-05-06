@@ -237,6 +237,13 @@ licenses.get("/", async (c) => {
 });
 
 // ── GET /:key — license detail with activations + audit timeline ──────────
+//
+// Cross-DB error policy: LICENSE_DB calls below are NOT wrapped in
+// `.catch(() => fallback)` the way users.ts wraps `listLicensesByEmail`.
+// The asymmetry is intentional — for a Lahza/comp license, LICENSE_DB IS
+// the primary data, and silently returning empty rows would render a
+// misleading "no such license" 404 instead of surfacing the outage. Let
+// the 500 propagate so the admin sees something is wrong.
 licenses.get("/:key", async (c) => {
   const licenseKey = c.req.param("key");
   const src = sourceFor(licenseKey);

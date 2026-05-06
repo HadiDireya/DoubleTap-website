@@ -1158,6 +1158,17 @@ body.admin {
   gap: var(--space-2);
 }
 
+/* Prose variant for drawers whose header identifies a human (Customer name)
+   rather than an ID (license_key, machine_id). Mono is wrong for "Alice
+   Demo"; this variant drops mono + tracking and bumps to base size since
+   names don't break-all the way IDs do. */
+.lic-drawer-key.is-prose {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  letter-spacing: normal;
+  word-break: normal;
+}
+
 .lic-drawer-badges {
   display: flex;
   gap: var(--space-2);
@@ -1230,6 +1241,22 @@ body.admin {
   color: var(--color-text);
   margin: 0;
   word-break: break-all;
+}
+
+/* Meta row variant that pairs an identifier with a copy button. The
+   button reuses .lic-drawer-key-copy for visual consistency with the
+   header copy affordance. Used for the user.id row in the customer
+   drawer; future drawers that surface paste-relevant IDs can opt in. */
+.lic-meta-grid dd.lic-meta-copyable {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lic-meta-mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .lic-actions {

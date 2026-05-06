@@ -59,6 +59,11 @@ trials.get("/", async (c) => {
 });
 
 // ── GET /:machineId — detail with activations + audit timeline ────────────
+//
+// Cross-DB error policy: same as licenses.ts — LICENSE_DB IS the primary
+// data here (the trial row + its activations live there), so we don't
+// soft-fail those calls the way users.ts wraps `listLicensesByEmail`
+// (where Lahza is enrichment, not the spine of the response).
 trials.get("/:machineId", async (c) => {
   const machineId = c.req.param("machineId");
   const ldb = c.env.LICENSE_DB;

@@ -1186,6 +1186,12 @@ const closeDrawer = () => {
     params.delete("key");
     const qs = params.toString();
     history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+    // replaceState doesn't fire hashchange, so route() doesn't run and
+    // lastLicensesFilterSig stays at its prior value. Today that's fine
+    // because licensesFilterSig() ignores ?key — but re-cache defensively
+    // so a future filter that ever overlapped with the drawer-id param
+    // wouldn't silently get short-circuited.
+    if (path === "/licenses") lastLicensesFilterSig = licensesFilterSig(params);
   }
   // Capture the nodes locally before the post-animation cleanup. Module-level
   // refs may be reassigned by a fresh openLicenseDrawer() call within the
@@ -1822,6 +1828,8 @@ const closeCustomerDrawer = () => {
     params.delete("u");
     const qs = params.toString();
     history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+    // Defensive re-cache — see closeDrawer for the full rationale.
+    if (path === "/customers") lastCustomersFilterSig = customersFilterSig(params);
   }
   // Local capture so a fresh open within the close animation doesn't get
   // torn down here — see closeDrawer for the canonical note.
@@ -1852,6 +1860,8 @@ const openCustomerDrawer = async (userId) => {
   }
 
   clear(customersDrawerEl);
+  // Skeleton uses the bare userId in the header; the prose variant kicks
+  // in on paint once we have the user's name.
   customersDrawerEl.append(
     el("div", { class: "lic-drawer-header" },
       el("div", { class: "lic-drawer-key" }, userId),
@@ -1893,7 +1903,7 @@ const paintCustomerDrawer = (data) => {
   customersDrawerEl.append(
     el("div", { class: "lic-drawer-header" },
       el("div", {},
-        el("div", { class: "lic-drawer-key" },
+        el("div", { class: "lic-drawer-key is-prose" },
           el("span", {}, data.name || data.email || data.id),
         ),
         el("div", { class: "lic-drawer-badges" },
@@ -1920,7 +1930,26 @@ const paintCustomerDrawer = (data) => {
   if (data.updated_at && data.updated_at !== data.created_at) {
     addMeta("Updated", fmtDateTime(data.updated_at));
   }
-  addMeta("User id", data.id);
+  // User id meta gets a copy button — admins routinely paste this into SQL
+  // prompts when cross-referencing a user against raw D1 queries, and the
+  // Better Auth nanoid isn't memorable enough to retype.
+  meta.append(
+    el("dt", {}, "User id"),
+    el("dd", { class: "lic-meta-copyable" },
+      el("span", { class: "lic-meta-mono" }, data.id),
+      el("button", {
+        class: "lic-drawer-key-copy",
+        type: "button",
+        "aria-label": "Copy user id",
+        onclick: async () => {
+          try {
+            await navigator.clipboard.writeText(data.id);
+            showToast("User id copied");
+          } catch (_) { showToast("Couldn't copy", "error"); }
+        },
+      }, icon("copy", 12)),
+    ),
+  );
   body.append(
     el("div", {},
       el("div", { class: "lic-section-title" }, "Details"),
@@ -2265,6 +2294,8 @@ const closeTrialDrawer = () => {
     params.delete("machine");
     const qs = params.toString();
     history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+    // Defensive re-cache — see closeDrawer for the full rationale.
+    if (path === "/trials") lastTrialsFilterSig = trialsFilterSig(params);
   }
   // See the matching note in closeDrawer — local capture so a fresh open
   // within the 260 ms animation window doesn't get torn down here.
