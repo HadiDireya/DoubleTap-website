@@ -379,6 +379,94 @@ const demoFixture = (path) => {
       stats: { total_activations: 178, shared_machines: 2, hot_licenses: 1 },
     };
   }
+  if (path.startsWith("/admin/feedback/")) {
+    const suffix = path.slice("/admin/feedback/".length).split("?")[0];
+    // Action endpoints (PATCH /:id/status, DELETE /:id, DELETE /:id/comments/:cid)
+    // — return ok. The frontend uses status code from the method, not from the
+    // body, so noop:false is fine.
+    if (suffix.includes("/")) return { ok: true };
+    const id = decodeURIComponent(suffix);
+    const now = Date.now();
+    // Detail fixture: pretend "p_with_comments" carries a thread; the
+    // others are bare posts. Mirrors the list fixture.
+    const isWithComments = id === "p_with_comments";
+    const isBug = id === "p_bug";
+    const isPraise = id === "p_praise";
+    return {
+      id,
+      type: isBug ? "bug" : isPraise ? "praise" : "feature",
+      title: isBug
+        ? "Double-tap of right ⌘ doesn't fire the action"
+        : isPraise
+          ? "Switching from BetterTouchTool — DoubleTap nailed it"
+          : "Per-app trigger overrides for Spotlight remap",
+      body: "Steps to reproduce:\n1. Map right ⌘ to Spotlight.\n2. Lock the screen, then unlock.\n3. Double-tap right ⌘ — nothing happens.\nExpected: Spotlight opens. Actual: silent.",
+      status: "suggested",
+      created_at: new Date(now - 7 * 86400_000).toISOString(),
+      updated_at: new Date(now - 7 * 86400_000).toISOString(),
+      author: {
+        id: "u_alice", name: "Alice Demo", email: "alice@example.com", image: null,
+      },
+      vote_count: isWithComments ? 14 : isPraise ? 6 : 3,
+      comments: isWithComments
+        ? [
+            { id: "c2", body: "Same on my M3 Air. Reverting to v1.4.1 fixes it.",
+              created_at: new Date(now - 1 * 86400_000).toISOString(),
+              author: { id: "u_bob", name: "Bob Tester", email: "bob@example.com" } },
+            { id: "c1", body: "Repro confirmed — opening a ticket.",
+              created_at: new Date(now - 2 * 86400_000).toISOString(),
+              author: { id: "u_admin", name: "Hadi", email: ADMIN_EMAIL } },
+          ]
+        : [],
+      audit: [],
+    };
+  }
+  if (path.startsWith("/admin/feedback")) {
+    const now = Date.now();
+    const rows = [
+      { id: "p_bug", type: "bug",
+        title: "Double-tap of right ⌘ doesn't fire the action",
+        body_preview: "Steps to reproduce: 1. Map right ⌘ to Spotlight. 2. Lock the screen, then unlock. 3. Double-tap right ⌘ — nothing happens.…",
+        status: "under_review",
+        created_at: new Date(now - 30 * 60_000).toISOString(),
+        updated_at: new Date(now - 30 * 60_000).toISOString(),
+        author: { id: "u_alice", name: "Alice Demo", email: "alice@example.com" },
+        vote_count: 3, comment_count: 0 },
+      { id: "p_with_comments", type: "feature",
+        title: "Per-app trigger overrides for Spotlight remap",
+        body_preview: "I'd love to map double-tap ⇧ to Spotlight everywhere except in Xcode where it should fall back to the standard shortcut.",
+        status: "planned",
+        created_at: new Date(now - 6 * 86400_000).toISOString(),
+        updated_at: new Date(now - 5 * 86400_000).toISOString(),
+        author: { id: "u_bob", name: "Bob Tester", email: "bob@example.com" },
+        vote_count: 14, comment_count: 2 },
+      { id: "p_praise", type: "praise",
+        title: "Switching from BetterTouchTool — DoubleTap nailed it",
+        body_preview: "Tried half a dozen alternatives. None of them got the modifier-key double-tap detection right. Yours just works.",
+        status: "shipped",
+        created_at: new Date(now - 9 * 86400_000).toISOString(),
+        updated_at: new Date(now - 9 * 86400_000).toISOString(),
+        author: { id: "u_charlie", name: "Charlie Recent", email: "charlie@example.com" },
+        vote_count: 6, comment_count: 0 },
+      { id: "p_inprogress", type: "feature",
+        title: "Add Fn+arrow keys as a trigger",
+        body_preview: "Fn-arrow combos free up modifier keys for other things and would round out the Fn-key story.",
+        status: "in_progress",
+        created_at: new Date(now - 14 * 86400_000).toISOString(),
+        updated_at: new Date(now - 2 * 86400_000).toISOString(),
+        author: { id: "u_dana", name: "Dana", email: "dana@example.com" },
+        vote_count: 9, comment_count: 1 },
+      { id: "p_declined", type: "feature",
+        title: "iOS companion app",
+        body_preview: "Sync the macOS app's mappings to iOS so I can configure them on my phone.",
+        status: "declined",
+        created_at: new Date(now - 60 * 86400_000).toISOString(),
+        updated_at: new Date(now - 45 * 86400_000).toISOString(),
+        author: { id: "u_eve", name: "Eve", email: "eve@example.com" },
+        vote_count: 1, comment_count: 0 },
+    ];
+    return { rows, page: 1, limit: 50, total: rows.length };
+  }
   if (path.startsWith("/admin/audit/facets")) {
     return {
       actions: [
@@ -593,7 +681,7 @@ const NAV_ITEMS = [
   { href: "#/customers", id: "customers", icon: "users", label: "Customers" },
   { href: "#/trials", id: "trials", icon: "clock", label: "Trials" },
   { href: "#/activations", id: "activations", icon: "activity", label: "Activations" },
-  { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
+  { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback" },
   { href: "#/audit", id: "audit", icon: "scroll", label: "Audit log" },
   { href: "#/settings", id: "settings", icon: "settings", label: "Settings", soon: true },
 ];
@@ -3501,6 +3589,578 @@ const renderAuditDetailsRow = (row) => {
   );
 };
 
+// ── Feedback page ─────────────────────────────────────────────────────────
+//
+// Routing:
+//   #/feedback                            → list (default: all)
+//   #/feedback?q=…                        → substring on title/body
+//   #/feedback?type=bug|feature|praise    → filter by post type
+//   #/feedback?status=<status>            → filter by moderation status
+//   #/feedback?since=…&until=…            → bounds on createdAt, ISO 8601
+//   #/feedback?id=<post-id>               → list + open detail drawer
+//
+// Pin/unpin is deferred in PR7 — see backend feedback.ts header for why.
+// Ban-author is also deferred (no `banned` column on user yet, per PR5
+// design notes). Status change + delete-post + delete-comment land here.
+
+const FEEDBACK_TYPE_LABELS = { all: "All types", bug: "Bug", feature: "Feature", praise: "Praise" };
+const FEEDBACK_STATUS_LABELS = {
+  all: "Any status",
+  suggested: "Suggested",
+  under_review: "Under review",
+  planned: "Planned",
+  in_progress: "In progress",
+  shipped: "Shipped",
+  declined: "Declined",
+};
+
+// Status valence map → status badge class. Mirrors how the trials/licenses
+// pages map their state spaces onto the existing semantic palette so a
+// scan across the admin reads consistently:
+//   shipped    → status-active   (positive milestone, accent green)
+//   in_progress→ status-shared   (in-flight signal, praise yellow)
+//   planned    → converted       (locked-in commitment, praise yellow)
+//   under_review→ status-expired (passive review state, muted gray)
+//   suggested  → status-expired  (passive default, muted gray)
+//   declined   → status-revoked  (admin closed it, bug red)
+const FEEDBACK_STATUS_BADGE = {
+  suggested: "status-expired",
+  under_review: "status-expired",
+  planned: "converted",
+  in_progress: "status-shared",
+  shipped: "status-active",
+  declined: "status-revoked",
+};
+
+const buildFeedbackQuery = (params) => {
+  const out = new URLSearchParams();
+  for (const k of ["q", "type", "status", "since", "until", "page"]) {
+    const v = params.get(k);
+    if (v && ((k !== "type" && k !== "status") || v !== "all")) out.set(k, v);
+  }
+  return out.toString();
+};
+
+let feedbackDrawerEl = null;
+let feedbackDrawerBackdrop = null;
+// Re-entrancy guard for openFeedbackDrawer — same rationale as
+// drawerLoadingKey: opening a drawer mutates the hash, which fires
+// hashchange and re-routes; without this guard the second pass would
+// kick off a duplicate apiFetch for the same id and tear down the in-
+// flight skeleton. Cleared in the success and error tails.
+let feedbackDrawerLoadingId = null;
+let lastFeedbackFilterSig = null;
+const feedbackFilterSig = (params) =>
+  [params.get("q") ?? "", params.get("type") ?? "", params.get("status") ?? "",
+   params.get("since") ?? "", params.get("until") ?? "", params.get("page") ?? ""].join("|");
+
+const renderFeedback = async (canvas, { params }) => {
+  // Preserve focus across re-renders so typing in q / date pickers doesn't
+  // bounce the caret.
+  const focusedSelector = (() => {
+    const a = document.activeElement;
+    if (!a || !canvas.contains(a)) return null;
+    if (a.matches?.(".lic-search input")) return ".lic-search input";
+    return null;
+  })();
+  const caret = focusedSelector ? document.activeElement.selectionStart : null;
+
+  clear(canvas);
+  canvas.append(
+    el("div", { class: "admin-page-header" },
+      el("div", {},
+        el("h1", { class: "admin-page-title" }, "Feedback"),
+        el("p", { class: "admin-page-subtitle" },
+          "Bugs, feature requests, and praise from signed-in users. Change status, delete posts/comments from the drawer."),
+      ),
+    ),
+  );
+
+  const q = params.get("q") ?? "";
+  const typeVal = params.get("type") ?? "all";
+  const statusVal = params.get("status") ?? "all";
+  const since = params.get("since") ?? "";
+  const until = params.get("until") ?? "";
+  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const limit = 50;
+
+  const setParam = (key, value) => updateHashParams((p) => {
+    if (value) p.set(key, value);
+    else p.delete(key);
+    p.delete("page");
+  });
+
+  const searchInput = el("input", {
+    type: "search",
+    placeholder: "Search title or body…",
+    value: q,
+    autocomplete: "off",
+    spellcheck: "false",
+    "aria-label": "Search feedback posts",
+  });
+  let debounce = null;
+  searchInput.addEventListener("input", () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => setParam("q", searchInput.value.trim()), 250);
+  });
+
+  const typeFilters = el("div", { class: "lic-filters", role: "group", "aria-label": "Filter by type" });
+  for (const [k, label] of Object.entries(FEEDBACK_TYPE_LABELS)) {
+    const cls = ["lic-chip"];
+    if (k === typeVal) cls.push("is-active");
+    typeFilters.append(
+      el("button", {
+        type: "button",
+        class: cls.join(" "),
+        onclick: () => updateHashParams((p) => {
+          if (k === "all") p.delete("type");
+          else p.set("type", k);
+          p.delete("page");
+        }),
+      }, label),
+    );
+  }
+
+  const statusSel = el("select", {
+    class: "audit-select", "aria-label": "Filter by status",
+    onchange: (e) => setParam("status", e.target.value === "all" ? "" : e.target.value),
+  });
+  for (const [k, label] of Object.entries(FEEDBACK_STATUS_LABELS)) {
+    statusSel.append(el("option", { value: k, ...(k === statusVal ? { selected: true } : {}) }, label));
+  }
+
+  const sinceInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(since),
+    "aria-label": "Posted on or after",
+    onchange: (e) => setParam("since", localMidnightISO(e.target.value)),
+  });
+  const untilInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(until),
+    "aria-label": "Posted before (exclusive)",
+    onchange: (e) => setParam("until", localMidnightISO(e.target.value)),
+  });
+
+  canvas.append(
+    el("div", { class: "lic-toolbar" },
+      el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+      typeFilters,
+      statusSel,
+      sinceInput,
+      untilInput,
+    ),
+  );
+
+  if (focusedSelector) {
+    const restored = canvas.querySelector(focusedSelector);
+    if (restored) {
+      restored.focus();
+      if (caret != null) {
+        try { restored.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support setSelectionRange */ }
+      }
+    }
+  }
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading feedback…"));
+
+  let data;
+  try {
+    const qs = buildFeedbackQuery(params);
+    data = await apiFetch(`/admin/feedback${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load feedback: ${err.message || err}`));
+    return;
+  }
+
+  clear(tableMount);
+  tableMount.append(renderFeedbackTable(data, { page, limit }));
+
+  const openId = params.get("id");
+  if (openId) openFeedbackDrawer(openId);
+  else if (feedbackDrawerEl) closeFeedbackDrawer();
+};
+
+const renderFeedbackTable = (data, { page, limit }) => {
+  const card = el("div", { class: "lic-table-card" });
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No feedback posts match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const table = el("table", { class: "lic-table" });
+  table.append(
+    el("thead", {},
+      el("tr", {},
+        el("th", {}, "Title"),
+        el("th", {}, "Type"),
+        el("th", {}, "Status"),
+        el("th", {}, "Author"),
+        el("th", {}, "Votes"),
+        el("th", {}, "Comments"),
+        el("th", {}, "Posted"),
+      ),
+    ),
+  );
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    const tr = el("tr", {
+      tabindex: "0",
+      onclick: () => openFeedbackDrawer(row.id),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFeedbackDrawer(row.id); }
+      },
+    });
+    const statusClass = FEEDBACK_STATUS_BADGE[row.status] || "status-expired";
+    const statusBadge = el("span", { class: `lic-badge ${statusClass}` },
+      (row.status || "").replace(/_/g, " ").toUpperCase());
+    const typeBadge = el("span", { class: `lic-badge fb-type-${row.type}` },
+      (row.type || "").toUpperCase());
+    const authorCell = row.author
+      ? el("a", {
+          class: "audit-target-link",
+          href: `#/customers?u=${encodeURIComponent(row.author.id)}`,
+          onclick: (e) => e.stopPropagation(),
+        }, truncateEmail(row.author.email || row.author.name || row.author.id, 28))
+      : el("span", { class: "lic-meta" }, "—");
+    tr.append(
+      el("td", {}, el("div", { class: "feedback-post-title" }, row.title)),
+      el("td", {}, typeBadge),
+      el("td", {}, statusBadge),
+      el("td", {}, authorCell),
+      el("td", {}, el("span", { class: "lic-meta" }, String(row.vote_count ?? 0))),
+      el("td", {}, el("span", { class: "lic-meta" }, String(row.comment_count ?? 0))),
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.created_at))),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  card.append(table);
+  return wrapWithPagination(card, data, { page, limit });
+};
+
+const closeFeedbackDrawer = () => {
+  if (!feedbackDrawerEl) return;
+  feedbackDrawerEl.classList.remove("is-open");
+  feedbackDrawerBackdrop?.classList.remove("is-open");
+  const { path, params } = parseHash();
+  if (params.has("id")) {
+    params.delete("id");
+    const qs = params.toString();
+    history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+    // Defensive re-cache — see closeDrawer for the full rationale.
+    if (path === "/feedback") lastFeedbackFilterSig = feedbackFilterSig(params);
+  }
+  // Local capture so a fresh open within the close animation doesn't get
+  // torn down here — see closeDrawer for the canonical note.
+  const elToRemove = feedbackDrawerEl;
+  const backdropToRemove = feedbackDrawerBackdrop;
+  feedbackDrawerEl = null;
+  feedbackDrawerBackdrop = null;
+  setTimeout(() => {
+    elToRemove?.remove();
+    backdropToRemove?.remove();
+  }, 260);
+};
+
+const openFeedbackDrawer = async (postId) => {
+  if (feedbackDrawerLoadingId === postId) return;
+  feedbackDrawerLoadingId = postId;
+
+  updateHashParams((p) => p.set("id", postId));
+
+  if (!feedbackDrawerEl) {
+    feedbackDrawerBackdrop = el("div", { class: "lic-drawer-backdrop", onclick: closeFeedbackDrawer });
+    feedbackDrawerEl = el("aside", { class: "lic-drawer", role: "dialog", "aria-modal": "true" });
+    document.body.append(feedbackDrawerBackdrop, feedbackDrawerEl);
+    requestAnimationFrame(() => {
+      feedbackDrawerBackdrop.classList.add("is-open");
+      feedbackDrawerEl.classList.add("is-open");
+    });
+  }
+
+  clear(feedbackDrawerEl);
+  feedbackDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", { class: "lic-drawer-key" }, postId),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeFeedbackDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+    el("div", { class: "lic-drawer-body" },
+      el("div", { class: "admin-loading" }, "Loading…"),
+    ),
+  );
+
+  let data;
+  try {
+    data = await apiFetch(`/admin/feedback/${encodeURIComponent(postId)}`);
+  } catch (err) {
+    clear(feedbackDrawerEl);
+    feedbackDrawerEl.append(
+      el("div", { class: "lic-drawer-header" },
+        el("div", { class: "lic-drawer-key" }, postId),
+        el("button", { class: "lic-drawer-close", type: "button", onclick: closeFeedbackDrawer, "aria-label": "Close" },
+          icon("x-circle", 18)),
+      ),
+      el("div", { class: "lic-drawer-body" },
+        el("div", { class: "admin-error" }, `Couldn't load post: ${err.message || err}`),
+      ),
+    );
+    if (feedbackDrawerLoadingId === postId) feedbackDrawerLoadingId = null;
+    return;
+  }
+
+  paintFeedbackDrawer(data);
+  if (feedbackDrawerLoadingId === postId) feedbackDrawerLoadingId = null;
+};
+
+const paintFeedbackDrawer = (data) => {
+  if (!feedbackDrawerEl) return;
+  clear(feedbackDrawerEl);
+
+  const statusClass = FEEDBACK_STATUS_BADGE[data.status] || "status-expired";
+
+  feedbackDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", {},
+        el("div", { class: "lic-drawer-key is-prose" },
+          el("span", {}, data.title),
+        ),
+        el("div", { class: "lic-drawer-badges" },
+          el("span", { class: `lic-badge fb-type-${data.type}` }, (data.type || "").toUpperCase()),
+          el("span", { class: `lic-badge ${statusClass}` },
+            (data.status || "").replace(/_/g, " ").toUpperCase()),
+        ),
+      ),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeFeedbackDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+  );
+
+  const body = el("div", { class: "lic-drawer-body" });
+
+  // Status banner — aria-live so screen readers announce status changes
+  // after a successful PATCH /:id/status round-trip without focus-stealing.
+  const banner = el("div", {
+    class: "feedback-status-banner",
+    role: "status",
+    "aria-live": "polite",
+    "aria-atomic": "true",
+  });
+  body.append(banner);
+
+  // Meta grid — author + post id (with copy) + timestamps + vote count.
+  const meta = el("dl", { class: "lic-meta-grid" });
+  const addMeta = (label, value) => {
+    if (value == null || value === "") return;
+    meta.append(el("dt", {}, label), el("dd", {}, value));
+  };
+  if (data.author) {
+    addMeta("Author",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/customers?u=${encodeURIComponent(data.author.id)}`,
+      }, data.author.name || data.author.email || data.author.id));
+    addMeta("Author email", data.author.email);
+  } else {
+    addMeta("Author", "— (account deleted)");
+  }
+  addMeta("Posted", fmtDateTime(data.created_at));
+  if (data.updated_at && data.updated_at !== data.created_at) {
+    addMeta("Updated", fmtDateTime(data.updated_at));
+  }
+  addMeta("Votes", String(data.vote_count ?? 0));
+  meta.append(
+    el("dt", {}, "Post id"),
+    el("dd", { class: "lic-meta-copyable" },
+      el("span", { class: "lic-meta-mono" }, data.id),
+      el("button", {
+        class: "lic-drawer-key-copy",
+        type: "button",
+        "aria-label": "Copy post id",
+        onclick: async () => {
+          try {
+            await navigator.clipboard.writeText(data.id);
+            showToast("Post id copied");
+          } catch (_) { showToast("Couldn't copy", "error"); }
+        },
+      }, icon("copy", 12)),
+    ),
+  );
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Details"),
+      meta,
+    ),
+  );
+
+  // Post body — full text, preserved whitespace.
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Post body"),
+      el("div", { class: "feedback-post-body" }, data.body || ""),
+    ),
+  );
+
+  // Status change controls + danger actions.
+  const statusSel = el("select", {
+    class: "audit-select", "aria-label": "Change status",
+    onchange: async (e) => {
+      const next = e.target.value;
+      if (next === data.status) return;
+      statusSel.disabled = true;
+      try {
+        const result = await apiFetch(`/admin/feedback/${encodeURIComponent(data.id)}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ status: next }),
+        });
+        if (result.noop) {
+          showToast(`Already ${next.replace(/_/g, " ")}`);
+        } else {
+          showToast(`Status → ${next.replace(/_/g, " ")}`);
+        }
+        // Banner update + re-fetch the drawer so audit timeline picks
+        // up the new entry. Banner is announced via aria-live.
+        banner.textContent = `Status set to ${next.replace(/_/g, " ")}.`;
+        openFeedbackDrawer(data.id);
+      } catch (err) {
+        statusSel.disabled = false;
+        statusSel.value = data.status;
+        showToast(err.message || "Couldn't change status", "error");
+      }
+    },
+  });
+  for (const [k, label] of Object.entries(FEEDBACK_STATUS_LABELS)) {
+    if (k === "all") continue;
+    statusSel.append(el("option", { value: k, ...(k === data.status ? { selected: true } : {}) }, label));
+  }
+
+  const actions = el("div", { class: "lic-actions" });
+  actions.append(
+    el("label", { class: "feedback-status-label" },
+      el("span", {}, "Set status"),
+      statusSel,
+    ),
+    el("button", {
+      class: "lic-action-btn is-danger", type: "button",
+      onclick: async () => {
+        const ok = await confirmModal({
+          title: "Delete this post?",
+          message: "Cascades to all comments and votes on this post. The audit row keeps a snapshot of the title and author. This cannot be undone.",
+          confirmLabel: "Delete post",
+          danger: true,
+        });
+        if (!ok) return;
+        try {
+          await apiFetch(`/admin/feedback/${encodeURIComponent(data.id)}`, { method: "DELETE" });
+          showToast("Post deleted");
+          // Force the list to re-fetch — drawer's gone, list filter sig
+          // stays valid but the row itself is now stale.
+          lastFeedbackFilterSig = null;
+          closeFeedbackDrawer();
+          // Trigger a re-render via hash navigation.
+          const { path, params } = parseHash();
+          if (path === "/feedback") {
+            const qs = params.toString();
+            window.location.hash = `#${path}${qs ? `?${qs}` : ""}`;
+            // Above is a no-op (same hash); fall back to direct re-render.
+          }
+        } catch (err) {
+          showToast(err.message || "Couldn't delete", "error");
+        }
+      },
+    }, icon("trash", 12), "Delete post"),
+  );
+
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Actions"),
+      actions,
+    ),
+  );
+
+  // Comments
+  const comments = data.comments || [];
+  const commentsSection = el("div", {},
+    el("div", { class: "lic-section-title" }, `Comments (${comments.length})`),
+  );
+  if (comments.length === 0) {
+    commentsSection.append(el("div", { class: "lic-empty" }, "No comments on this post."));
+  } else {
+    const list = el("div", { class: "lic-activations-list" });
+    for (const cm of comments) {
+      const authorLink = cm.author
+        ? el("a", {
+            class: "audit-target-link",
+            href: `#/customers?u=${encodeURIComponent(cm.author.id)}`,
+          }, cm.author.name || cm.author.email || cm.author.id)
+        : el("span", { class: "lic-meta" }, "— (account deleted)");
+      const deleteBtn = el("button", {
+        class: "lic-action-btn is-danger feedback-comment-delete",
+        type: "button",
+        "aria-label": "Delete comment",
+        onclick: async () => {
+          const ok = await confirmModal({
+            title: "Delete this comment?",
+            message: "The audit row keeps a snapshot of the author and a body preview. This cannot be undone.",
+            confirmLabel: "Delete comment",
+            danger: true,
+          });
+          if (!ok) return;
+          try {
+            await apiFetch(
+              `/admin/feedback/${encodeURIComponent(data.id)}/comments/${encodeURIComponent(cm.id)}`,
+              { method: "DELETE" },
+            );
+            showToast("Comment deleted");
+            openFeedbackDrawer(data.id);
+          } catch (err) {
+            showToast(err.message || "Couldn't delete comment", "error");
+          }
+        },
+      }, icon("trash", 12), "Delete");
+      list.append(
+        el("div", { class: "lic-activation feedback-comment" },
+          el("div", { class: "feedback-comment-main" },
+            el("div", { class: "feedback-comment-meta" },
+              authorLink, " · ", fmtDateTime(cm.created_at),
+            ),
+            el("div", { class: "feedback-comment-body" }, cm.body || ""),
+          ),
+          deleteBtn,
+        ),
+      );
+    }
+    commentsSection.append(list);
+  }
+  body.append(commentsSection);
+
+  // Audit timeline — reuse renderAuditItem so feedback/license/trial
+  // timelines all render the same way.
+  const auditSection = el("div", {},
+    el("div", { class: "lic-section-title" },
+      "Audit timeline",
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/audit?target_type=feedback_post&target_id=${encodeURIComponent(data.id)}`,
+      }, "view in log"),
+    ),
+  );
+  if (!data.audit || data.audit.length === 0) {
+    auditSection.append(el("div", { class: "lic-empty" }, "No admin actions recorded yet."));
+  } else {
+    const list = el("div", { class: "lic-audit-list" });
+    for (const e of data.audit) list.append(renderAuditItem(e));
+    auditSection.append(list);
+  }
+  body.append(auditSection);
+
+  feedbackDrawerEl.append(body);
+};
+
 // ── Coming-soon placeholder ───────────────────────────────────────────────
 
 const renderComingSoon = (canvas, label) => {
@@ -3553,12 +4213,14 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path !== "/licenses" && drawerEl) closeDrawer();
   if (path !== "/trials" && trialsDrawerEl) closeTrialDrawer();
   if (path !== "/customers" && customersDrawerEl) closeCustomerDrawer();
-  if (path !== "/licenses" && path !== "/trials" && path !== "/customers") {
+  if (path !== "/feedback" && feedbackDrawerEl) closeFeedbackDrawer();
+  if (path !== "/licenses" && path !== "/trials" && path !== "/customers" && path !== "/feedback") {
     document.querySelectorAll(".lic-modal-backdrop").forEach((n) => n.remove());
   }
   if (path !== "/licenses") lastLicensesFilterSig = null;
   if (path !== "/trials") lastTrialsFilterSig = null;
   if (path !== "/customers") lastCustomersFilterSig = null;
+  if (path !== "/feedback") lastFeedbackFilterSig = null;
 
   // Hot-path: opening or closing the drawer mutates the hash (?key=…),
   // which fires hashchange and would otherwise re-run renderLicenses on
@@ -3580,6 +4242,12 @@ const route = (canvas, topbar, sidebarMount, session) => {
     const openId = params.get("u");
     if (openId) openCustomerDrawer(openId);
     else if (customersDrawerEl) closeCustomerDrawer();
+    return;
+  }
+  if (path === "/feedback" && lastFeedbackFilterSig === feedbackFilterSig(params)) {
+    const openId = params.get("id");
+    if (openId) openFeedbackDrawer(openId);
+    else if (feedbackDrawerEl) closeFeedbackDrawer();
     return;
   }
 
@@ -3622,6 +4290,11 @@ const route = (canvas, topbar, sidebarMount, session) => {
   }
   if (path === "/activations") {
     renderActivations(canvas, { params });
+    return;
+  }
+  if (path === "/feedback") {
+    lastFeedbackFilterSig = feedbackFilterSig(params);
+    renderFeedback(canvas, { params });
     return;
   }
   if (path === "/audit") {
