@@ -153,6 +153,72 @@ const demoFixture = (path) => {
   if (path === "/admin/me") {
     return { email: ADMIN_EMAIL, name: "Hadi (demo)" };
   }
+  if (path.startsWith("/admin/licenses?") || path === "/admin/licenses") {
+    const now = Date.now();
+    const rows = [
+      { source: "lahza", license_key: "LZ-AB12-CD34-EF56-GH78", email: "alice@example.com",
+        max_uses: 1, tx_reference: "dt_abc123", issued_at: new Date(now - 30 * 60_000).toISOString(),
+        revoked_at: null, active_activations: 1, status: "active" },
+      { source: "lahza", license_key: "LZ-XY34-WV56-UV78-TS90", email: "charlie@example.com",
+        max_uses: 2, tx_reference: "dt_def456", issued_at: new Date(now - 18 * 3600_000).toISOString(),
+        revoked_at: null, active_activations: 2, status: "active" },
+      { source: "comp", license_key: "LZ-COMP-9XYZ8-WV7TU", email: "press@example.com",
+        max_uses: 1, tx_reference: "comp_aaa", issued_at: new Date(now - 4 * 86400_000).toISOString(),
+        revoked_at: null, active_activations: 0, status: "active" },
+      { source: "lahza", license_key: "LZ-DEAD-BEEF-CAFE-FOOD", email: "bob@example.com",
+        max_uses: 5, tx_reference: "dt_ghi789", issued_at: new Date(now - 9 * 86400_000).toISOString(),
+        revoked_at: new Date(now - 1 * 86400_000).toISOString(), active_activations: 1, status: "revoked" },
+      { source: "gumroad", license_key: "ABCD1234-EFGH5678", email: "veteran@example.com",
+        max_uses: null, tx_reference: "sale_xyz", issued_at: new Date(now - 12 * 86400_000).toISOString(),
+        revoked_at: null, active_activations: 1, status: "active" },
+    ];
+    return {
+      rows, page: 1, limit: 50, total: rows.length,
+      counts: { lahza: 3, gumroad: 1 },
+    };
+  }
+  if (path.startsWith("/admin/licenses/")) {
+    const suffix = path.slice("/admin/licenses/".length).split("?")[0];
+    // /admin/licenses/comp — issue-comp endpoint (POST)
+    if (suffix === "comp") {
+      return {
+        ok: true,
+        license_key: "LZ-COMP-DEM01-DEM02-DEM03",
+        email: "demo@example.com",
+        max_uses: 1,
+        emailed: true,
+      };
+    }
+    // /admin/licenses/<key>/<action…>  → action result. Detail endpoint
+    // is the bare /admin/licenses/<key> (one segment after the prefix).
+    if (suffix.includes("/")) {
+      return { ok: true };
+    }
+    const key = decodeURIComponent(suffix);
+    const now = Date.now();
+    const isComp = key.startsWith("LZ-COMP-");
+    const isGumroad = !key.startsWith("LZ-");
+    return {
+      source: isGumroad ? "gumroad" : isComp ? "comp" : "lahza",
+      license_key: key,
+      email: "alice@example.com",
+      max_uses: isGumroad ? null : 2,
+      tx_reference: isGumroad ? null : "dt_demo",
+      product_id: isGumroad ? "abc" : undefined,
+      sale_id: isGumroad ? "sale_xyz" : undefined,
+      issued_at: new Date(now - 30 * 60_000).toISOString(),
+      revoked_at: null,
+      activations: [
+        { id: 1, machine_id: "MAC-A1B2C3D4E5F6", activated_at: new Date(now - 10 * 60_000).toISOString() },
+        { id: 2, machine_id: "MAC-Z9Y8X7W6V5U4", activated_at: new Date(now - 4 * 86400_000).toISOString() },
+      ],
+      audit: [
+        { id: "1", actor_email: ADMIN_EMAIL, action: "license.issue_comp",
+          details: JSON.stringify({ email: "alice@example.com", max_uses: 2 }),
+          created_at: new Date(now - 30 * 60_000).toISOString() },
+      ],
+    };
+  }
   if (path.startsWith("/admin/dashboard")) {
     const days = (n) => {
       const out = [];
@@ -321,8 +387,8 @@ const renderGate = (root, kind) => {
 
 const NAV_ITEMS = [
   { href: "#/", id: "dashboard", icon: "dashboard", label: "Dashboard" },
+  { href: "#/licenses", id: "licenses", icon: "key", label: "Licenses" },
   { href: "#/customers", id: "customers", icon: "users", label: "Customers", soon: true },
-  { href: "#/licenses", id: "licenses", icon: "key", label: "Licenses", soon: true },
   { href: "#/trials", id: "trials", icon: "clock", label: "Trials", soon: true },
   { href: "#/activations", id: "activations", icon: "activity", label: "Activations", soon: true },
   { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
@@ -680,6 +746,738 @@ const renderDashboard = async (canvas, { range = "30d" } = {}) => {
   canvas.append(bento);
 };
 
+// ── Toast (transient feedback for actions) ───────────────────────────────
+// One global toast instance; subsequent show() calls reset its content + timer.
+
+const toastEl = el("div", { class: "lic-toast", role: "status", "aria-live": "polite" });
+let toastTimer = null;
+const showToast = (message, kind = "info") => {
+  if (!toastEl.isConnected) document.body.append(toastEl);
+  clear(toastEl);
+  toastEl.classList.toggle("is-error", kind === "error");
+  toastEl.append(
+    icon(kind === "error" ? "x-circle" : "check", 14),
+    el("span", {}, message),
+  );
+  toastEl.classList.add("is-open");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("is-open"), 2400);
+};
+
+// ── Confirm modal (Promise-based) ─────────────────────────────────────────
+// Returns true on confirm, false on cancel/backdrop. Used for destructive
+// or significant actions (revoke, free-all-slots).
+
+const confirmModal = ({ title, message, confirmLabel = "Confirm", danger = false }) =>
+  new Promise((resolve) => {
+    const backdrop = el("div", { class: "lic-modal-backdrop is-open" });
+    let settled = false;
+    const close = (v) => {
+      if (settled) return;
+      settled = true;
+      backdrop.remove();
+      resolve(v);
+    };
+    const modal = el("div", { class: "lic-modal", role: "dialog", "aria-modal": "true" });
+    modal.append(
+      el("div", { class: "lic-modal-title" }, title),
+      el("p", { class: "lic-modal-message" }, message),
+      el("div", { class: "lic-modal-actions" },
+        el("button", { class: "lic-modal-cancel", type: "button", onclick: () => close(false) }, "Cancel"),
+        el("button", {
+          class: "lic-modal-submit" + (danger ? " is-danger" : ""),
+          type: "button",
+          onclick: () => close(true),
+        }, confirmLabel),
+      ),
+    );
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(false); });
+    backdrop.append(modal);
+    document.body.append(backdrop);
+    setTimeout(() => modal.querySelector("button.lic-modal-submit")?.focus(), 0);
+  });
+
+// ── Licenses list ─────────────────────────────────────────────────────────
+//
+// Routing:
+//   #/licenses                 → list (default filters)
+//   #/licenses?source=lahza    → preset source filter
+//   #/licenses?status=revoked  → preset status filter
+//   #/licenses?q=alice         → preset search
+//   #/licenses?key=LZ-…        → list + open detail drawer for that key
+//
+// We keep the "open key" in the hash query so the back button closes the
+// drawer (no separate history entries — that'd double-back through filters
+// the user didn't change).
+
+const SOURCE_LABELS = { all: "All", lahza: "Lahza", comp: "Comp", gumroad: "Gumroad" };
+const STATUS_LABELS = { all: "Any status", active: "Active", revoked: "Revoked" };
+
+const updateHashParams = (mutate) => {
+  const { path, params } = parseHash();
+  mutate(params);
+  const qs = params.toString();
+  window.location.hash = `#${path}${qs ? `?${qs}` : ""}`;
+};
+
+const buildListQuery = (params) => {
+  const out = new URLSearchParams();
+  const q = params.get("q");
+  if (q) out.set("q", q);
+  const source = params.get("source");
+  if (source && source !== "all") out.set("source", source);
+  const status = params.get("status");
+  if (status && status !== "all") out.set("status", status);
+  const page = params.get("page");
+  if (page) out.set("page", page);
+  return out.toString();
+};
+
+const fmtDateTime = (iso) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
+const renderLicensesHeader = (canvas) => {
+  const header = el("div", { class: "admin-page-header" },
+    el("div", {},
+      el("h1", { class: "admin-page-title" }, "Licenses"),
+      el("p", { class: "admin-page-subtitle" }, "Issue, revoke, and manage license keys across Lahza, Gumroad, and comps."),
+    ),
+  );
+  canvas.append(header);
+};
+
+const renderLicenses = async (canvas, { params }) => {
+  // Preserve focus across re-renders so the user can keep typing in the
+  // search box while the hash-driven re-fetch runs underneath.
+  const prevSearch = canvas.querySelector?.(".lic-search input");
+  const wasFocused = prevSearch && document.activeElement === prevSearch;
+  const caret = wasFocused ? prevSearch.selectionStart : null;
+
+  clear(canvas);
+  renderLicensesHeader(canvas);
+
+  const q = params.get("q") ?? "";
+  const source = params.get("source") ?? "all";
+  const status = params.get("status") ?? "all";
+  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const limit = 50;
+
+  // Toolbar — always rendered first (synchronously) so the search input
+  // exists while the table fetch is in flight. Reduces perceived latency.
+  const searchInput = el("input", {
+    type: "search",
+    placeholder: "Search by email, key, tx reference…",
+    value: q,
+    autocomplete: "off",
+    spellcheck: "false",
+    "aria-label": "Search licenses",
+  });
+  // Debounced — every keystroke would otherwise re-fetch on every char.
+  let debounce = null;
+  searchInput.addEventListener("input", () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => {
+      updateHashParams((p) => {
+        if (searchInput.value.trim()) p.set("q", searchInput.value.trim());
+        else p.delete("q");
+        p.delete("page"); // reset to page 1 on new query
+      });
+    }, 250);
+  });
+
+  const filters = el("div", { class: "lic-filters" });
+  for (const [k, label] of Object.entries(SOURCE_LABELS)) {
+    const cls = ["lic-chip"];
+    if (k === source) cls.push("is-active");
+    filters.append(
+      el("button", {
+        type: "button",
+        class: cls.join(" "),
+        onclick: () => updateHashParams((p) => {
+          if (k === "all") p.delete("source");
+          else p.set("source", k);
+          p.delete("page");
+        }),
+      }, label),
+    );
+  }
+
+  const statusFilters = el("div", { class: "lic-filters" });
+  for (const [k, label] of Object.entries(STATUS_LABELS)) {
+    const cls = ["lic-chip"];
+    if (k === status) cls.push("is-active");
+    statusFilters.append(
+      el("button", {
+        type: "button",
+        class: cls.join(" "),
+        onclick: () => updateHashParams((p) => {
+          if (k === "all") p.delete("status");
+          else p.set("status", k);
+          p.delete("page");
+        }),
+      }, label),
+    );
+  }
+
+  const issueBtn = el("button", { class: "lic-toolbar-action", type: "button", onclick: openIssueCompDialog },
+    icon("plus", 14), "Issue comp",
+  );
+
+  const toolbar = el("div", { class: "lic-toolbar" },
+    el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+    filters,
+    statusFilters,
+    el("div", { class: "lic-toolbar-spacer" }),
+    issueBtn,
+  );
+  canvas.append(toolbar);
+
+  if (wasFocused) {
+    searchInput.focus();
+    if (caret != null) {
+      try { searchInput.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support this in all engines */ }
+    }
+  }
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading licenses…"));
+
+  let data;
+  try {
+    const qs = buildListQuery(params);
+    data = await apiFetch(`/admin/licenses${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load licenses: ${err.message || err}`));
+    return;
+  }
+
+  clear(tableMount);
+  tableMount.append(renderLicensesTable(data, { page, limit, q, source, status }));
+
+  // Reflect URL state. ?key=… opens the detail drawer; absence closes any
+  // drawer left over from prior navigation (e.g. Back from a detail view).
+  const openKey = params.get("key");
+  if (openKey) openLicenseDrawer(openKey);
+  else if (drawerEl) closeDrawer();
+};
+
+const renderLicensesTable = (data, { page, limit }) => {
+  const card = el("div", { class: "lic-table-card" });
+
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No licenses match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const table = el("table", { class: "lic-table" });
+  const thead = el("thead", {},
+    el("tr", {},
+      el("th", {}, "Key"),
+      el("th", {}, "Email"),
+      el("th", {}, "Source"),
+      el("th", {}, "Status"),
+      el("th", {}, "Seats"),
+      el("th", {}, "Issued"),
+    ),
+  );
+  table.append(thead);
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    const tr = el("tr", {
+      tabindex: "0",
+      onclick: () => openLicenseDrawer(row.license_key),
+      onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLicenseDrawer(row.license_key); } },
+    });
+    tr.append(
+      el("td", {}, el("span", { class: "lic-key" }, row.license_key)),
+      el("td", {}, el("span", { class: "lic-email" }, truncateEmail(row.email, 32))),
+      el("td", {}, el("span", { class: `lic-badge src-${row.source}` }, row.source.toUpperCase())),
+      el("td", {}, el("span", { class: `lic-badge status-${row.status}` }, row.status.toUpperCase())),
+      el("td", {}, el("span", { class: "lic-meta" },
+        row.max_uses == null
+          ? `${row.active_activations}/—`
+          : `${row.active_activations}/${row.max_uses}`,
+      )),
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.issued_at))),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  card.append(table);
+
+  return wrapWithPagination(card, data, { page, limit });
+};
+
+const wrapWithPagination = (card, data, { page, limit }) => {
+  const wrap = el("div");
+  wrap.append(card);
+  const totalPages = Math.max(1, Math.ceil((data.total ?? 0) / limit));
+  if (totalPages <= 1) return wrap;
+  const firstIndex = (page - 1) * limit + 1;
+  const lastIndex = Math.min(page * limit, data.total ?? 0);
+  const prevDisabled = page <= 1;
+  const nextDisabled = page >= totalPages;
+  const goto = (p) => updateHashParams((params) => params.set("page", String(p)));
+  wrap.append(
+    el("div", { class: "lic-pagination" },
+      el("span", {}, `${fmtNum(firstIndex)}–${fmtNum(lastIndex)} of ${fmtNum(data.total ?? 0)}`),
+      el("div", { class: "lic-pagination-buttons" },
+        el("button", {
+          class: "lic-page-btn", type: "button", disabled: prevDisabled,
+          onclick: () => !prevDisabled && goto(page - 1),
+        }, icon("chevron-left", 12), "Prev"),
+        el("button", {
+          class: "lic-page-btn", type: "button", disabled: nextDisabled,
+          onclick: () => !nextDisabled && goto(page + 1),
+        }, "Next", icon("chevron-right", 12)),
+      ),
+    ),
+  );
+  return wrap;
+};
+
+// ── License detail drawer ────────────────────────────────────────────────
+
+let drawerEl = null;
+let drawerBackdrop = null;
+
+const closeDrawer = () => {
+  if (!drawerEl) return;
+  drawerEl.classList.remove("is-open");
+  drawerBackdrop?.classList.remove("is-open");
+  // Clear ?key=… from the hash without reloading the list (preserve filters).
+  const { path, params } = parseHash();
+  if (params.has("key")) {
+    params.delete("key");
+    const qs = params.toString();
+    history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+  }
+  setTimeout(() => {
+    drawerEl?.remove();
+    drawerBackdrop?.remove();
+    drawerEl = null;
+    drawerBackdrop = null;
+  }, 260);
+};
+
+const openLicenseDrawer = async (licenseKey) => {
+  // Reflect open state in the URL so back-button closes it.
+  updateHashParams((p) => p.set("key", licenseKey));
+
+  if (!drawerEl) {
+    drawerBackdrop = el("div", { class: "lic-drawer-backdrop", onclick: closeDrawer });
+    drawerEl = el("aside", { class: "lic-drawer", role: "dialog", "aria-modal": "true" });
+    document.body.append(drawerBackdrop, drawerEl);
+    // Trigger transition next frame so the slide-in animation actually plays.
+    requestAnimationFrame(() => {
+      drawerBackdrop.classList.add("is-open");
+      drawerEl.classList.add("is-open");
+    });
+  }
+
+  // Skeleton while we fetch
+  clear(drawerEl);
+  drawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", { class: "lic-drawer-key" }, licenseKey),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+    el("div", { class: "lic-drawer-body" },
+      el("div", { class: "admin-loading" }, "Loading…"),
+    ),
+  );
+
+  let data;
+  try {
+    data = await apiFetch(`/admin/licenses/${encodeURIComponent(licenseKey)}`);
+  } catch (err) {
+    clear(drawerEl);
+    drawerEl.append(
+      el("div", { class: "lic-drawer-header" },
+        el("div", { class: "lic-drawer-key" }, licenseKey),
+        el("button", { class: "lic-drawer-close", type: "button", onclick: closeDrawer, "aria-label": "Close" },
+          icon("x-circle", 18)),
+      ),
+      el("div", { class: "lic-drawer-body" },
+        el("div", { class: "admin-error" }, `Couldn't load license: ${err.message || err}`),
+      ),
+    );
+    return;
+  }
+
+  paintDrawer(data);
+};
+
+const paintDrawer = (data) => {
+  if (!drawerEl) return;
+  clear(drawerEl);
+
+  const isGumroad = data.source === "gumroad";
+  const isRevoked = !!data.revoked_at;
+
+  drawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", {},
+        el("div", { class: "lic-drawer-key" },
+          el("span", {}, data.license_key),
+          el("button", {
+            class: "lic-drawer-key-copy",
+            type: "button",
+            "aria-label": "Copy license key",
+            onclick: async () => {
+              try {
+                await navigator.clipboard.writeText(data.license_key);
+                showToast("Key copied");
+              } catch (_) { showToast("Couldn't copy", "error"); }
+            },
+          }, icon("copy", 14)),
+        ),
+        el("div", { class: "lic-drawer-badges" },
+          el("span", { class: `lic-badge src-${data.source}` }, data.source.toUpperCase()),
+          el("span", { class: `lic-badge status-${isRevoked ? "revoked" : "active"}` },
+            isRevoked ? "REVOKED" : "ACTIVE"),
+        ),
+      ),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+  );
+
+  const body = el("div", { class: "lic-drawer-body" });
+
+  // Meta grid
+  const meta = el("dl", { class: "lic-meta-grid" });
+  const addMeta = (label, value) => {
+    if (value == null || value === "") return;
+    meta.append(el("dt", {}, label), el("dd", {}, String(value)));
+  };
+  addMeta("Email", data.email ?? "—");
+  if (data.max_uses != null) addMeta("Seats", `${data.activations.length} active / ${data.max_uses} max`);
+  else addMeta("Activations", String(data.activations.length));
+  addMeta("Issued", fmtDateTime(data.issued_at));
+  if (isRevoked) addMeta("Revoked", fmtDateTime(data.revoked_at));
+  if (data.tx_reference) addMeta("Tx reference", data.tx_reference);
+  if (data.sale_id) addMeta("Gumroad sale", data.sale_id);
+  if (data.product_id) addMeta("Gumroad product", data.product_id);
+
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Details"),
+      meta,
+    ),
+  );
+
+  // Actions
+  const actions = el("div", { class: "lic-actions" });
+  if (isGumroad) {
+    actions.append(
+      el("a", {
+        class: "lic-action-btn",
+        href: `https://app.gumroad.com/products`,
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }, icon("arrow-up-right", 12), "Manage in Gumroad"),
+    );
+  } else {
+    if (isRevoked) {
+      actions.append(
+        el("button", {
+          class: "lic-action-btn", type: "button",
+          onclick: () => doAction(data.license_key, "unrevoke", { method: "POST" }, "License un-revoked"),
+        }, icon("rotate-ccw", 12), "Un-revoke"),
+      );
+    } else {
+      actions.append(
+        el("button", {
+          class: "lic-action-btn is-danger", type: "button",
+          onclick: async () => {
+            const ok = await confirmModal({
+              title: "Revoke this license?",
+              message: "The next /verify call from any of this license's machines will fail and DoubleTap will revert to trial state. This is reversible.",
+              confirmLabel: "Revoke",
+              danger: true,
+            });
+            if (ok) doAction(data.license_key, "revoke", { method: "POST" }, "License revoked");
+          },
+        }, icon("x-circle", 12), "Revoke"),
+      );
+    }
+    actions.append(
+      el("button", {
+        class: "lic-action-btn", type: "button",
+        onclick: () => editLicenseEmail(data),
+      }, icon("edit", 12), "Change email"),
+      el("button", {
+        class: "lic-action-btn", type: "button",
+        onclick: () => editLicenseSeats(data),
+      }, icon("users", 12), "Set seats"),
+      el("button", {
+        class: "lic-action-btn", type: "button",
+        onclick: () => doAction(data.license_key, "resend-email", { method: "POST" }, "Email resent"),
+      }, icon("mail", 12), "Resend email"),
+    );
+  }
+  if (data.activations.length > 0) {
+    actions.append(
+      el("button", {
+        class: "lic-action-btn is-danger", type: "button",
+        onclick: async () => {
+          const ok = await confirmModal({
+            title: "Free all seats?",
+            message: `This drops all ${data.activations.length} machine(s) from this license. Each Mac will fall back to trial state on its next /verify.`,
+            confirmLabel: "Free all",
+            danger: true,
+          });
+          if (ok) doAction(data.license_key, "activations/free-all", { method: "POST" }, "All seats freed");
+        },
+      }, icon("trash", 12), "Free all seats"),
+    );
+  }
+
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Actions"),
+      actions,
+    ),
+  );
+
+  // Activations
+  const activationsSection = el("div", {},
+    el("div", { class: "lic-section-title" }, `Active machines (${data.activations.length})`),
+  );
+  if (data.activations.length === 0) {
+    activationsSection.append(el("div", { class: "lic-empty" }, "No active machines."));
+  } else {
+    const list = el("div", { class: "lic-activations-list" });
+    for (const a of data.activations) {
+      list.append(
+        el("div", { class: "lic-activation" },
+          el("div", {},
+            el("div", { class: "lic-activation-machine" }, a.machine_id),
+            el("div", { class: "lic-activation-meta" }, "Activated ", fmtDateTime(a.activated_at)),
+          ),
+          el("button", {
+            class: "lic-activation-free", type: "button", "aria-label": "Free this seat",
+            onclick: async () => {
+              const ok = await confirmModal({
+                title: "Free this seat?",
+                message: `Drops machine ${a.machine_id.slice(0, 14)}… from this license. The Mac will fall back to trial state on its next /verify.`,
+                confirmLabel: "Free seat",
+                danger: true,
+              });
+              if (ok) doAction(data.license_key, `activations/${a.id}/free`, { method: "POST" }, "Seat freed");
+            },
+          }, icon("trash", 12)),
+        ),
+      );
+    }
+    activationsSection.append(list);
+  }
+  body.append(activationsSection);
+
+  // Audit timeline
+  const auditSection = el("div", {},
+    el("div", { class: "lic-section-title" }, "Audit timeline"),
+  );
+  if (!data.audit || data.audit.length === 0) {
+    auditSection.append(el("div", { class: "lic-empty" }, "No admin actions recorded yet."));
+  } else {
+    const list = el("div", { class: "lic-audit-list" });
+    for (const e of data.audit) list.append(renderAuditItem(e));
+    auditSection.append(list);
+  }
+  body.append(auditSection);
+
+  drawerEl.append(body);
+};
+
+const renderAuditItem = (e) => {
+  const item = el("div", { class: "lic-audit-item" });
+  let detailsLine = "";
+  if (e.details) {
+    try {
+      const d = JSON.parse(e.details);
+      detailsLine = Object.entries(d)
+        .filter(([, v]) => v != null && v !== "")
+        .map(([k, v]) => `${k}=${typeof v === "string" ? v.slice(0, 40) : JSON.stringify(v).slice(0, 40)}`)
+        .join(", ");
+    } catch (_) { /* leave blank */ }
+  }
+  item.append(
+    el("div", {}, el("strong", {}, e.action.replace(/^license\./, "").replace(/\./g, " ").replace(/_/g, " "))),
+    detailsLine ? el("div", { class: "lic-audit-meta" }, detailsLine) : null,
+    el("div", { class: "lic-audit-meta" },
+      e.actor_email, " · ", fmtDateTime(e.created_at), " (", fmtRelative(e.created_at), ")",
+    ),
+  );
+  return item;
+};
+
+// ── License action helper ─────────────────────────────────────────────────
+
+const doAction = async (licenseKey, action, opts, successMessage) => {
+  try {
+    await apiFetch(`/admin/licenses/${encodeURIComponent(licenseKey)}/${action}`, opts);
+    showToast(successMessage);
+    // Re-fetch the detail so the drawer shows the new state.
+    openLicenseDrawer(licenseKey);
+  } catch (err) {
+    showToast(err.message || "Action failed", "error");
+  }
+};
+
+// Inline-edit helpers — open a modal with a single field, then PATCH.
+
+const editLicenseEmail = (data) => {
+  const input = el("input", { type: "email", value: data.email ?? "", required: true, autocomplete: "off" });
+  const submit = el("button", { class: "lic-modal-submit", type: "submit" }, "Save");
+  const cancel = el("button", { class: "lic-modal-cancel", type: "button" }, "Cancel");
+  const form = el("form", { onsubmit: async (e) => {
+    e.preventDefault();
+    const next = input.value.trim().toLowerCase();
+    if (!next || next === (data.email ?? "")) { close(); return; }
+    try {
+      await apiFetch(`/admin/licenses/${encodeURIComponent(data.license_key)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ email: next }),
+      });
+      showToast("Email updated");
+      close();
+      openLicenseDrawer(data.license_key);
+    } catch (err) {
+      showToast(err.message || "Update failed", "error");
+    }
+  } });
+  let backdrop;
+  const close = () => backdrop?.remove();
+  cancel.addEventListener("click", close);
+  form.append(
+    el("label", {}, "New email", input),
+    el("div", { class: "lic-modal-actions" }, cancel, submit),
+  );
+  backdrop = el("div", { class: "lic-modal-backdrop is-open" },
+    el("div", { class: "lic-modal" },
+      el("div", { class: "lic-modal-title" }, "Change customer email"),
+      form,
+    ),
+  );
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
+  document.body.append(backdrop);
+  setTimeout(() => input.focus(), 0);
+};
+
+const editLicenseSeats = (data) => {
+  const input = el("input", { type: "number", value: String(data.max_uses ?? 1), min: "1", max: "100", required: true });
+  const submit = el("button", { class: "lic-modal-submit", type: "submit" }, "Save");
+  const cancel = el("button", { class: "lic-modal-cancel", type: "button" }, "Cancel");
+  const form = el("form", { onsubmit: async (e) => {
+    e.preventDefault();
+    const next = parseInt(input.value, 10);
+    if (!Number.isFinite(next) || next < 1 || next === data.max_uses) { close(); return; }
+    try {
+      await apiFetch(`/admin/licenses/${encodeURIComponent(data.license_key)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ max_uses: next }),
+      });
+      showToast("Seats updated");
+      close();
+      openLicenseDrawer(data.license_key);
+    } catch (err) {
+      showToast(err.message || "Update failed", "error");
+    }
+  } });
+  let backdrop;
+  const close = () => backdrop?.remove();
+  cancel.addEventListener("click", close);
+  form.append(
+    el("label", {}, "Max seats", input),
+    el("p", { class: "lic-modal-message" },
+      "Lowering this below current activations doesn't auto-free seats — use ", "Free all seats", " for that."),
+    el("div", { class: "lic-modal-actions" }, cancel, submit),
+  );
+  backdrop = el("div", { class: "lic-modal-backdrop is-open" },
+    el("div", { class: "lic-modal" },
+      el("div", { class: "lic-modal-title" }, "Set max seats"),
+      form,
+    ),
+  );
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
+  document.body.append(backdrop);
+  setTimeout(() => input.focus(), 0);
+};
+
+// ── Issue comp dialog ────────────────────────────────────────────────────
+
+const openIssueCompDialog = () => {
+  const emailInput = el("input", { type: "email", required: true, autocomplete: "off", placeholder: "customer@example.com" });
+  const seatsInput = el("input", { type: "number", value: "1", min: "1", max: "100", required: true });
+  const noteInput = el("textarea", { placeholder: "Optional internal note (visible in audit log only)" });
+  const submit = el("button", { class: "lic-modal-submit", type: "submit" }, "Issue + email");
+  const cancel = el("button", { class: "lic-modal-cancel", type: "button" }, "Cancel");
+  let backdrop;
+  const close = () => backdrop?.remove();
+  cancel.addEventListener("click", close);
+  const form = el("form", { onsubmit: async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim().toLowerCase();
+    const seats = parseInt(seatsInput.value, 10);
+    const note = noteInput.value.trim();
+    if (!email || !Number.isFinite(seats) || seats < 1) return;
+    submit.disabled = true;
+    try {
+      const res = await apiFetch("/admin/licenses/comp", {
+        method: "POST",
+        body: JSON.stringify({ email, max_uses: seats, note }),
+      });
+      showToast(`Issued ${res.license_key}`);
+      close();
+      // Reload the list so the new key appears, and open the drawer.
+      // If the user had filtered to a non-comp source, swap to comp so the
+      // new row is visible. Same for status=revoked (the comp is active).
+      const { path, params } = parseHash();
+      if (path === "/licenses") {
+        const currentSource = params.get("source");
+        if (currentSource && currentSource !== "all" && currentSource !== "comp") {
+          params.set("source", "comp");
+        }
+        if (params.get("status") === "revoked") params.delete("status");
+        params.delete("page");
+        params.set("key", res.license_key);
+        window.location.hash = `#${path}?${params.toString()}`;
+      } else {
+        window.location.hash = `#/licenses?source=comp&key=${encodeURIComponent(res.license_key)}`;
+      }
+    } catch (err) {
+      submit.disabled = false;
+      showToast(err.message || "Couldn't issue comp", "error");
+    }
+  } });
+  form.append(
+    el("label", {}, "Customer email", emailInput),
+    el("label", {}, "Seats (max activations)", seatsInput),
+    el("label", {}, "Internal note", noteInput),
+    el("div", { class: "lic-modal-actions" }, cancel, submit),
+  );
+  backdrop = el("div", { class: "lic-modal-backdrop is-open" },
+    el("div", { class: "lic-modal" },
+      el("div", { class: "lic-modal-title" }, "Issue comp license"),
+      el("p", { class: "lic-modal-message" },
+        "Mints an LZ-COMP- key, stores it in the licenses DB, and emails it via Resend. The action is recorded in the audit log."),
+      form,
+    ),
+  );
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
+  document.body.append(backdrop);
+  setTimeout(() => emailInput.focus(), 0);
+};
+
 // ── Coming-soon placeholder ───────────────────────────────────────────────
 
 const renderComingSoon = (canvas, label) => {
@@ -715,9 +1513,36 @@ const TITLES = {
   "/settings": "Settings",
 };
 
+// Signature of the last licenses-list render (filters/page only, NOT the
+// open drawer key). Used to skip a full re-render + table re-fetch when
+// only `?key=…` changed — clicking a row, opening, closing, etc.
+let lastLicensesFilterSig = null;
+const licensesFilterSig = (params) =>
+  [params.get("q") ?? "", params.get("source") ?? "", params.get("status") ?? "", params.get("page") ?? ""].join("|");
+
 const route = (canvas, topbar, sidebarMount, session) => {
   const { path, params } = parseHash();
   const title = TITLES[path] || "Dashboard";
+
+  // Tear down any license drawer / open modal left over from the prior
+  // route. Modals are appended to <body>, so they survive canvas re-renders
+  // and have to be cleaned up explicitly on navigation.
+  if (path !== "/licenses" && drawerEl) closeDrawer();
+  if (path !== "/licenses") {
+    document.querySelectorAll(".lic-modal-backdrop").forEach((n) => n.remove());
+    lastLicensesFilterSig = null;
+  }
+
+  // Hot-path: opening or closing the drawer mutates the hash (?key=…),
+  // which fires hashchange and would otherwise re-run renderLicenses on
+  // every drawer click — including a fresh table fetch. If only `key`
+  // changed, just open or close the drawer; leave the rendered list alone.
+  if (path === "/licenses" && lastLicensesFilterSig === licensesFilterSig(params)) {
+    const openKey = params.get("key");
+    if (openKey) openLicenseDrawer(openKey);
+    else if (drawerEl) closeDrawer();
+    return;
+  }
 
   // Refresh sidebar active state.
   clear(sidebarMount);
@@ -739,6 +1564,11 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path === "/") {
     const range = params.get("range") || "30d";
     renderDashboard(canvas, { range });
+    return;
+  }
+  if (path === "/licenses") {
+    lastLicensesFilterSig = licensesFilterSig(params);
+    renderLicenses(canvas, { params });
     return;
   }
   renderComingSoon(canvas, title);
