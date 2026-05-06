@@ -219,14 +219,52 @@ const demoFixture = (path) => {
       ],
     };
   }
+  if (path.startsWith("/admin/trials/")) {
+    const suffix = path.slice("/admin/trials/".length).split("?")[0];
+    // Action endpoints (PATCH /:id/extend, /:id/terminate) — return ok.
+    if (suffix.includes("/")) return { ok: true, deadline: new Date().toISOString() };
+    // Detail endpoint
+    const id = decodeURIComponent(suffix);
+    const now = Date.now();
+    return {
+      machine_id: id,
+      started_at: new Date(now - 4 * 86400_000).toISOString(),
+      deadline: new Date(now + 10 * 86400_000).toISOString(),
+      status: "active",
+      converted_license_key: null,
+      converted_at: null,
+      activations: [],
+      audit: [],
+      now: new Date(now).toISOString(),
+    };
+  }
+  if (path.startsWith("/admin/trials")) {
+    const now = Date.now();
+    const rows = [
+      { machine_id: "MAC-AAAA1111-BBBB2222-CCCC3333", started_at: new Date(now - 1 * 86400_000).toISOString(),
+        deadline: new Date(now + 13 * 86400_000).toISOString(), converted_license_key: null, converted_at: null,
+        status: "active" },
+      { machine_id: "MAC-DEAD1111-BEEF2222-CAFE3333", started_at: new Date(now - 6 * 86400_000).toISOString(),
+        deadline: new Date(now + 8 * 86400_000).toISOString(), converted_license_key: "LZ-AB12-CD34-EF56-GH78",
+        converted_at: new Date(now - 5 * 86400_000).toISOString(), status: "active" },
+      { machine_id: "MAC-OLD1234-EXPIRED-99887766", started_at: new Date(now - 22 * 86400_000).toISOString(),
+        deadline: new Date(now - 8 * 86400_000).toISOString(), converted_license_key: null, converted_at: null,
+        status: "expired" },
+      { machine_id: "MAC-CONVERTED-77665544", started_at: new Date(now - 30 * 86400_000).toISOString(),
+        deadline: new Date(now - 16 * 86400_000).toISOString(),
+        converted_license_key: "LZ-XY34-WV56-UV78-TS90",
+        converted_at: new Date(now - 18 * 86400_000).toISOString(), status: "expired" },
+    ];
+    return { rows, page: 1, limit: 50, total: rows.length, now: new Date(now).toISOString() };
+  }
   if (path.startsWith("/admin/audit/facets")) {
     return {
       actions: [
         "license.revoke", "license.unrevoke", "license.issue_comp",
         "license.update_max_uses", "license.change_email", "license.resend_email",
-        "activation.free",
+        "activation.free", "trial.extend", "trial.terminate",
       ],
-      target_types: ["license"],
+      target_types: ["license", "trial"],
       actors: [ADMIN_EMAIL],
     };
   }
@@ -430,7 +468,7 @@ const NAV_ITEMS = [
   { href: "#/", id: "dashboard", icon: "dashboard", label: "Dashboard" },
   { href: "#/licenses", id: "licenses", icon: "key", label: "Licenses" },
   { href: "#/customers", id: "customers", icon: "users", label: "Customers", soon: true },
-  { href: "#/trials", id: "trials", icon: "clock", label: "Trials", soon: true },
+  { href: "#/trials", id: "trials", icon: "clock", label: "Trials" },
   { href: "#/activations", id: "activations", icon: "activity", label: "Activations", soon: true },
   { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
   { href: "#/audit", id: "audit", icon: "scroll", label: "Audit log" },
@@ -1087,6 +1125,11 @@ const wrapWithPagination = (card, data, { page, limit }) => {
 
 let drawerEl = null;
 let drawerBackdrop = null;
+// Tracks the license_key currently being fetched into the drawer so that
+// re-entrant calls (the hashchange from updateHashParams triggers route(),
+// which fast-paths back into openLicenseDrawer with the same key) don't
+// race a second apiFetch. The guard releases on completion or error.
+let drawerLoadingKey = null;
 
 const closeDrawer = () => {
   if (!drawerEl) return;
@@ -1099,15 +1142,25 @@ const closeDrawer = () => {
     const qs = params.toString();
     history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
   }
+  // Capture the nodes locally before the post-animation cleanup. Module-level
+  // refs may be reassigned by a fresh openLicenseDrawer() call within the
+  // 260 ms close window — without the local capture, the timeout would
+  // remove the *new* drawer mid-animation and null the live refs.
+  const elToRemove = drawerEl;
+  const backdropToRemove = drawerBackdrop;
+  drawerEl = null;
+  drawerBackdrop = null;
   setTimeout(() => {
-    drawerEl?.remove();
-    drawerBackdrop?.remove();
-    drawerEl = null;
-    drawerBackdrop = null;
+    elToRemove?.remove();
+    backdropToRemove?.remove();
   }, 260);
 };
 
 const openLicenseDrawer = async (licenseKey) => {
+  // Re-entrancy guard — see drawerLoadingKey declaration above.
+  if (drawerLoadingKey === licenseKey) return;
+  drawerLoadingKey = licenseKey;
+
   // Reflect open state in the URL so back-button closes it.
   updateHashParams((p) => p.set("key", licenseKey));
 
@@ -1150,10 +1203,12 @@ const openLicenseDrawer = async (licenseKey) => {
         el("div", { class: "admin-error" }, `Couldn't load license: ${err.message || err}`),
       ),
     );
+    if (drawerLoadingKey === licenseKey) drawerLoadingKey = null;
     return;
   }
 
   paintDrawer(data);
+  if (drawerLoadingKey === licenseKey) drawerLoadingKey = null;
 };
 
 const paintDrawer = (data) => {
@@ -1301,7 +1356,14 @@ const paintDrawer = (data) => {
       list.append(
         el("div", { class: "lic-activation" },
           el("div", {},
-            el("div", { class: "lic-activation-machine" }, a.machine_id),
+            // Machine id pivots to the trial detail drawer for this
+            // machine — `?machine=` opens the drawer directly so the admin
+            // doesn't have to click through the list. The trials page
+            // gracefully empty-states if no trial row exists.
+            el("a", {
+              class: "lic-pivot-link",
+              href: `#/trials?machine=${encodeURIComponent(a.machine_id)}`,
+            }, a.machine_id),
             el("div", { class: "lic-activation-meta" }, "Activated ", fmtDateTime(a.activated_at)),
           ),
           el("button", {
@@ -1526,6 +1588,514 @@ const openIssueCompDialog = () => {
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
   document.body.append(backdrop);
   setTimeout(() => emailInput.focus(), 0);
+};
+
+// ── Trials page ───────────────────────────────────────────────────────────
+//
+// Routing:
+//   #/trials                       → list (default: all)
+//   #/trials?status=active|expired → filter by deadline vs now
+//   #/trials?since=…&until=…       → filter on started_at, ISO 8601
+//   #/trials?q=<machine-id>        → substring match on machine_id (also
+//                                    used as the deep-link target from the
+//                                    licenses drawer "Active machines" list)
+//   #/trials?machine=<id>          → list + open detail drawer
+//
+// Trial rows are not deletable from the UI on purpose: the trials table
+// exists to bind a machine_id to "trial already used", and removing the
+// row re-opens the "wipe Keychain → fresh 14 days" exploit that
+// `0002_trials.sql` was added to close. Terminate sets deadline=now
+// instead — the machine remains bound.
+
+const TRIAL_STATUS_LABELS = { all: "Any status", active: "Active", expired: "Expired" };
+
+// Days remaining (negative when expired). Used for the row hint and the
+// drawer headline. Keeping the rounding consistent across both places lets
+// the user reconcile what the drawer says with what they clicked.
+const trialDaysLeft = (deadlineISO, nowISO) => {
+  const deadline = new Date(deadlineISO).getTime();
+  const now = new Date(nowISO).getTime();
+  if (!Number.isFinite(deadline) || !Number.isFinite(now)) return 0;
+  return Math.round((deadline - now) / 86_400_000);
+};
+
+const trialDeadlineLabel = (deadlineISO, nowISO) => {
+  const days = trialDaysLeft(deadlineISO, nowISO);
+  if (days >= 1) return `${days}d left`;
+  if (days === 0) return "ends today";
+  return `expired ${Math.abs(days)}d ago`;
+};
+
+const buildTrialsQuery = (params) => {
+  const out = new URLSearchParams();
+  for (const k of ["q", "status", "since", "until", "page"]) {
+    const v = params.get(k);
+    if (v && (k !== "status" || v !== "all")) out.set(k, v);
+  }
+  return out.toString();
+};
+
+let trialsDrawerEl = null;
+let trialsDrawerBackdrop = null;
+// Re-entrancy guard for openTrialDrawer — same rationale as drawerLoadingKey.
+let trialsDrawerLoadingMachine = null;
+let lastTrialsFilterSig = null;
+const trialsFilterSig = (params) =>
+  [params.get("q") ?? "", params.get("status") ?? "", params.get("since") ?? "",
+   params.get("until") ?? "", params.get("page") ?? ""].join("|");
+
+const renderTrials = async (canvas, { params }) => {
+  // Preserve focus across re-renders so typing in q / date pickers doesn't
+  // bounce the caret.
+  const focusedSelector = (() => {
+    const a = document.activeElement;
+    if (!a || !canvas.contains(a)) return null;
+    if (a.matches?.(".lic-search input")) return ".lic-search input";
+    return null;
+  })();
+  const caret = focusedSelector ? document.activeElement.selectionStart : null;
+
+  clear(canvas);
+  canvas.append(
+    el("div", { class: "admin-page-header" },
+      el("div", {},
+        el("h1", { class: "admin-page-title" }, "Trials"),
+        el("p", { class: "admin-page-subtitle" },
+          "Active and expired 14-day trials, keyed by machine_id. Extend or terminate from the drawer."),
+      ),
+    ),
+  );
+
+  const q = params.get("q") ?? "";
+  const status = params.get("status") ?? "all";
+  const since = params.get("since") ?? "";
+  const until = params.get("until") ?? "";
+  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const limit = 50;
+
+  const setParam = (key, value) => updateHashParams((p) => {
+    if (value) p.set(key, value);
+    else p.delete(key);
+    p.delete("page");
+  });
+
+  const searchInput = el("input", {
+    type: "search",
+    placeholder: "Search by machine_id…",
+    value: q,
+    autocomplete: "off",
+    spellcheck: "false",
+    "aria-label": "Search trials by machine id",
+  });
+  let debounce = null;
+  searchInput.addEventListener("input", () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => setParam("q", searchInput.value.trim()), 250);
+  });
+
+  const statusFilters = el("div", { class: "lic-filters" });
+  for (const [k, label] of Object.entries(TRIAL_STATUS_LABELS)) {
+    const cls = ["lic-chip"];
+    if (k === status) cls.push("is-active");
+    statusFilters.append(
+      el("button", {
+        type: "button",
+        class: cls.join(" "),
+        onclick: () => updateHashParams((p) => {
+          if (k === "all") p.delete("status");
+          else p.set("status", k);
+          p.delete("page");
+        }),
+      }, label),
+    );
+  }
+
+  const sinceInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(since),
+    "aria-label": "Started on or after",
+    onchange: (e) => setParam("since", localMidnightISO(e.target.value)),
+  });
+  const untilInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(until),
+    "aria-label": "Started before (exclusive)",
+    onchange: (e) => setParam("until", localMidnightISO(e.target.value)),
+  });
+
+  canvas.append(
+    el("div", { class: "lic-toolbar" },
+      el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+      statusFilters,
+      sinceInput,
+      untilInput,
+    ),
+  );
+
+  if (focusedSelector) {
+    const restored = canvas.querySelector(focusedSelector);
+    if (restored) {
+      restored.focus();
+      if (caret != null) {
+        try { restored.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support setSelectionRange */ }
+      }
+    }
+  }
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading trials…"));
+
+  let data;
+  try {
+    const qs = buildTrialsQuery(params);
+    data = await apiFetch(`/admin/trials${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load trials: ${err.message || err}`));
+    return;
+  }
+
+  clear(tableMount);
+  tableMount.append(renderTrialsTable(data, { page, limit }));
+
+  const openMachine = params.get("machine");
+  if (openMachine) openTrialDrawer(openMachine);
+  else if (trialsDrawerEl) closeTrialDrawer();
+};
+
+const renderTrialsTable = (data, { page, limit }) => {
+  const card = el("div", { class: "lic-table-card" });
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No trials match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const nowISO = data.now || new Date().toISOString();
+  const table = el("table", { class: "lic-table" });
+  table.append(
+    el("thead", {},
+      el("tr", {},
+        el("th", {}, "Machine"),
+        el("th", {}, "Started"),
+        el("th", {}, "Deadline"),
+        el("th", {}, "Status"),
+        el("th", {}, "Converted"),
+      ),
+    ),
+  );
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    const tr = el("tr", {
+      tabindex: "0",
+      onclick: () => openTrialDrawer(row.machine_id),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTrialDrawer(row.machine_id); }
+      },
+    });
+    const statusCell = el("span", { class: `lic-badge status-${row.status}` },
+      row.status.toUpperCase());
+    const convertedCell = row.converted_license_key
+      ? el("a", {
+          class: "audit-target-link",
+          href: `#/licenses?key=${encodeURIComponent(row.converted_license_key)}`,
+          onclick: (e) => e.stopPropagation(),
+        }, row.converted_license_key)
+      : el("span", { class: "lic-meta" }, "—");
+    tr.append(
+      el("td", {}, el("span", { class: "lic-key" }, row.machine_id)),
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.started_at))),
+      el("td", {}, el("span", { class: "lic-meta" }, trialDeadlineLabel(row.deadline, nowISO))),
+      el("td", {}, statusCell),
+      el("td", {}, convertedCell),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  card.append(table);
+  return wrapWithPagination(card, data, { page, limit });
+};
+
+const closeTrialDrawer = () => {
+  if (!trialsDrawerEl) return;
+  trialsDrawerEl.classList.remove("is-open");
+  trialsDrawerBackdrop?.classList.remove("is-open");
+  const { path, params } = parseHash();
+  if (params.has("machine")) {
+    params.delete("machine");
+    const qs = params.toString();
+    history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+  }
+  // See the matching note in closeDrawer — local capture so a fresh open
+  // within the 260 ms animation window doesn't get torn down here.
+  const elToRemove = trialsDrawerEl;
+  const backdropToRemove = trialsDrawerBackdrop;
+  trialsDrawerEl = null;
+  trialsDrawerBackdrop = null;
+  setTimeout(() => {
+    elToRemove?.remove();
+    backdropToRemove?.remove();
+  }, 260);
+};
+
+const openTrialDrawer = async (machineId) => {
+  if (trialsDrawerLoadingMachine === machineId) return;
+  trialsDrawerLoadingMachine = machineId;
+
+  updateHashParams((p) => p.set("machine", machineId));
+
+  if (!trialsDrawerEl) {
+    trialsDrawerBackdrop = el("div", { class: "lic-drawer-backdrop", onclick: closeTrialDrawer });
+    trialsDrawerEl = el("aside", { class: "lic-drawer", role: "dialog", "aria-modal": "true" });
+    document.body.append(trialsDrawerBackdrop, trialsDrawerEl);
+    requestAnimationFrame(() => {
+      trialsDrawerBackdrop.classList.add("is-open");
+      trialsDrawerEl.classList.add("is-open");
+    });
+  }
+
+  clear(trialsDrawerEl);
+  trialsDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", { class: "lic-drawer-key" }, machineId),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeTrialDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+    el("div", { class: "lic-drawer-body" },
+      el("div", { class: "admin-loading" }, "Loading…"),
+    ),
+  );
+
+  let data;
+  try {
+    data = await apiFetch(`/admin/trials/${encodeURIComponent(machineId)}`);
+  } catch (err) {
+    clear(trialsDrawerEl);
+    trialsDrawerEl.append(
+      el("div", { class: "lic-drawer-header" },
+        el("div", { class: "lic-drawer-key" }, machineId),
+        el("button", { class: "lic-drawer-close", type: "button", onclick: closeTrialDrawer, "aria-label": "Close" },
+          icon("x-circle", 18)),
+      ),
+      el("div", { class: "lic-drawer-body" },
+        el("div", { class: "admin-error" }, `Couldn't load trial: ${err.message || err}`),
+      ),
+    );
+    if (trialsDrawerLoadingMachine === machineId) trialsDrawerLoadingMachine = null;
+    return;
+  }
+
+  paintTrialDrawer(data);
+  if (trialsDrawerLoadingMachine === machineId) trialsDrawerLoadingMachine = null;
+};
+
+const paintTrialDrawer = (data) => {
+  if (!trialsDrawerEl) return;
+  clear(trialsDrawerEl);
+
+  const isActive = data.status === "active";
+  const nowISO = data.now || new Date().toISOString();
+
+  trialsDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", {},
+        el("div", { class: "lic-drawer-key" },
+          el("span", {}, data.machine_id),
+          el("button", {
+            class: "lic-drawer-key-copy",
+            type: "button",
+            "aria-label": "Copy machine id",
+            onclick: async () => {
+              try {
+                await navigator.clipboard.writeText(data.machine_id);
+                showToast("Machine id copied");
+              } catch (_) { showToast("Couldn't copy", "error"); }
+            },
+          }, icon("copy", 14)),
+        ),
+        el("div", { class: "lic-drawer-badges" },
+          el("span", { class: `lic-badge status-${isActive ? "active" : "expired"}` },
+            isActive ? "ACTIVE" : "EXPIRED"),
+          data.converted_license_key
+            ? el("span", { class: "lic-badge converted" }, "CONVERTED")
+            : null,
+        ),
+      ),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeTrialDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+  );
+
+  const body = el("div", { class: "lic-drawer-body" });
+
+  // Meta grid
+  const meta = el("dl", { class: "lic-meta-grid" });
+  const addMeta = (label, value) => {
+    if (value == null || value === "") return;
+    meta.append(el("dt", {}, label), el("dd", {}, value));
+  };
+  addMeta("Started", fmtDateTime(data.started_at));
+  addMeta("Deadline", `${fmtDateTime(data.deadline)} · ${trialDeadlineLabel(data.deadline, nowISO)}`);
+  if (data.converted_license_key) {
+    addMeta("Converted to",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/licenses?key=${encodeURIComponent(data.converted_license_key)}`,
+      }, data.converted_license_key));
+  }
+  if (data.converted_at) addMeta("Converted on", fmtDateTime(data.converted_at));
+
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Details"),
+      meta,
+    ),
+  );
+
+  // Actions
+  const actions = el("div", { class: "lic-actions" });
+  actions.append(
+    el("button", {
+      class: "lic-action-btn", type: "button",
+      onclick: () => extendTrialDialog(data),
+    }, icon("plus", 12), "Extend deadline"),
+  );
+  if (isActive) {
+    actions.append(
+      el("button", {
+        class: "lic-action-btn is-danger", type: "button",
+        onclick: async () => {
+          const ok = await confirmModal({
+            title: "Terminate this trial?",
+            message: "Sets the deadline to now. The machine will fall back to trialExpired on its next /verify. The trial row stays so a Keychain wipe can't earn a fresh 14 days.",
+            confirmLabel: "Terminate",
+            danger: true,
+          });
+          if (ok) doTrialAction(data.machine_id, "terminate", "Trial terminated");
+        },
+      }, icon("x-circle", 12), "Terminate now"),
+    );
+  }
+
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Actions"),
+      actions,
+    ),
+  );
+
+  // Activations on this machine_id (across any license).
+  const activationsSection = el("div", {},
+    el("div", { class: "lic-section-title" }, `Activations on this machine (${data.activations.length})`),
+  );
+  if (data.activations.length === 0) {
+    activationsSection.append(el("div", { class: "lic-empty" }, "No activations on this machine."));
+  } else {
+    const list = el("div", { class: "lic-activations-list" });
+    for (const a of data.activations) {
+      list.append(
+        el("div", { class: "lic-activation" },
+          el("div", {},
+            el("a", {
+              class: "lic-pivot-link",
+              href: `#/licenses?key=${encodeURIComponent(a.license_key)}`,
+            }, a.license_key),
+            el("div", { class: "lic-activation-meta" }, "Activated ", fmtDateTime(a.activated_at)),
+          ),
+        ),
+      );
+    }
+    activationsSection.append(list);
+  }
+  body.append(activationsSection);
+
+  // Audit timeline
+  const auditSection = el("div", {},
+    el("div", { class: "lic-section-title" },
+      "Audit timeline",
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/audit?target_type=trial&target_id=${encodeURIComponent(data.machine_id)}`,
+      }, "view in log"),
+    ),
+  );
+  if (!data.audit || data.audit.length === 0) {
+    auditSection.append(el("div", { class: "lic-empty" }, "No admin actions recorded yet."));
+  } else {
+    const list = el("div", { class: "lic-audit-list" });
+    for (const e of data.audit) list.append(renderAuditItem(e));
+    auditSection.append(list);
+  }
+  body.append(auditSection);
+
+  trialsDrawerEl.append(body);
+};
+
+const doTrialAction = async (machineId, action, successMessage, opts = {}) => {
+  try {
+    await apiFetch(`/admin/trials/${encodeURIComponent(machineId)}/${action}`, {
+      method: "PATCH",
+      ...opts,
+    });
+    showToast(successMessage);
+    openTrialDrawer(machineId);
+  } catch (err) {
+    showToast(err.message || "Action failed", "error");
+  }
+};
+
+const extendTrialDialog = (data) => {
+  const isExpired = data.status === "expired";
+  const input = el("input", { type: "number", value: "14", min: "1", max: "365", required: true });
+  const submit = el("button", { class: "lic-modal-submit", type: "submit" }, "Extend");
+  const cancel = el("button", { class: "lic-modal-cancel", type: "button" }, "Cancel");
+  let backdrop;
+  const close = () => backdrop?.remove();
+  cancel.addEventListener("click", close);
+  const form = el("form", { onsubmit: async (e) => {
+    e.preventDefault();
+    const days = parseInt(input.value, 10);
+    // Mirror the server bounds (1-365) on the client so a fat-fingered
+    // value gets a clear toast instead of a generic "invalid_days" 400.
+    if (!Number.isFinite(days) || days < 1 || days > 365) {
+      showToast("Days must be between 1 and 365", "error");
+      return;
+    }
+    submit.disabled = true;
+    try {
+      await apiFetch(`/admin/trials/${encodeURIComponent(data.machine_id)}/extend`, {
+        method: "PATCH",
+        body: JSON.stringify({ days }),
+      });
+      showToast(`Extended by ${days}d`);
+      close();
+      openTrialDrawer(data.machine_id);
+    } catch (err) {
+      submit.disabled = false;
+      showToast(err.message || "Couldn't extend", "error");
+    }
+  } });
+  // For active trials we anchor at the existing deadline ("+N days from
+  // current deadline"); for expired trials the server anchors at now,
+  // effectively reactivating the trial for N days. Surface that distinction
+  // up-front so the admin doesn't expect a different behaviour.
+  const helpText = isExpired
+    ? "This trial is already expired. Extending will reactivate it for N days starting now."
+    : "Pushes the existing deadline forward — not from now. So extending an already-extended trial adds N more days, rather than silently shortening it.";
+  form.append(
+    el("label", {}, "Add days", input),
+    el("p", { class: "lic-modal-message" }, helpText),
+    el("div", { class: "lic-modal-actions" }, cancel, submit),
+  );
+  backdrop = el("div", { class: "lic-modal-backdrop is-open" },
+    el("div", { class: "lic-modal" },
+      el("div", { class: "lic-modal-title" }, isExpired ? "Reactivate trial" : "Extend trial"),
+      form,
+    ),
+  );
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
+  document.body.append(backdrop);
+  setTimeout(() => input.focus(), 0);
 };
 
 // ── Audit log page ────────────────────────────────────────────────────────
@@ -1904,14 +2474,16 @@ const route = (canvas, topbar, sidebarMount, session) => {
   const { path, params } = parseHash();
   const title = TITLES[path] || "Dashboard";
 
-  // Tear down any license drawer / open modal left over from the prior
-  // route. Modals are appended to <body>, so they survive canvas re-renders
-  // and have to be cleaned up explicitly on navigation.
+  // Tear down any drawer / open modal left over from the prior route.
+  // Modals are appended to <body>, so they survive canvas re-renders and
+  // have to be cleaned up explicitly on navigation.
   if (path !== "/licenses" && drawerEl) closeDrawer();
-  if (path !== "/licenses") {
+  if (path !== "/trials" && trialsDrawerEl) closeTrialDrawer();
+  if (path !== "/licenses" && path !== "/trials") {
     document.querySelectorAll(".lic-modal-backdrop").forEach((n) => n.remove());
-    lastLicensesFilterSig = null;
   }
+  if (path !== "/licenses") lastLicensesFilterSig = null;
+  if (path !== "/trials") lastTrialsFilterSig = null;
 
   // Hot-path: opening or closing the drawer mutates the hash (?key=…),
   // which fires hashchange and would otherwise re-run renderLicenses on
@@ -1921,6 +2493,12 @@ const route = (canvas, topbar, sidebarMount, session) => {
     const openKey = params.get("key");
     if (openKey) openLicenseDrawer(openKey);
     else if (drawerEl) closeDrawer();
+    return;
+  }
+  if (path === "/trials" && lastTrialsFilterSig === trialsFilterSig(params)) {
+    const openMachine = params.get("machine");
+    if (openMachine) openTrialDrawer(openMachine);
+    else if (trialsDrawerEl) closeTrialDrawer();
     return;
   }
 
@@ -1949,6 +2527,11 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path === "/licenses") {
     lastLicensesFilterSig = licensesFilterSig(params);
     renderLicenses(canvas, { params });
+    return;
+  }
+  if (path === "/trials") {
+    lastTrialsFilterSig = trialsFilterSig(params);
+    renderTrials(canvas, { params });
     return;
   }
   if (path === "/audit") {

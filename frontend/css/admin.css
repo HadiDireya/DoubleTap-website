@@ -19,6 +19,7 @@
   --admin-color-topbar-bg: rgba(10, 10, 10, 0.85);
   --admin-color-bug-soft: rgba(255, 122, 108, 0.1);
   --admin-color-feature-soft: rgba(139, 155, 247, 0.1);
+  --admin-color-praise-soft: rgba(255, 209, 102, 0.12);
   /* The active-nav rail is 2px so it reads at small icon sizes;
      plain --border-width (1px) disappears against the muted text. */
   --admin-rail-width: 2px;
@@ -1027,6 +1028,21 @@ body.admin {
   color: var(--color-type-bug);
 }
 
+/* "Expired" is a passive time-based state, not an admin action like
+   `revoked`. Muted gray reads as "stale" without the alarm of red. */
+.lic-badge.status-expired {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+
+/* "Converted" tags a trial whose machine_id later activated a license.
+   Praise-soft (yellow) reads as a positive milestone and stays visually
+   distinct from `status-active` (accent) and `src-comp` (feature/purple). */
+.lic-badge.converted {
+  background: var(--admin-color-praise-soft);
+  color: var(--color-type-praise);
+}
+
 /* Pagination */
 .lic-pagination {
   display: flex;
@@ -1282,6 +1298,28 @@ body.admin {
   letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text);
   word-break: break-all;
+}
+
+/* Mono-styled cross-link used in drawer activation rows when the leading
+   identifier (machine_id from licenses → trials, license_key from trials
+   → licenses) pivots to another resource. Mirrors `.audit-target-link`'s
+   dotted-underline-on-hover treatment but in mono so it sits naturally
+   alongside identifier text. */
+.lic-pivot-link {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text);
+  word-break: break-all;
+  text-decoration: none;
+  border-block-end: var(--border-width) dotted var(--color-line);
+  transition: color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+}
+
+.lic-pivot-link:hover {
+  color: var(--color-accent);
+  border-block-end-color: var(--color-accent);
 }
 
 .lic-activation-meta {
