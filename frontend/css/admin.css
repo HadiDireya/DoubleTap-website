@@ -1968,3 +1968,42 @@ body.admin {
   .audit-toolbar { flex-direction: column; align-items: stretch; }
   .audit-toolbar > * { width: 100%; }
 }
+
+/* =====================================
+   N. ACTIVATIONS PAGE
+   Stats banner above the table (3 cards), pivot banner shown when the
+   page was opened from a license/trial drawer drilldown, and a small
+   tweak so a REVOKED badge can sit inline next to the license link
+   without an inline style. The table itself is plain `.lic-table`.
+   ===================================== */
+.activations-stats {
+  margin-block-end: var(--space-5);
+}
+
+/* Visible callout for a pivot filter (e.g. "filtered to license LZ-…")
+   so users notice why some rows are missing. Mirrors the muted-surface
+   look of `.lic-empty` but as a single line above the toolbar. */
+.lic-pivot-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
+  padding-block: var(--space-3);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-block-end: var(--space-4);
+}
+
+/* Activations row "License" cell can carry a trailing REVOKED badge next
+   to the license link. Inline-flex with a small gap keeps the badge
+   pinned to the link without an inline style. */
+.act-license-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}

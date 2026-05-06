@@ -326,6 +326,44 @@ const demoFixture = (path) => {
     ];
     return { rows, page: 1, limit: 50, total: rows.length, now: new Date(now).toISOString() };
   }
+  if (path.startsWith("/admin/activations")) {
+    const now = Date.now();
+    // Mix in: a shared-machine pair (same MAC across two licenses), a
+    // hot-key (same key activated 3× recently from different machines),
+    // a Gumroad row (no email), and a revoked-license activation.
+    const sharedMac = "MAC-AAAA1111-BBBB2222-CCCC3333";
+    const hotKey = "LZ-XY34-WV56-UV78-TS90";
+    const rows = [
+      { id: 51, license_key: "LZ-AB12-CD34-EF56-GH78", machine_id: sharedMac,
+        activated_at: new Date(now - 5 * 60_000).toISOString(),
+        email: "alice@example.com", source: "lahza", license_revoked: false, shared_count: 2 },
+      { id: 50, license_key: hotKey, machine_id: "MAC-RAPID-A1B2",
+        activated_at: new Date(now - 25 * 60_000).toISOString(),
+        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+      { id: 49, license_key: hotKey, machine_id: "MAC-RAPID-C3D4",
+        activated_at: new Date(now - 2 * 3600_000).toISOString(),
+        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+      { id: 48, license_key: hotKey, machine_id: "MAC-RAPID-E5F6",
+        activated_at: new Date(now - 5 * 3600_000).toISOString(),
+        email: "charlie@example.com", source: "lahza", license_revoked: false, shared_count: 1 },
+      { id: 47, license_key: "LZ-FRIEND-OF-ALICE-7890", machine_id: sharedMac,
+        activated_at: new Date(now - 26 * 3600_000).toISOString(),
+        email: "alice2@example.com", source: "lahza", license_revoked: false, shared_count: 2 },
+      { id: 46, license_key: "ABCD1234-EFGH5678", machine_id: "MAC-GUMROAD-LEGACY",
+        activated_at: new Date(now - 4 * 86400_000).toISOString(),
+        email: null, source: "gumroad", license_revoked: false, shared_count: 1 },
+      { id: 45, license_key: "LZ-DEAD-BEEF-CAFE-FOOD", machine_id: "MAC-REVOKED-1234",
+        activated_at: new Date(now - 6 * 86400_000).toISOString(),
+        email: "bob@example.com", source: "lahza", license_revoked: true, shared_count: 1 },
+      { id: 44, license_key: "LZ-COMP-9XYZ8-WV7TU", machine_id: "MAC-PRESS-RIG",
+        activated_at: new Date(now - 9 * 86400_000).toISOString(),
+        email: "press@example.com", source: "comp", license_revoked: false, shared_count: 1 },
+    ];
+    return {
+      rows, page: 1, limit: 50, total: rows.length,
+      stats: { total_activations: 178, shared_machines: 2, hot_licenses: 1 },
+    };
+  }
   if (path.startsWith("/admin/audit/facets")) {
     return {
       actions: [
@@ -539,7 +577,7 @@ const NAV_ITEMS = [
   { href: "#/licenses", id: "licenses", icon: "key", label: "Licenses" },
   { href: "#/customers", id: "customers", icon: "users", label: "Customers" },
   { href: "#/trials", id: "trials", icon: "clock", label: "Trials" },
-  { href: "#/activations", id: "activations", icon: "activity", label: "Activations", soon: true },
+  { href: "#/activations", id: "activations", icon: "activity", label: "Activations" },
   { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
   { href: "#/audit", id: "audit", icon: "scroll", label: "Audit log" },
   { href: "#/settings", id: "settings", icon: "settings", label: "Settings", soon: true },
@@ -1651,7 +1689,14 @@ const paintDrawer = (data) => {
 
   // Activations
   const activationsSection = el("div", {},
-    el("div", { class: "lic-section-title" }, `Active machines (${data.activations.length})`),
+    el("div", { class: "lic-section-title" },
+      `Active machines (${data.activations.length})`,
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/activations?license_key=${encodeURIComponent(data.license_key)}`,
+      }, "view all activations"),
+    ),
   );
   if (data.activations.length === 0) {
     activationsSection.append(el("div", { class: "lic-empty" }, "No active machines."));
@@ -2711,7 +2756,14 @@ const paintTrialDrawer = (data) => {
 
   // Activations on this machine_id (across any license).
   const activationsSection = el("div", {},
-    el("div", { class: "lic-section-title" }, `Activations on this machine (${data.activations.length})`),
+    el("div", { class: "lic-section-title" },
+      `Activations on this machine (${data.activations.length})`,
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/activations?machine_id=${encodeURIComponent(data.machine_id)}`,
+      }, "view all activations"),
+    ),
   );
   if (data.activations.length === 0) {
     activationsSection.append(el("div", { class: "lic-empty" }, "No activations on this machine."));
@@ -2822,6 +2874,263 @@ const extendTrialDialog = (data) => {
   backdrop.addEventListener("click", (e) => { if (e.target === backdrop) close(); });
   document.body.append(backdrop);
   setTimeout(() => input.focus(), 0);
+};
+
+// ── Activations page ──────────────────────────────────────────────────────
+//
+// Routing:
+//   #/activations                    → all activations (most recent first)
+//   #/activations?q=…                → substring match on license_key OR
+//                                      machine_id
+//   #/activations?since=…&until=…    → bounds on activated_at, ISO 8601
+//   #/activations?shared=1           → only machine_ids with ≥2 distinct keys
+//   #/activations?license_key=LZ-…   → pivot from a license drawer
+//   #/activations?machine_id=MAC-…   → pivot from a trial drawer
+//
+// No detail drawer here — clicking a row's license cell pivots to the
+// licenses drawer; clicking the machine cell pivots to the trials drawer.
+// The unique value of this page is the cross-cut: machine_ids grouped by
+// `shared_count` (≥2 = customer-shared seat) and license_keys with rapid
+// repeat activations (deactivate-loop abuse). Drilling INTO the per-license
+// or per-machine view is what the existing drawers already do better.
+
+const buildActivationsQuery = (params) => {
+  const out = new URLSearchParams();
+  for (const k of ["q", "since", "until", "shared", "license_key", "machine_id", "page"]) {
+    const v = params.get(k);
+    if (v) out.set(k, v);
+  }
+  return out.toString();
+};
+
+// No `lastActivationsFilterSig` short-circuit like licenses/trials/customers
+// have — those skip the table re-fetch when only `?key=` / `?machine=` /
+// `?u=` flips (drawer open/close). This page has no drawer of its own;
+// every hash mutation is a filter change, so a full re-render is always
+// the right thing.
+
+const renderActivations = async (canvas, { params }) => {
+  // Same focus-preservation pattern as licenses/trials/audit — typing in
+  // the search input shouldn't bounce the caret on every hash-driven
+  // re-render.
+  const focusedSelector = (() => {
+    const a = document.activeElement;
+    if (!a || !canvas.contains(a)) return null;
+    if (a.matches?.(".lic-search input")) return ".lic-search input";
+    return null;
+  })();
+  const caret = focusedSelector ? document.activeElement.selectionStart : null;
+
+  clear(canvas);
+  canvas.append(
+    el("div", { class: "admin-page-header" },
+      el("div", {},
+        el("h1", { class: "admin-page-title" }, "Activations"),
+        el("p", { class: "admin-page-subtitle" },
+          "Every (license, machine) pair. Spot a single machine on multiple keys, or a key with rapid repeat activations."),
+      ),
+    ),
+  );
+
+  const q = params.get("q") ?? "";
+  const since = params.get("since") ?? "";
+  const until = params.get("until") ?? "";
+  const sharedOnly = params.get("shared") === "1";
+  const licenseKeyPivot = params.get("license_key") ?? "";
+  const machineIdPivot = params.get("machine_id") ?? "";
+  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const limit = 50;
+
+  const setParam = (key, value) => updateHashParams((p) => {
+    if (value) p.set(key, value);
+    else p.delete(key);
+    p.delete("page");
+  });
+
+  // Pivot banner — when the page was opened via license_key= or machine_id=
+  // (drilldown from another page's drawer), surface the active pivot with a
+  // clear-button. Without this, the user can be filtered down to 3 rows
+  // and not realise why the rest of the table is missing.
+  if (licenseKeyPivot || machineIdPivot) {
+    const pivotLabel = licenseKeyPivot
+      ? el("span", {}, "Filtered to license ",
+          el("span", { class: "lic-key" }, licenseKeyPivot))
+      : el("span", {}, "Filtered to machine ",
+          el("span", { class: "lic-key" }, machineIdPivot));
+    canvas.append(
+      el("div", { class: "lic-pivot-banner" },
+        pivotLabel,
+        el("button", {
+          type: "button", class: "lic-page-btn",
+          onclick: () => updateHashParams((p) => {
+            p.delete("license_key");
+            p.delete("machine_id");
+            p.delete("page");
+          }),
+        }, icon("x-circle", 12), "Clear"),
+      ),
+    );
+  }
+
+  const searchInput = el("input", {
+    type: "search",
+    placeholder: "Search by license_key or machine_id…",
+    value: q,
+    autocomplete: "off",
+    spellcheck: "false",
+    "aria-label": "Search activations",
+  });
+  let debounce = null;
+  searchInput.addEventListener("input", () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => setParam("q", searchInput.value.trim()), 250);
+  });
+
+  // Single chip toggle — `shared_count ≥ 2`. Inline rather than a select
+  // because there's only one binary state to expose.
+  const sharedToggle = el("button", {
+    type: "button",
+    class: `lic-chip ${sharedOnly ? "is-active" : ""}`,
+    "aria-pressed": sharedOnly ? "true" : "false",
+    onclick: () => setParam("shared", sharedOnly ? "" : "1"),
+  }, "Shared machines only");
+
+  const sinceInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(since),
+    "aria-label": "Activated on or after",
+    onchange: (e) => setParam("since", localMidnightISO(e.target.value)),
+  });
+  const untilInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(until),
+    "aria-label": "Activated before (exclusive)",
+    onchange: (e) => setParam("until", localMidnightISO(e.target.value)),
+  });
+
+  canvas.append(
+    el("div", { class: "lic-toolbar" },
+      el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+      el("div", { class: "lic-filters" }, sharedToggle),
+      sinceInput,
+      untilInput,
+    ),
+  );
+
+  if (focusedSelector) {
+    const restored = canvas.querySelector(focusedSelector);
+    if (restored) {
+      restored.focus();
+      if (caret != null) {
+        try { restored.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support setSelectionRange */ }
+      }
+    }
+  }
+
+  // Stats banner mounts above the table so the global counts (total,
+  // shared machines on file, hot licenses in last 7d) sit visually
+  // distinct from the filter-respecting table below.
+  const statsMount = el("div", { class: "admin-bento activations-stats" });
+  canvas.append(statsMount);
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading activations…"));
+
+  let data;
+  try {
+    const qs = buildActivationsQuery(params);
+    data = await apiFetch(`/admin/activations${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load activations: ${err.message || err}`));
+    return;
+  }
+
+  // Stats: 3 cards, span-4 each across the 12-column bento.
+  if (data.stats) {
+    statsMount.append(
+      renderStat({
+        label: "Total activations",
+        value: fmtNum(data.stats.total_activations),
+        foot: "All-time, across every license source.",
+      }),
+      renderStat({
+        label: "Shared machines",
+        value: fmtNum(data.stats.shared_machines),
+        foot: "Machines whose ID activated ≥2 distinct license keys. Possible seat-sharing.",
+      }),
+      renderStat({
+        label: "Hot licenses (7d)",
+        value: fmtNum(data.stats.hot_licenses),
+        foot: "Keys with ≥3 activations in the last 7 days. Possible deactivate-loop abuse.",
+      }),
+    );
+  }
+
+  clear(tableMount);
+  tableMount.append(renderActivationsTable(data, { page, limit }));
+};
+
+const renderActivationsTable = (data, { page, limit }) => {
+  const card = el("div", { class: "lic-table-card" });
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No activations match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const table = el("table", { class: "lic-table" });
+  table.append(
+    el("thead", {},
+      el("tr", {},
+        el("th", {}, "License"),
+        el("th", {}, "Machine"),
+        el("th", {}, "Source"),
+        el("th", {}, "Email"),
+        el("th", {}, "Activated"),
+        el("th", {}, "Shared"),
+      ),
+    ),
+  );
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    // Row is non-clickable on purpose — each cell pivots somewhere
+    // different (license drawer vs. trials drawer), so a single row-level
+    // onClick would be ambiguous. Cell-level <a> elements give the user
+    // explicit control over which side they want to drill into.
+    const tr = el("tr");
+
+    const licenseLink = el("a", {
+      class: "lic-pivot-link",
+      href: `#/licenses?key=${encodeURIComponent(row.license_key)}`,
+    }, row.license_key);
+
+    const machineLink = el("a", {
+      class: "lic-pivot-link",
+      href: `#/trials?machine=${encodeURIComponent(row.machine_id)}`,
+    }, row.machine_id);
+
+    const sharedBadge = row.shared_count >= 2
+      ? el("span", { class: "lic-badge status-revoked", title: `Activated on ${row.shared_count} different license keys` },
+          `SHARED · ${row.shared_count}`)
+      : el("span", { class: "lic-meta" }, "—");
+
+    const licenseCell = el("td", { class: "act-license-cell" }, licenseLink);
+    if (row.license_revoked) {
+      licenseCell.append(el("span", { class: "lic-badge status-revoked" }, "REVOKED"));
+    }
+    tr.append(
+      licenseCell,
+      el("td", {}, machineLink),
+      el("td", {}, el("span", { class: `lic-badge src-${row.source}` }, row.source.toUpperCase())),
+      el("td", {}, el("span", { class: "lic-email" }, truncateEmail(row.email, 28))),
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.activated_at))),
+      el("td", {}, sharedBadge),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  card.append(table);
+  return wrapWithPagination(card, data, { page, limit });
 };
 
 // ── Audit log page ────────────────────────────────────────────────────────
@@ -3271,6 +3580,10 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path === "/customers") {
     lastCustomersFilterSig = customersFilterSig(params);
     renderCustomers(canvas, { params });
+    return;
+  }
+  if (path === "/activations") {
+    renderActivations(canvas, { params });
     return;
   }
   if (path === "/audit") {
