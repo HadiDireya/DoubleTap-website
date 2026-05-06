@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, count, desc, eq, gte, inArray, like, lt, or, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, like, lt, or, sql, type SQL } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import {
   adminAuditLog,
@@ -9,7 +9,7 @@ import {
   user,
 } from "../../db/schema";
 import { serializeAuditEntry } from "../../lib/audit";
-import { toISO } from "../../lib/dates";
+import { parseISODate, toISO } from "../../lib/dates";
 import { listLicensesByEmail } from "../../lib/license-db";
 import { parsePositiveInt } from "../../lib/query";
 import type { AdminVariables } from "./index";
@@ -17,25 +17,37 @@ import type { Env } from "../../env";
 
 const users = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 
-const parseISODate = (raw: string | undefined): Date | null => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? null : d;
-};
-
 // ── GET / — paginated list ────────────────────────────────────────────────
 users.get("/", async (c) => {
   const q = (c.req.query("q") || "").trim();
   const since = parseISODate(c.req.query("since"));
   const until = parseISODate(c.req.query("until"));
   const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
+  // Capped at 100 (not 200 like the other routes) because the gumroadCounts
+  // fan-in below uses `inArray(userIds)` which expands into one bind per id,
+  // and D1 prepared statements top out around 100 binds. 100 is still 2× the
+  // default page size, so this only matters for someone hand-crafting a
+  // ?limit= override; the default 50 leaves plenty of headroom.
+  const limit = parsePositiveInt(c.req.query("limit"), 50, 100);
   const offset = (page - 1) * limit;
 
   const db = getDb(c.env);
 
+  // SQLite's default LIKE is case-insensitive for ASCII (and emails are
+  // ASCII), so a search for "Alice" already matches "alice@example.com".
+  // But name can be Unicode — Better Auth surfaces whatever the provider
+  // returns — and SQLite's built-in LIKE doesn't case-fold non-ASCII
+  // (e.g. "Álvaro" vs. "álvaro"). lower() on both sides makes the search
+  // case-insensitive for both the ASCII and the Unicode cases, and stays
+  // symmetric with `listLicensesByEmail`'s lower-on-both-sides join.
+  const qLower = q.toLowerCase();
   const filters: (SQL | undefined)[] = [
-    q ? or(like(user.name, `%${q}%`), like(user.email, `%${q}%`)) : undefined,
+    q
+      ? or(
+          like(sql`lower(${user.name})`, `%${qLower}%`),
+          like(sql`lower(${user.email})`, `%${qLower}%`),
+        )
+      : undefined,
     since ? gte(user.createdAt, since) : undefined,
     until ? lt(user.createdAt, until) : undefined,
   ];

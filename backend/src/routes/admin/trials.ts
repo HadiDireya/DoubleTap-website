@@ -4,6 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { adminAuditLog } from "../../db/schema";
 import { serializeAuditEntry, writeAudit } from "../../lib/audit";
+import { parseISODate } from "../../lib/dates";
 import {
   countTrialsAdmin,
   getTrial,
@@ -22,18 +23,14 @@ const parseStatus = (raw: string | undefined): "active" | "expired" | "all" => {
   return "all";
 };
 
-const parseISODate = (raw: string | undefined): string | null => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
-};
-
 // ── GET / — paginated list with filters ───────────────────────────────────
 trials.get("/", async (c) => {
   const q = c.req.query("q") ?? "";
   const status = parseStatus(c.req.query("status"));
-  const since = parseISODate(c.req.query("since"));
-  const until = parseISODate(c.req.query("until"));
+  // listTrialsAdmin expects ISO strings (the SQL wraps them in datetime()
+  // so the helper takes pre-stringified values rather than Date objects).
+  const since = parseISODate(c.req.query("since"))?.toISOString() ?? null;
+  const until = parseISODate(c.req.query("until"))?.toISOString() ?? null;
   const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
   const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
   const offset = (page - 1) * limit;

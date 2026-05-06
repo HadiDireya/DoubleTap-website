@@ -1439,7 +1439,7 @@ const paintDrawer = (data) => {
       " · ",
       el("a", {
         class: "audit-target-link",
-        href: `#/audit?target_id=${encodeURIComponent(data.license_key)}`,
+        href: `#/audit?target_type=license&target_id=${encodeURIComponent(data.license_key)}`,
       }, "view in log"),
     ),
   );

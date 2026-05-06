@@ -85,7 +85,12 @@ licenses.get("/", async (c) => {
   const q = c.req.query("q") ?? "";
   const source = parseSource(c.req.query("source"));
   const status = parseStatus(c.req.query("status"));
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
+  // Cap at 100, not 200, to stay under D1's prepared-statement bind limit:
+  // the Gumroad-row activation-count fan-in below uses an IN (?, ?, …) list
+  // with one bind per license key, which would blow past the limit at 200.
+  // Default page size is 50; 100 is still 2× the default for hand-crafted
+  // ?limit= overrides.
+  const limit = parsePositiveInt(c.req.query("limit"), 50, 100);
   const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
   const offset = (page - 1) * limit;
 

@@ -2,18 +2,12 @@ import { Hono } from "hono";
 import { and, count, desc, eq, gte, like, lt, or, type SQL } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { adminAuditLog } from "../../db/schema";
-import { toISO } from "../../lib/dates";
+import { parseISODate, toISO } from "../../lib/dates";
 import { parsePositiveInt } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
 const audit = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
-
-const parseISODate = (raw: string | undefined): Date | null => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime()) ? null : d;
-};
 
 // ── GET / — paginated list with filters ───────────────────────────────────
 //
