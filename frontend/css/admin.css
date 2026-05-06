@@ -1530,3 +1530,185 @@ body.admin {
     display: none;
   }
 }
+
+/* =====================================
+   16. AUDIT LOG PAGE
+   Reuses .lic-table, .lic-pagination, .lic-empty etc. from licenses page;
+   only the toolbar and the expanded-row details panel are unique here.
+   ===================================== */
+
+.audit-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-5);
+}
+
+.audit-select {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.audit-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.audit-date {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  color: var(--color-text);
+}
+
+.audit-date:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.audit-clear {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-line);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease);
+}
+
+.audit-clear:hover {
+  color: var(--color-text);
+  border-color: var(--color-line-strong);
+}
+
+/* The action token gets a subtle background so columnar scanning works
+   even when the table is dense. Distinct from the licence-source pill so
+   you can tell at a glance which row class you're looking at. */
+.audit-action {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.audit-action.is-revoke,
+.audit-action.is-delete,
+.audit-action.is-ban,
+.audit-action.is-terminate {
+  color: var(--color-type-bug);
+  background: var(--admin-color-bug-soft);
+}
+
+.audit-action.is-issue,
+.audit-action.is-unrevoke,
+.audit-action.is-unban {
+  color: var(--color-accent);
+  background: var(--color-accent-glow);
+}
+
+.audit-action.is-update,
+.audit-action.is-change,
+.audit-action.is-extend {
+  color: var(--color-type-feature);
+  background: var(--admin-color-feature-soft);
+}
+
+.audit-target {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-wide);
+  word-break: break-all;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.audit-target-type {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+}
+
+.audit-target-link {
+  color: var(--color-text);
+  text-decoration: none;
+  border-block-end: var(--border-width) dotted var(--color-line);
+  transition: color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease);
+}
+
+.audit-target-link:hover {
+  color: var(--color-accent);
+  border-block-end-color: var(--color-accent);
+}
+
+.audit-row-details {
+  background: var(--color-surface);
+}
+
+.audit-row-details td {
+  padding-block: var(--space-4);
+  padding-inline: var(--space-5);
+}
+
+.audit-details-pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-wide);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.audit-details-empty {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+@media (max-width: 640px) {
+  .audit-toolbar { flex-direction: column; align-items: stretch; }
+  .audit-toolbar > * { width: 100%; }
+}

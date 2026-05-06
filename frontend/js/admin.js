@@ -219,6 +219,47 @@ const demoFixture = (path) => {
       ],
     };
   }
+  if (path.startsWith("/admin/audit/facets")) {
+    return {
+      actions: [
+        "license.revoke", "license.unrevoke", "license.issue_comp",
+        "license.update_max_uses", "license.change_email", "license.resend_email",
+        "activation.free",
+      ],
+      target_types: ["license"],
+      actors: [ADMIN_EMAIL],
+    };
+  }
+  if (path.startsWith("/admin/audit")) {
+    const now = Date.now();
+    const rows = [
+      { id: "a1", actor_email: ADMIN_EMAIL, action: "license.issue_comp",
+        target_type: "license", target_id: "LZ-COMP-9XYZ8-WV7TU",
+        details: JSON.stringify({ email: "press@example.com", max_uses: 1, note: "TechCrunch reviewer", emailed: true }),
+        created_at: new Date(now - 30 * 60_000).toISOString() },
+      { id: "a2", actor_email: ADMIN_EMAIL, action: "license.revoke",
+        target_type: "license", target_id: "LZ-DEAD-BEEF-CAFE-FOOD",
+        details: JSON.stringify({ reason: "chargeback received via Lahza" }),
+        created_at: new Date(now - 4 * 3600_000).toISOString() },
+      { id: "a3", actor_email: ADMIN_EMAIL, action: "license.change_email",
+        target_type: "license", target_id: "LZ-AB12-CD34-EF56-GH78",
+        details: JSON.stringify({ from: "old@example.com", to: "alice@example.com" }),
+        created_at: new Date(now - 22 * 3600_000).toISOString() },
+      { id: "a4", actor_email: ADMIN_EMAIL, action: "activation.free",
+        target_type: "license", target_id: "LZ-AB12-CD34-EF56-GH78",
+        details: JSON.stringify({ activation_id: 7, machine_id: "MAC-OLD-LAPTOP-A1B2", activated_at: new Date(now - 30 * 86400_000).toISOString() }),
+        created_at: new Date(now - 25 * 3600_000).toISOString() },
+      { id: "a5", actor_email: ADMIN_EMAIL, action: "license.update_max_uses",
+        target_type: "license", target_id: "LZ-XY34-WV56-UV78-TS90",
+        details: JSON.stringify({ from: 1, to: 2 }),
+        created_at: new Date(now - 3 * 86400_000).toISOString() },
+      { id: "a6", actor_email: ADMIN_EMAIL, action: "license.resend_email",
+        target_type: "license", target_id: "LZ-AB12-CD34-EF56-GH78",
+        details: JSON.stringify({ to: "alice@example.com" }),
+        created_at: new Date(now - 6 * 86400_000).toISOString() },
+    ];
+    return { rows, page: 1, limit: 50, total: rows.length };
+  }
   if (path.startsWith("/admin/dashboard")) {
     const days = (n) => {
       const out = [];
@@ -392,7 +433,7 @@ const NAV_ITEMS = [
   { href: "#/trials", id: "trials", icon: "clock", label: "Trials", soon: true },
   { href: "#/activations", id: "activations", icon: "activity", label: "Activations", soon: true },
   { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
-  { href: "#/audit", id: "audit", icon: "scroll", label: "Audit log", soon: true },
+  { href: "#/audit", id: "audit", icon: "scroll", label: "Audit log" },
   { href: "#/settings", id: "settings", icon: "settings", label: "Settings", soon: true },
 ];
 
@@ -1282,9 +1323,18 @@ const paintDrawer = (data) => {
   }
   body.append(activationsSection);
 
-  // Audit timeline
+  // Audit timeline. Link out to the global audit log page filtered to
+  // this license so the user can see context from neighbouring rows
+  // (e.g. "what else happened the day this was revoked").
   const auditSection = el("div", {},
-    el("div", { class: "lic-section-title" }, "Audit timeline"),
+    el("div", { class: "lic-section-title" },
+      "Audit timeline",
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/audit?target_id=${encodeURIComponent(data.license_key)}`,
+      }, "view in log"),
+    ),
   );
   if (!data.audit || data.audit.length === 0) {
     auditSection.append(el("div", { class: "lic-empty" }, "No admin actions recorded yet."));
@@ -1478,6 +1528,280 @@ const openIssueCompDialog = () => {
   setTimeout(() => emailInput.focus(), 0);
 };
 
+// ── Audit log page ────────────────────────────────────────────────────────
+//
+// Routing:
+//   #/audit                         → all events
+//   #/audit?action=license.revoke   → filter by action
+//   #/audit?target_type=license     → filter by polymorphic target type
+//   #/audit?target_id=LZ-…          → substring match on target_id
+//   #/audit?since=2026-05-01        → date range, ISO 8601 (until is exclusive)
+//   #/audit?q=…                     → free-text across target_id/action/details
+//   #/audit?expand=<row-id>         → keeps the expanded-details panel open
+//
+// Filters chain — every set param narrows the result. Facets endpoint
+// populates the action / target_type dropdowns so the UI tracks new
+// `AuditAction` enum values without manual sync.
+
+// Per-render facets cache. Avoids one of the two round-trips on the
+// drawer-style "open expanded row" interaction (which keeps the same
+// filter set), and on rapid filter changes within a single page session.
+let auditFacetsCache = null;
+
+const fmtAuditAction = (raw) => raw.replace(/^[a-z_]+\./, "").replace(/[._]/g, " ");
+
+const auditActionClass = (action) => {
+  // Map any action into one of the small valence buckets in admin.css —
+  // green (issue/unrevoke/unban), red (revoke/delete/ban/terminate),
+  // blue (update/change/extend), default surface for everything else.
+  if (/(\.issue|\.unrevoke|\.unban)/.test(action)) return "is-issue";
+  if (/(\.revoke|\.delete|\.ban|\.terminate)/.test(action)) return "is-revoke";
+  if (/(\.update|\.change|\.extend)/.test(action)) return "is-update";
+  return "";
+};
+
+const buildAuditQuery = (params) => {
+  const out = new URLSearchParams();
+  for (const k of ["action", "target_type", "target_id", "actor_email", "since", "until", "q", "page"]) {
+    const v = params.get(k);
+    if (v) out.set(k, v);
+  }
+  return out.toString();
+};
+
+const renderAudit = async (canvas, { params }) => {
+  // Preserve search-input focus across re-renders, same as licenses page.
+  const prevSearch = canvas.querySelector?.(".lic-search input");
+  const wasFocused = prevSearch && document.activeElement === prevSearch;
+  const caret = wasFocused ? prevSearch.selectionStart : null;
+
+  clear(canvas);
+  canvas.append(
+    el("div", { class: "admin-page-header" },
+      el("div", {},
+        el("h1", { class: "admin-page-title" }, "Audit log"),
+        el("p", { class: "admin-page-subtitle" }, "Every admin write across licenses, trials, users, and feedback."),
+      ),
+    ),
+  );
+
+  // Facets. Cache the first response so filter-toggle doesn't re-fetch.
+  if (!auditFacetsCache) {
+    try {
+      auditFacetsCache = await apiFetch("/admin/audit/facets");
+    } catch (_) {
+      auditFacetsCache = { actions: [], target_types: [], actors: [] };
+    }
+  }
+  const facets = auditFacetsCache;
+
+  const actionVal = params.get("action") || "";
+  const targetTypeVal = params.get("target_type") || "";
+  const targetIdVal = params.get("target_id") || "";
+  const sinceVal = params.get("since") || "";
+  const untilVal = params.get("until") || "";
+  const qVal = params.get("q") || "";
+  const page = parseInt(params.get("page") || "1", 10) || 1;
+  const limit = 50;
+
+  const setParam = (key, value) =>
+    updateHashParams((p) => {
+      if (value) p.set(key, value);
+      else p.delete(key);
+      p.delete("page");
+      p.delete("expand");
+    });
+
+  const actionSel = el("select", {
+    class: "audit-select", "aria-label": "Filter by action",
+    onchange: (e) => setParam("action", e.target.value),
+  });
+  actionSel.append(el("option", { value: "" }, "Any action"));
+  for (const a of facets.actions) {
+    actionSel.append(el("option", { value: a, ...(a === actionVal ? { selected: true } : {}) }, a));
+  }
+
+  const targetSel = el("select", {
+    class: "audit-select", "aria-label": "Filter by target type",
+    onchange: (e) => setParam("target_type", e.target.value),
+  });
+  targetSel.append(el("option", { value: "" }, "Any target type"));
+  for (const t of facets.target_types) {
+    targetSel.append(el("option", { value: t, ...(t === targetTypeVal ? { selected: true } : {}) }, t));
+  }
+
+  const targetIdInput = el("input", {
+    type: "search", class: "audit-date", placeholder: "Target id contains…",
+    value: targetIdVal, autocomplete: "off", spellcheck: "false",
+    "aria-label": "Filter by target id",
+  });
+  let targetDebounce = null;
+  targetIdInput.addEventListener("input", () => {
+    if (targetDebounce) clearTimeout(targetDebounce);
+    targetDebounce = setTimeout(() => setParam("target_id", targetIdInput.value.trim()), 250);
+  });
+
+  const sinceInput = el("input", {
+    type: "date", class: "audit-date", value: sinceVal.slice(0, 10),
+    "aria-label": "From date",
+    onchange: (e) => setParam("since", e.target.value ? new Date(e.target.value).toISOString() : ""),
+  });
+  const untilInput = el("input", {
+    type: "date", class: "audit-date", value: untilVal.slice(0, 10),
+    "aria-label": "Until date (exclusive)",
+    onchange: (e) => setParam("until", e.target.value ? new Date(e.target.value).toISOString() : ""),
+  });
+
+  const searchInput = el("input", {
+    type: "search", placeholder: "Search target / action / details…",
+    value: qVal, autocomplete: "off", spellcheck: "false",
+    "aria-label": "Free-text search",
+  });
+  let searchDebounce = null;
+  searchInput.addEventListener("input", () => {
+    if (searchDebounce) clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => setParam("q", searchInput.value.trim()), 250);
+  });
+
+  const hasAnyFilter = !!(actionVal || targetTypeVal || targetIdVal || sinceVal || untilVal || qVal);
+  const clearBtn = el("button", {
+    class: "audit-clear", type: "button",
+    onclick: () => updateHashParams((p) => {
+      for (const k of ["action", "target_type", "target_id", "since", "until", "q", "page", "expand"]) p.delete(k);
+    }),
+  }, "Clear filters");
+
+  canvas.append(
+    el("div", { class: "audit-toolbar" },
+      el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+      actionSel,
+      targetSel,
+      targetIdInput,
+      sinceInput,
+      untilInput,
+      hasAnyFilter ? clearBtn : null,
+    ),
+  );
+
+  if (wasFocused) {
+    searchInput.focus();
+    if (caret != null) {
+      try { searchInput.setSelectionRange(caret, caret); } catch (_) { /* noop */ }
+    }
+  }
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading audit log…"));
+
+  let data;
+  try {
+    const qs = buildAuditQuery(params);
+    data = await apiFetch(`/admin/audit${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load audit log: ${err.message || err}`));
+    return;
+  }
+
+  clear(tableMount);
+  tableMount.append(renderAuditTable(data, { page, limit, expand: params.get("expand") || "" }));
+};
+
+const renderAuditTable = (data, { page, limit, expand }) => {
+  const card = el("div", { class: "lic-table-card" });
+
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No audit events match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const table = el("table", { class: "lic-table" });
+  table.append(
+    el("thead", {},
+      el("tr", {},
+        el("th", {}, "When"),
+        el("th", {}, "Actor"),
+        el("th", {}, "Action"),
+        el("th", {}, "Target"),
+      ),
+    ),
+  );
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    const isExpanded = expand === row.id;
+    const tr = el("tr", {
+      tabindex: "0",
+      onclick: () => updateHashParams((p) => {
+        if (isExpanded) p.delete("expand");
+        else p.set("expand", row.id);
+      }),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          updateHashParams((p) => {
+            if (isExpanded) p.delete("expand");
+            else p.set("expand", row.id);
+          });
+        }
+      },
+    });
+    tr.append(
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.created_at))),
+      el("td", {}, el("span", { class: "lic-meta" }, truncateEmail(row.actor_email, 24))),
+      el("td", {}, el("span", { class: `audit-action ${auditActionClass(row.action)}` }, fmtAuditAction(row.action))),
+      el("td", {}, renderAuditTargetCell(row)),
+    );
+    tbody.append(tr);
+    if (isExpanded) tbody.append(renderAuditDetailsRow(row));
+  }
+  table.append(tbody);
+  card.append(table);
+  return wrapWithPagination(card, data, { page, limit });
+};
+
+const renderAuditTargetCell = (row) => {
+  const cell = el("span", { class: "audit-target" });
+  cell.append(el("span", { class: "audit-target-type" }, row.target_type));
+  // Cross-link to the resource page when one exists. Licenses pivot to
+  // the licenses list with the drawer pre-opened.
+  if (row.target_type === "license") {
+    cell.append(
+      el("a", {
+        class: "audit-target-link",
+        href: `#/licenses?key=${encodeURIComponent(row.target_id)}`,
+        onclick: (e) => e.stopPropagation(),
+      }, row.target_id),
+    );
+  } else {
+    cell.append(el("span", {}, row.target_id));
+  }
+  return cell;
+};
+
+const renderAuditDetailsRow = (row) => {
+  let details = null;
+  if (row.details) {
+    try { details = JSON.parse(row.details); } catch (_) { details = row.details; }
+  }
+  let body;
+  if (details == null) {
+    body = el("div", { class: "audit-details-empty" }, "No details recorded for this event.");
+  } else {
+    const text = typeof details === "string" ? details : JSON.stringify(details, null, 2);
+    body = el("pre", { class: "audit-details-pre" }, text);
+  }
+  return el("tr", { class: "audit-row-details" },
+    el("td", { colspan: "4" },
+      el("div", { class: "lic-section-title" },
+        "Event ", row.id, " · ", fmtDateTime(row.created_at),
+      ),
+      body,
+    ),
+  );
+};
+
 // ── Coming-soon placeholder ───────────────────────────────────────────────
 
 const renderComingSoon = (canvas, label) => {
@@ -1569,6 +1893,10 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path === "/licenses") {
     lastLicensesFilterSig = licensesFilterSig(params);
     renderLicenses(canvas, { params });
+    return;
+  }
+  if (path === "/audit") {
+    renderAudit(canvas, { params });
     return;
   }
   renderComingSoon(canvas, title);
