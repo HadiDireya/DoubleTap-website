@@ -727,3 +727,200 @@ export const listLicensesByEmail = async (
   const { results } = await db.prepare(sql).bind(email).all<LahzaLicenseListRow>();
   return results ?? [];
 };
+
+// ── Activations page ──────────────────────────────────────────────────────
+// Cross-cut view of every (license_key, machine_id) pair. Two fraud signals
+// the page wants to surface:
+//   1. one machine_id appearing on ≥2 distinct license_keys — shared seat
+//      across customers (the "deactivate-and-reactivate-on-someone-else's-
+//      key" play, or somebody buying once then handing the key to friends).
+//   2. one license_key with many recent rapid activations — deactivate-loop
+//      abuse to dodge the per-key seat cap.
+//
+// LEFT JOIN with `licenses`: activations whose license rows live in the
+// website D1 (Gumroad) won't have a row here, so an INNER JOIN would
+// silently drop them. We surface them anyway with a null `email` so the
+// admin can spot a Gumroad-source machine sharing across customers too.
+
+export type ActivationAdminRow = {
+  id: number;
+  license_key: string;
+  machine_id: string;
+  activated_at: string; // ISO 8601 with Z
+  email: string | null; // null when license is Gumroad (lives in website D1)
+  license_revoked_at: string | null; // ISO when revoked, null when active OR Gumroad
+  // Distinct license_keys this machine_id has ever activated against. ≥2
+  // marks the row as "shared" — surfaced as a badge in the UI even when
+  // the filter is off, since it's the load-bearing fraud signal.
+  shared_count: number;
+};
+
+const activationSearchClause = (q: string | undefined) => {
+  if (!q || !q.trim()) return { sql: "", binds: [] as string[] };
+  const pat = `%${q.trim()}%`;
+  return {
+    sql: "AND (a.license_key LIKE ? OR a.machine_id LIKE ?)",
+    binds: [pat, pat],
+  };
+};
+
+const activationDateRangeClause = (sinceISO: string | null, untilISO: string | null) => {
+  const parts: string[] = [];
+  const binds: string[] = [];
+  if (sinceISO) {
+    parts.push("AND datetime(a.activated_at) >= datetime(?)");
+    binds.push(sinceISO);
+  }
+  if (untilISO) {
+    parts.push("AND datetime(a.activated_at) < datetime(?)");
+    binds.push(untilISO);
+  }
+  return { sql: parts.join(" "), binds };
+};
+
+const activationPivotClause = (licenseKey?: string, machineId?: string) => {
+  const parts: string[] = [];
+  const binds: string[] = [];
+  if (licenseKey) {
+    parts.push("AND a.license_key = ?");
+    binds.push(licenseKey);
+  }
+  if (machineId) {
+    parts.push("AND a.machine_id = ?");
+    binds.push(machineId);
+  }
+  return { sql: parts.join(" "), binds };
+};
+
+// "Shared" toggle restricts to activations whose machine_id appears on ≥2
+// distinct license_keys. EXISTS subquery is materially cheaper than a
+// `GROUP BY HAVING COUNT(DISTINCT) >= 2` for this 2-distinct check —
+// SQLite can short-circuit on the first row it finds with a different key.
+const activationSharedClause = (sharedOnly: boolean) =>
+  sharedOnly
+    ? `AND EXISTS (
+         SELECT 1 FROM activations a2
+         WHERE a2.machine_id = a.machine_id AND a2.license_key != a.license_key
+       )`
+    : "";
+
+export const listActivationsAdmin = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    sinceISO?: string | null;
+    untilISO?: string | null;
+    sharedOnly?: boolean;
+    licenseKey?: string;
+    machineId?: string;
+    limit?: number;
+    offset?: number;
+  },
+): Promise<ActivationAdminRow[]> => {
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  const offset = Math.max(opts.offset ?? 0, 0);
+  const search = activationSearchClause(opts.q);
+  const range = activationDateRangeClause(opts.sinceISO ?? null, opts.untilISO ?? null);
+  const pivot = activationPivotClause(opts.licenseKey, opts.machineId);
+  const shared = activationSharedClause(opts.sharedOnly === true);
+
+  const sql = `
+    SELECT
+      a.id,
+      a.license_key,
+      a.machine_id,
+      ${ISO}a.activated_at) AS activated_at,
+      l.email AS email,
+      CASE WHEN l.revoked_at IS NULL THEN NULL ELSE ${ISO}l.revoked_at) END AS license_revoked_at,
+      (SELECT COUNT(DISTINCT a2.license_key) FROM activations a2 WHERE a2.machine_id = a.machine_id) AS shared_count
+    FROM activations a
+    LEFT JOIN licenses l ON l.license_key = a.license_key
+    WHERE 1 = 1
+      ${search.sql}
+      ${range.sql}
+      ${pivot.sql}
+      ${shared}
+    ORDER BY datetime(a.activated_at) DESC
+    LIMIT ? OFFSET ?`;
+
+  const { results } = await db
+    .prepare(sql)
+    .bind(...search.binds, ...range.binds, ...pivot.binds, limit, offset)
+    .all<ActivationAdminRow>();
+  return results ?? [];
+};
+
+export const countActivationsAdmin = async (
+  db: D1Database,
+  opts: {
+    q?: string;
+    sinceISO?: string | null;
+    untilISO?: string | null;
+    sharedOnly?: boolean;
+    licenseKey?: string;
+    machineId?: string;
+  },
+): Promise<number> => {
+  const search = activationSearchClause(opts.q);
+  const range = activationDateRangeClause(opts.sinceISO ?? null, opts.untilISO ?? null);
+  const pivot = activationPivotClause(opts.licenseKey, opts.machineId);
+  const shared = activationSharedClause(opts.sharedOnly === true);
+
+  const sql = `
+    SELECT COUNT(*) AS n FROM activations a
+    LEFT JOIN licenses l ON l.license_key = a.license_key
+    WHERE 1 = 1
+      ${search.sql}
+      ${range.sql}
+      ${pivot.sql}
+      ${shared}`;
+  const r = await db
+    .prepare(sql)
+    .bind(...search.binds, ...range.binds, ...pivot.binds)
+    .first<{ n: number }>();
+  return r?.n ?? 0;
+};
+
+// Aggregate counters surfaced as a banner above the list. `total` is just
+// `countActivationsAdmin` with the same filter set; the other two are
+// intentionally global (not filter-respecting) so the user can see the
+// fraud surface area at a glance regardless of what they're searching.
+export type ActivationStats = {
+  total_activations: number;
+  shared_machines: number;
+  hot_licenses: number;
+};
+
+export const activationStats = async (db: D1Database): Promise<ActivationStats> => {
+  const [total, shared, hot] = await Promise.all([
+    db.prepare("SELECT COUNT(*) AS n FROM activations").first<{ n: number }>(),
+    // Distinct machine_ids that touch ≥2 license_keys. Same fraud signal
+    // the row-level shared_count surfaces; the count gives a top-of-page
+    // "N shared machines on file" hint.
+    db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM (
+           SELECT machine_id FROM activations
+           GROUP BY machine_id HAVING COUNT(DISTINCT license_key) >= 2
+         )`,
+      )
+      .first<{ n: number }>(),
+    // License keys with ≥3 activations in the last 7 days — the
+    // "deactivate-loop abuse" signal. Threshold is heuristic; tuned to
+    // skip the ordinary 1–2 install on a new Mac path.
+    db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM (
+           SELECT license_key FROM activations
+           WHERE datetime(activated_at) >= datetime('now', '-7 days')
+           GROUP BY license_key HAVING COUNT(*) >= 3
+         )`,
+      )
+      .first<{ n: number }>(),
+  ]);
+  return {
+    total_activations: total?.n ?? 0,
+    shared_machines: shared?.n ?? 0,
+    hot_licenses: hot?.n ?? 0,
+  };
+};
