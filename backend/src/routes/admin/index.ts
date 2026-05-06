@@ -4,6 +4,7 @@ import activations from "./activations";
 import audit from "./audit";
 import backup from "./backup";
 import dashboard from "./dashboard";
+import feedback from "./feedback";
 import licenses from "./licenses";
 import trials from "./trials";
 import users from "./users";
@@ -34,6 +35,7 @@ admin.route("/licenses", licenses);
 admin.route("/trials", trials);
 admin.route("/users", users);
 admin.route("/activations", activations);
+admin.route("/feedback", feedback);
 admin.route("/audit", audit);
 admin.route("/backup", backup);
 
