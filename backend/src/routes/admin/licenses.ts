@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { getDb } from "../../db/client";
 import { adminAuditLog, gumroadLicense, user } from "../../db/schema";
 import { writeAudit } from "../../lib/audit";
+import { parsePositiveInt } from "../../lib/query";
 import {
   countLahzaLicenses,
   deleteActivationById,
@@ -60,11 +61,6 @@ const parseStatus = (raw: string | undefined): "active" | "revoked" | "all" => {
   return "all";
 };
 
-const parsePositiveInt = (raw: string | undefined, fallback: number, max: number) => {
-  const n = parseInt(raw ?? "", 10);
-  if (!Number.isFinite(n) || n < 1) return fallback;
-  return Math.min(n, max);
-};
 
 // ── Common merged list row shape ──────────────────────────────────────────
 // Both sources flatten into the same JSON for the frontend table. Gumroad
