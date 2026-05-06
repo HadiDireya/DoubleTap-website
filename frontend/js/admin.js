@@ -219,6 +219,50 @@ const demoFixture = (path) => {
       ],
     };
   }
+  if (path.startsWith("/admin/users/")) {
+    const id = decodeURIComponent(path.slice("/admin/users/".length).split("?")[0]);
+    const now = Date.now();
+    return {
+      id,
+      name: "Alice Demo",
+      email: "alice@example.com",
+      email_verified: true,
+      image: null,
+      created_at: new Date(now - 90 * 86400_000).toISOString(),
+      updated_at: new Date(now - 5 * 86400_000).toISOString(),
+      licenses: {
+        gumroad: [
+          { license_key: "GR-OLD1234-EFGH5678", product_id: "abc", sale_id: "sale_old",
+            issued_at: new Date(now - 60 * 86400_000).toISOString() },
+        ],
+        lahza: [
+          { license_key: "LZ-AB12-CD34-EF56-GH78", email: "alice@example.com",
+            max_uses: 2, tx_reference: "dt_demo", issued_at: new Date(now - 14 * 86400_000).toISOString(),
+            revoked_at: null, active_activations: 1 },
+        ],
+      },
+      feedback: {
+        total: 3,
+        recent: [
+          { id: "p1", type: "feature", title: "Per-app trigger overrides", status: "suggested",
+            created_at: new Date(now - 7 * 86400_000).toISOString() },
+        ],
+      },
+      audit: [],
+    };
+  }
+  if (path.startsWith("/admin/users")) {
+    const now = Date.now();
+    const rows = [
+      { id: "u_alice", name: "Alice Demo", email: "alice@example.com", email_verified: true,
+        image: null, created_at: new Date(now - 90 * 86400_000).toISOString(), gumroad_license_count: 1 },
+      { id: "u_bob", name: "Bob Tester", email: "bob@example.com", email_verified: true,
+        image: null, created_at: new Date(now - 30 * 86400_000).toISOString(), gumroad_license_count: 0 },
+      { id: "u_charlie", name: "Charlie Recent", email: "charlie@example.com", email_verified: false,
+        image: null, created_at: new Date(now - 2 * 86400_000).toISOString(), gumroad_license_count: 0 },
+    ];
+    return { rows, page: 1, limit: 50, total: rows.length };
+  }
   if (path.startsWith("/admin/trials/")) {
     const suffix = path.slice("/admin/trials/".length).split("?")[0];
     // Action endpoints (PATCH /:id/extend, /:id/terminate) — return ok.
@@ -263,8 +307,9 @@ const demoFixture = (path) => {
         "license.revoke", "license.unrevoke", "license.issue_comp",
         "license.update_max_uses", "license.change_email", "license.resend_email",
         "activation.free", "trial.extend", "trial.terminate",
+        "user.ban", "user.unban", "user.delete", "user.change_email",
       ],
-      target_types: ["license", "trial"],
+      target_types: ["license", "trial", "user"],
       actors: [ADMIN_EMAIL],
     };
   }
@@ -467,7 +512,7 @@ const renderGate = (root, kind) => {
 const NAV_ITEMS = [
   { href: "#/", id: "dashboard", icon: "dashboard", label: "Dashboard" },
   { href: "#/licenses", id: "licenses", icon: "key", label: "Licenses" },
-  { href: "#/customers", id: "customers", icon: "users", label: "Customers", soon: true },
+  { href: "#/customers", id: "customers", icon: "users", label: "Customers" },
   { href: "#/trials", id: "trials", icon: "clock", label: "Trials" },
   { href: "#/activations", id: "activations", icon: "activity", label: "Activations", soon: true },
   { href: "#/feedback", id: "feedback", icon: "message", label: "Feedback", soon: true },
@@ -1590,6 +1635,402 @@ const openIssueCompDialog = () => {
   setTimeout(() => emailInput.focus(), 0);
 };
 
+// ── Customers (users) page ────────────────────────────────────────────────
+//
+// Routing:
+//   #/customers              → list (default)
+//   #/customers?q=…          → search on name + email
+//   #/customers?since=…      → joined on or after, ISO 8601
+//   #/customers?until=…      → joined before (exclusive)
+//   #/customers?u=<userId>   → list + open detail drawer
+//
+// v1 is read-only. The drawer shows linked Gumroad licenses (hard userId
+// FK) and Lahza/comp licenses (soft email match — see backend
+// listLicensesByEmail). Write actions (ban / delete / change-email) are
+// deferred to a later PR: ban needs a `banned` column on `user` (no
+// migration shipped yet); delete cascades sessions+gumroad_license+
+// feedback but leaves Lahza/comp orphaned in LICENSE_DB; change-email
+// needs to coordinate with Better Auth's `account` rows. None of these
+// are urgent enough to justify the schema/coordination work today.
+
+let customersDrawerEl = null;
+let customersDrawerBackdrop = null;
+let customersDrawerLoadingId = null;
+let lastCustomersFilterSig = null;
+const customersFilterSig = (params) =>
+  [params.get("q") ?? "", params.get("since") ?? "",
+   params.get("until") ?? "", params.get("page") ?? ""].join("|");
+
+const buildCustomersQuery = (params) => {
+  const out = new URLSearchParams();
+  for (const k of ["q", "since", "until", "page"]) {
+    const v = params.get(k);
+    if (v) out.set(k, v);
+  }
+  return out.toString();
+};
+
+const renderCustomers = async (canvas, { params }) => {
+  const focusedSelector = (() => {
+    const a = document.activeElement;
+    if (!a || !canvas.contains(a)) return null;
+    if (a.matches?.(".lic-search input")) return ".lic-search input";
+    return null;
+  })();
+  const caret = focusedSelector ? document.activeElement.selectionStart : null;
+
+  clear(canvas);
+  canvas.append(
+    el("div", { class: "admin-page-header" },
+      el("div", {},
+        el("h1", { class: "admin-page-title" }, "Customers"),
+        el("p", { class: "admin-page-subtitle" },
+          "Signed-up accounts and their linked licenses, trials, and feedback."),
+      ),
+    ),
+  );
+
+  const q = params.get("q") ?? "";
+  const since = params.get("since") ?? "";
+  const until = params.get("until") ?? "";
+  const page = parseInt(params.get("page") ?? "1", 10) || 1;
+  const limit = 50;
+
+  const setParam = (key, value) => updateHashParams((p) => {
+    if (value) p.set(key, value);
+    else p.delete(key);
+    p.delete("page");
+  });
+
+  const searchInput = el("input", {
+    type: "search",
+    placeholder: "Search by name or email…",
+    value: q,
+    autocomplete: "off",
+    spellcheck: "false",
+    "aria-label": "Search customers",
+  });
+  let debounce = null;
+  searchInput.addEventListener("input", () => {
+    if (debounce) clearTimeout(debounce);
+    debounce = setTimeout(() => setParam("q", searchInput.value.trim()), 250);
+  });
+
+  const sinceInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(since),
+    "aria-label": "Joined on or after",
+    onchange: (e) => setParam("since", localMidnightISO(e.target.value)),
+  });
+  const untilInput = el("input", {
+    type: "date", class: "audit-input", value: dateInputValueFromISO(until),
+    "aria-label": "Joined before (exclusive)",
+    onchange: (e) => setParam("until", localMidnightISO(e.target.value)),
+  });
+
+  canvas.append(
+    el("div", { class: "lic-toolbar" },
+      el("div", { class: "lic-search" }, icon("search", 16), searchInput),
+      sinceInput,
+      untilInput,
+    ),
+  );
+
+  if (focusedSelector) {
+    const restored = canvas.querySelector(focusedSelector);
+    if (restored) {
+      restored.focus();
+      if (caret != null) {
+        try { restored.setSelectionRange(caret, caret); } catch (_) { /* type=search may not support setSelectionRange */ }
+      }
+    }
+  }
+
+  const tableMount = el("div");
+  canvas.append(tableMount);
+  tableMount.append(el("div", { class: "admin-loading" }, "Loading customers…"));
+
+  let data;
+  try {
+    const qs = buildCustomersQuery(params);
+    data = await apiFetch(`/admin/users${qs ? `?${qs}` : ""}`);
+  } catch (err) {
+    clear(tableMount);
+    tableMount.append(el("div", { class: "admin-error" }, `Couldn't load customers: ${err.message || err}`));
+    return;
+  }
+
+  clear(tableMount);
+  tableMount.append(renderCustomersTable(data, { page, limit }));
+
+  const openId = params.get("u");
+  if (openId) openCustomerDrawer(openId);
+  else if (customersDrawerEl) closeCustomerDrawer();
+};
+
+const renderCustomersTable = (data, { page, limit }) => {
+  const card = el("div", { class: "lic-table-card" });
+  if (!data.rows || data.rows.length === 0) {
+    card.append(el("div", { class: "lic-empty" }, "No customers match these filters."));
+    return wrapWithPagination(card, data, { page, limit });
+  }
+
+  const table = el("table", { class: "lic-table" });
+  table.append(
+    el("thead", {},
+      el("tr", {},
+        el("th", {}, "Name"),
+        el("th", {}, "Email"),
+        el("th", {}, "Joined"),
+        el("th", {}, "Verified"),
+        el("th", {}, "Gumroad"),
+      ),
+    ),
+  );
+
+  const tbody = el("tbody");
+  for (const row of data.rows) {
+    const tr = el("tr", {
+      tabindex: "0",
+      onclick: () => openCustomerDrawer(row.id),
+      onkeydown: (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCustomerDrawer(row.id); }
+      },
+    });
+    tr.append(
+      el("td", {}, el("span", { class: "lic-meta" }, row.name || "—")),
+      el("td", {}, el("span", { class: "lic-email" }, truncateEmail(row.email, 36))),
+      el("td", {}, el("span", { class: "lic-meta" }, fmtRelative(row.created_at))),
+      el("td", {}, row.email_verified
+        ? el("span", { class: "lic-badge status-active" }, "VERIFIED")
+        : el("span", { class: "lic-badge status-expired" }, "PENDING")),
+      el("td", {}, el("span", { class: "lic-meta" },
+        row.gumroad_license_count > 0 ? String(row.gumroad_license_count) : "—")),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  card.append(table);
+  return wrapWithPagination(card, data, { page, limit });
+};
+
+const closeCustomerDrawer = () => {
+  if (!customersDrawerEl) return;
+  customersDrawerEl.classList.remove("is-open");
+  customersDrawerBackdrop?.classList.remove("is-open");
+  const { path, params } = parseHash();
+  if (params.has("u")) {
+    params.delete("u");
+    const qs = params.toString();
+    history.replaceState(null, "", `#${path}${qs ? `?${qs}` : ""}`);
+  }
+  // Local capture so a fresh open within the close animation doesn't get
+  // torn down here — see closeDrawer for the canonical note.
+  const elToRemove = customersDrawerEl;
+  const backdropToRemove = customersDrawerBackdrop;
+  customersDrawerEl = null;
+  customersDrawerBackdrop = null;
+  setTimeout(() => {
+    elToRemove?.remove();
+    backdropToRemove?.remove();
+  }, 260);
+};
+
+const openCustomerDrawer = async (userId) => {
+  if (customersDrawerLoadingId === userId) return;
+  customersDrawerLoadingId = userId;
+
+  updateHashParams((p) => p.set("u", userId));
+
+  if (!customersDrawerEl) {
+    customersDrawerBackdrop = el("div", { class: "lic-drawer-backdrop", onclick: closeCustomerDrawer });
+    customersDrawerEl = el("aside", { class: "lic-drawer", role: "dialog", "aria-modal": "true" });
+    document.body.append(customersDrawerBackdrop, customersDrawerEl);
+    requestAnimationFrame(() => {
+      customersDrawerBackdrop.classList.add("is-open");
+      customersDrawerEl.classList.add("is-open");
+    });
+  }
+
+  clear(customersDrawerEl);
+  customersDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", { class: "lic-drawer-key" }, userId),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeCustomerDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+    el("div", { class: "lic-drawer-body" },
+      el("div", { class: "admin-loading" }, "Loading…"),
+    ),
+  );
+
+  let data;
+  try {
+    data = await apiFetch(`/admin/users/${encodeURIComponent(userId)}`);
+  } catch (err) {
+    clear(customersDrawerEl);
+    customersDrawerEl.append(
+      el("div", { class: "lic-drawer-header" },
+        el("div", { class: "lic-drawer-key" }, userId),
+        el("button", { class: "lic-drawer-close", type: "button", onclick: closeCustomerDrawer, "aria-label": "Close" },
+          icon("x-circle", 18)),
+      ),
+      el("div", { class: "lic-drawer-body" },
+        el("div", { class: "admin-error" }, `Couldn't load customer: ${err.message || err}`),
+      ),
+    );
+    if (customersDrawerLoadingId === userId) customersDrawerLoadingId = null;
+    return;
+  }
+
+  paintCustomerDrawer(data);
+  if (customersDrawerLoadingId === userId) customersDrawerLoadingId = null;
+};
+
+const paintCustomerDrawer = (data) => {
+  if (!customersDrawerEl) return;
+  clear(customersDrawerEl);
+
+  customersDrawerEl.append(
+    el("div", { class: "lic-drawer-header" },
+      el("div", {},
+        el("div", { class: "lic-drawer-key" },
+          el("span", {}, data.name || data.email || data.id),
+        ),
+        el("div", { class: "lic-drawer-badges" },
+          data.email_verified
+            ? el("span", { class: "lic-badge status-active" }, "VERIFIED")
+            : el("span", { class: "lic-badge status-expired" }, "PENDING"),
+        ),
+      ),
+      el("button", { class: "lic-drawer-close", type: "button", onclick: closeCustomerDrawer, "aria-label": "Close" },
+        icon("x-circle", 18)),
+    ),
+  );
+
+  const body = el("div", { class: "lic-drawer-body" });
+
+  const meta = el("dl", { class: "lic-meta-grid" });
+  const addMeta = (label, value) => {
+    if (value == null || value === "") return;
+    meta.append(el("dt", {}, label), el("dd", {}, value));
+  };
+  addMeta("Email", data.email);
+  addMeta("Name", data.name);
+  addMeta("Joined", fmtDateTime(data.created_at));
+  if (data.updated_at && data.updated_at !== data.created_at) {
+    addMeta("Updated", fmtDateTime(data.updated_at));
+  }
+  addMeta("User id", data.id);
+  body.append(
+    el("div", {},
+      el("div", { class: "lic-section-title" }, "Details"),
+      meta,
+    ),
+  );
+
+  // Linked licenses — Gumroad rows are joined hard via userId; Lahza/comp
+  // are matched on email, so the section header makes the join basis
+  // visible (a Lahza row showing here means email matches data.email).
+  const gumroad = data.licenses?.gumroad ?? [];
+  const lahza = data.licenses?.lahza ?? [];
+  const totalLicenses = gumroad.length + lahza.length;
+  const licensesSection = el("div", {},
+    el("div", { class: "lic-section-title" }, `Linked licenses (${totalLicenses})`),
+  );
+  if (totalLicenses === 0) {
+    licensesSection.append(el("div", { class: "lic-empty" }, "No licenses linked to this account."));
+  } else {
+    const list = el("div", { class: "lic-activations-list" });
+    for (const r of gumroad) {
+      list.append(renderLinkedLicenseRow({
+        license_key: r.license_key,
+        source: "gumroad",
+        meta: `Issued ${fmtDateTime(r.issued_at)} · Sale ${r.sale_id || "—"}`,
+        revoked: false,
+      }));
+    }
+    for (const r of lahza) {
+      const isComp = r.license_key.startsWith("LZ-COMP-");
+      list.append(renderLinkedLicenseRow({
+        license_key: r.license_key,
+        source: isComp ? "comp" : "lahza",
+        meta: `Issued ${fmtDateTime(r.issued_at)} · ${r.active_activations}/${r.max_uses ?? "—"} seats`,
+        revoked: !!r.revoked_at,
+      }));
+    }
+    licensesSection.append(list);
+  }
+  body.append(licensesSection);
+
+  // Feedback
+  const fb = data.feedback ?? { total: 0, recent: [] };
+  const feedbackSection = el("div", {},
+    el("div", { class: "lic-section-title" }, `Feedback (${fb.total})`),
+  );
+  if (fb.total === 0) {
+    feedbackSection.append(el("div", { class: "lic-empty" }, "No feedback posts."));
+  } else {
+    const list = el("div", { class: "lic-activations-list" });
+    for (const post of fb.recent) {
+      list.append(
+        el("div", { class: "lic-activation" },
+          el("div", {},
+            // Plain text title — no `lic-activation-machine` here; that
+            // class is for monospaced machine-id-shaped strings, not
+            // free-form post titles.
+            el("div", { class: "feedback-post-title" }, post.title),
+            el("div", { class: "lic-activation-meta" },
+              post.type, " · ", post.status, " · ", fmtRelative(post.created_at)),
+          ),
+        ),
+      );
+    }
+    feedbackSection.append(list);
+    if (fb.total > fb.recent.length) {
+      feedbackSection.append(
+        el("div", { class: "lic-activation-meta" },
+          `Showing ${fb.recent.length} of ${fb.total} — full feedback view coming in a later PR.`),
+      );
+    }
+  }
+  body.append(feedbackSection);
+
+  // Audit timeline
+  const auditSection = el("div", {},
+    el("div", { class: "lic-section-title" },
+      "Audit timeline",
+      " · ",
+      el("a", {
+        class: "audit-target-link",
+        href: `#/audit?target_type=user&target_id=${encodeURIComponent(data.id)}`,
+      }, "view in log"),
+    ),
+  );
+  if (!data.audit || data.audit.length === 0) {
+    auditSection.append(el("div", { class: "lic-empty" }, "No admin actions recorded yet."));
+  } else {
+    const list = el("div", { class: "lic-audit-list" });
+    for (const e of data.audit) list.append(renderAuditItem(e));
+    auditSection.append(list);
+  }
+  body.append(auditSection);
+
+  customersDrawerEl.append(body);
+};
+
+const renderLinkedLicenseRow = ({ license_key, source, meta, revoked }) =>
+  el("div", { class: "lic-activation" },
+    el("div", {},
+      el("a", {
+        class: "lic-pivot-link",
+        href: `#/licenses?key=${encodeURIComponent(license_key)}`,
+      }, license_key),
+      el("div", { class: "lic-activation-meta" }, meta),
+    ),
+    el("span", { class: `lic-badge src-${source}` }, source.toUpperCase()),
+    revoked ? el("span", { class: "lic-badge status-revoked" }, "REVOKED") : null,
+  );
+
 // ── Trials page ───────────────────────────────────────────────────────────
 //
 // Routing:
@@ -2479,11 +2920,13 @@ const route = (canvas, topbar, sidebarMount, session) => {
   // have to be cleaned up explicitly on navigation.
   if (path !== "/licenses" && drawerEl) closeDrawer();
   if (path !== "/trials" && trialsDrawerEl) closeTrialDrawer();
-  if (path !== "/licenses" && path !== "/trials") {
+  if (path !== "/customers" && customersDrawerEl) closeCustomerDrawer();
+  if (path !== "/licenses" && path !== "/trials" && path !== "/customers") {
     document.querySelectorAll(".lic-modal-backdrop").forEach((n) => n.remove());
   }
   if (path !== "/licenses") lastLicensesFilterSig = null;
   if (path !== "/trials") lastTrialsFilterSig = null;
+  if (path !== "/customers") lastCustomersFilterSig = null;
 
   // Hot-path: opening or closing the drawer mutates the hash (?key=…),
   // which fires hashchange and would otherwise re-run renderLicenses on
@@ -2499,6 +2942,12 @@ const route = (canvas, topbar, sidebarMount, session) => {
     const openMachine = params.get("machine");
     if (openMachine) openTrialDrawer(openMachine);
     else if (trialsDrawerEl) closeTrialDrawer();
+    return;
+  }
+  if (path === "/customers" && lastCustomersFilterSig === customersFilterSig(params)) {
+    const openId = params.get("u");
+    if (openId) openCustomerDrawer(openId);
+    else if (customersDrawerEl) closeCustomerDrawer();
     return;
   }
 
@@ -2532,6 +2981,11 @@ const route = (canvas, topbar, sidebarMount, session) => {
   if (path === "/trials") {
     lastTrialsFilterSig = trialsFilterSig(params);
     renderTrials(canvas, { params });
+    return;
+  }
+  if (path === "/customers") {
+    lastCustomersFilterSig = customersFilterSig(params);
+    renderCustomers(canvas, { params });
     return;
   }
   if (path === "/audit") {

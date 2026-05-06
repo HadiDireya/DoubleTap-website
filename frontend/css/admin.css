@@ -1300,6 +1300,16 @@ body.admin {
   word-break: break-all;
 }
 
+/* Free-form text title shown inside a `.lic-activation` row — feedback
+   post titles in the customers drawer use this. Sans-serif (matches the
+   surrounding text), normal size, primary text color. Distinct from
+   `.lic-activation-machine` which is mono and tuned for ID-shaped strings. */
+.feedback-post-title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  line-height: var(--line-height-snug);
+}
+
 /* Mono-styled cross-link used in drawer activation rows when the leading
    identifier (machine_id from licenses → trials, license_key from trials
    → licenses) pivots to another resource. Mirrors `.audit-target-link`'s
