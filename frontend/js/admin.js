@@ -3134,7 +3134,12 @@ const renderActivationsTable = (data, { page, limit }) => {
           `SHARED · ${row.shared_count}`)
       : el("span", { class: "lic-meta" }, "—");
 
-    const licenseCell = el("td", { class: "act-license-cell" }, licenseLink);
+    // Inner flex wrapper, NOT the <td> itself. Putting display:flex on a
+    // <td> drops its `display: table-cell` behavior and the row separator
+    // (`border-bottom` on the cell) stops rendering on the row baseline,
+    // producing a stair-stepped seam between rows. Keep the <td> a real
+    // cell; flex only the inner content.
+    const licenseInner = el("div", { class: "act-license-cell" }, licenseLink);
     // REVOKED if the license has a revoked_at timestamp. ORPHAN if the
     // license_key has no row in LICENSE_DB.licenses AND it's not a
     // Gumroad-prefixed key (which is *expected* to be missing because
@@ -3142,9 +3147,9 @@ const renderActivationsTable = (data, { page, limit }) => {
     // exclusive — a missing row can't carry a revoked_at — so we render
     // at most one badge.
     if (row.license_revoked_at) {
-      licenseCell.append(el("span", { class: "lic-badge status-revoked" }, "REVOKED"));
+      licenseInner.append(el("span", { class: "lic-badge status-revoked" }, "REVOKED"));
     } else if (row.license_missing) {
-      licenseCell.append(
+      licenseInner.append(
         el("span", {
           class: "lic-badge status-revoked",
           title: "License row no longer exists in LICENSE_DB. Likely a stale activation; consider freeing the seat.",
@@ -3152,7 +3157,7 @@ const renderActivationsTable = (data, { page, limit }) => {
       );
     }
     tr.append(
-      licenseCell,
+      el("td", {}, licenseInner),
       el("td", {}, machineLink),
       el("td", {}, el("span", { class: `lic-badge src-${row.source}` }, row.source.toUpperCase())),
       el("td", {}, el("span", { class: "lic-email" }, truncateEmail(row.email, 28))),
