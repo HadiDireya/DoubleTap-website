@@ -2022,3 +2022,13 @@ body.admin {
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+
+/* `.lic-pivot-link` defaults to a dotted underline because in the drawer
+   activation lists it sits next to plain text, where the underline is
+   the only affordance saying "this is clickable". Inside the activations
+   table, the dotted underline doubles up against the row separator and
+   reads as a stray solid line under one row. Drop it here; the cursor
+   + accent-on-hover remain as the affordance. */
+.lic-table .lic-pivot-link {
+  border-block-end: none;
+}
