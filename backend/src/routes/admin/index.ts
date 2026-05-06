@@ -6,6 +6,7 @@ import backup from "./backup";
 import dashboard from "./dashboard";
 import feedback from "./feedback";
 import licenses from "./licenses";
+import settings from "./settings";
 import trials from "./trials";
 import users from "./users";
 import type { Env } from "../../env";
@@ -38,5 +39,6 @@ admin.route("/activations", activations);
 admin.route("/feedback", feedback);
 admin.route("/audit", audit);
 admin.route("/backup", backup);
+admin.route("/settings", settings);
 
 export default admin;

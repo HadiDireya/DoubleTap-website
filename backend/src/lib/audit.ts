@@ -10,7 +10,15 @@ import type { Env } from "../env";
 // writeAudit only needs c.env.
 type AppContext = { env: Env };
 
-export type AuditTargetType = "license" | "trial" | "activation" | "user" | "feedback_post" | "feedback_comment" | "backup";
+export type AuditTargetType =
+  | "license"
+  | "trial"
+  | "activation"
+  | "user"
+  | "feedback_post"
+  | "feedback_comment"
+  | "backup"
+  | "settings";
 
 export type AuditAction =
   | "license.revoke"
@@ -33,7 +41,13 @@ export type AuditAction =
   | "feedback.delete_comment"
   | "feedback.pin"
   | "feedback.unpin"
-  | "backup.trigger";
+  | "backup.trigger"
+  // settings.update_maintenance is reserved for the maintenance-mode
+  // toggle once the admin_settings migration lands. PR12 ships the
+  // settings page read-only (no admin_settings table yet) — wiring this
+  // up is purely additive: add the migration + Drizzle table + a PATCH
+  // handler that calls writeAudit({action: "settings.update_maintenance"}).
+  | "settings.update_maintenance";
 
 export const writeAudit = async (
   c: AppContext,
