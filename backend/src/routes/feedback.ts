@@ -22,8 +22,8 @@ import {
   type Status,
 } from "../lib/auth-helpers";
 import type { DB } from "../db/client";
+import type { D1Database } from "@cloudflare/workers-types";
 import type { Env } from "../env";
-import { findActiveBuyerEmails } from "../lib/license-db";
 
 type PublicAuthor = {
   id: string;
@@ -64,65 +64,98 @@ const escapeHtml = (s: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// Resolve which of a known set of user IDs count as verified buyers.
-// Scoped to the authors actually visible in the response so we don't
-// scan either license table in full on every request.
+// Resolve which of a known set of user IDs are verified buyers. Scoped
+// to the authors actually visible in the response so we don't scan the
+// full buyer surface on every request.
 //
-// Three independent paths — first match wins, all OR'd together:
-//   1) Direct gumroad link — `gumroad_license.userId` is the user's
-//      (set when the user pastes their key via /gumroad/verify).
-//   2) Gumroad email match — `gumroad_license.email` (captured at
-//      verify time) matches the user's account email. Catches the
-//      "I bought + signed in with the same email but never linked
-//      the key" case.
-//   3) Lahza/comp email match — `licenses.email` (LICENSE_DB) matches
-//      the user's account email. Lahza is its own license source
-//      with no userId column; email is the only join key. This is
-//      the path that covers buyers whose only license is Lahza.
+// Three ways a user counts as verified:
+//   1) Direct Gumroad link — a `gumroad_license` row whose userId is
+//      theirs (set when the user explicitly verifies a key via
+//      /gumroad/verify).
+//   2) Gumroad email match — a `gumroad_license` whose stored purchaser
+//      email matches the user's account email. Catches buyers who
+//      bought via Gumroad but never linked the key.
+//   3) Lahza email match — a row in `LICENSE_DB.licenses` (the primary
+//      paid checkout) whose email matches and isn't revoked. Same
+//      lower()-on-both-sides pattern as `lib/license-db.ts:listLicensesByEmail`.
+//
+// Every IN-list is chunked at IN_CHUNK to stay clear of D1's
+// prepared-statement bind ceiling (~100). The list endpoint isn't
+// paginated, so a busy board can otherwise push past the cap.
+const IN_CHUNK = 90;
+
+const chunked = <T>(arr: T[], size: number): T[][] => {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+};
+
 const resolveVerifiedBuyers = async (
   db: DB,
-  env: Env,
+  ldb: D1Database,
   userIds: string[],
 ): Promise<Set<string>> => {
   if (userIds.length === 0) return new Set();
 
-  // Path 1 — direct Gumroad userId link.
-  const directRows = await db
-    .selectDistinct({ userId: gumroadLicense.userId })
-    .from(gumroadLicense)
-    .where(inArray(gumroadLicense.userId, userIds));
-  const verified = new Set(directRows.map((r) => r.userId));
+  const verified = new Set<string>();
+  for (const slice of chunked(userIds, IN_CHUNK)) {
+    const rows = await db
+      .selectDistinct({ userId: gumroadLicense.userId })
+      .from(gumroadLicense)
+      .where(inArray(gumroadLicense.userId, slice));
+    // SQL `IN` excludes NULL but the column type is now nullable —
+    // guard before adding so TypeScript stays happy.
+    for (const r of rows) {
+      if (r.userId) verified.add(r.userId);
+    }
+  }
 
-  // Resolve the visible authors' account emails once; reused by both
-  // email-match paths below.
-  const userRows = await db
-    .select({ id: user.id, email: user.email })
-    .from(user)
-    .where(inArray(user.id, userIds));
   const emailToUserId = new Map<string, string>();
-  for (const u of userRows) {
-    if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
+  for (const slice of chunked(userIds, IN_CHUNK)) {
+    const rows = await db
+      .select({ id: user.id, email: user.email })
+      .from(user)
+      .where(inArray(user.id, slice));
+    for (const u of rows) {
+      if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
+    }
   }
   if (emailToUserId.size === 0) return verified;
+
   const emails = [...emailToUserId.keys()];
 
-  // Path 2 — Gumroad email match (works once verifyLicense captured
-  // the purchaser email; older rows have email = NULL and are skipped
-  // by `inArray`).
-  const gumroadEmailRows = await db
-    .selectDistinct({ email: gumroadLicense.email })
-    .from(gumroadLicense)
-    .where(inArray(gumroadLicense.email, emails));
-  for (const r of gumroadEmailRows) {
-    const uid = r.email ? emailToUserId.get(r.email) : undefined;
-    if (uid) verified.add(uid);
+  for (const slice of chunked(emails, IN_CHUNK)) {
+    const rows = await db
+      .selectDistinct({ email: gumroadLicense.email })
+      .from(gumroadLicense)
+      .where(inArray(gumroadLicense.email, slice));
+    for (const r of rows) {
+      const uid = r.email ? emailToUserId.get(r.email) : undefined;
+      if (uid) verified.add(uid);
+    }
   }
 
-  // Path 3 — Lahza/comp email match (separate D1 binding).
-  const lahzaEmails = await findActiveBuyerEmails(env.LICENSE_DB, emails);
-  for (const lower of lahzaEmails) {
-    const uid = emailToUserId.get(lower);
-    if (uid) verified.add(uid);
+  // Cross-DB into LICENSE_DB. Defensive: a transient binding error
+  // shouldn't blank the badge for everyone — degrade to "no Lahza match
+  // this request" and log. Same policy as admin/users.ts uses around
+  // listLicensesByEmail.
+  try {
+    for (const slice of chunked(emails, IN_CHUNK)) {
+      const placeholders = slice.map(() => "?").join(",");
+      const { results } = await ldb
+        .prepare(
+          `SELECT DISTINCT lower(email) AS email FROM licenses
+           WHERE revoked_at IS NULL AND lower(email) IN (${placeholders})`,
+        )
+        .bind(...slice)
+        .all<{ email: string }>();
+      for (const r of results ?? []) {
+        const uid = r.email ? emailToUserId.get(r.email) : undefined;
+        if (uid) verified.add(uid);
+      }
+    }
+  } catch (err) {
+    console.error("resolveVerifiedBuyers_lahza_failed", (err as Error).message);
   }
 
   return verified;
@@ -206,7 +239,7 @@ feedback.get("/posts", async (c) => {
   // response. See resolveVerifiedBuyers' comment for the perf rationale.
   const buyers = await resolveVerifiedBuyers(
     db,
-    c.env,
+    c.env.LICENSE_DB,
     [...new Set(rows.map((r) => r.authorId))],
   );
 
@@ -319,7 +352,7 @@ feedback.get("/posts/:id", async (c) => {
   // Same `inArray`-bounded lookup as the list view.
   const buyers = await resolveVerifiedBuyers(
     db,
-    c.env,
+    c.env.LICENSE_DB,
     [...new Set([postRow.authorId, ...comments.map((c) => c.authorId)])],
   );
 

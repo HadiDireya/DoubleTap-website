@@ -82,7 +82,12 @@ users.get("/", async (c) => {
       .from(gumroadLicense)
       .where(inArray(gumroadLicense.userId, userIds))
       .groupBy(gumroadLicense.userId);
-    for (const r of counts) gumroadCounts.set(r.userId, r.n);
+    // userId is now nullable on gumroad_license (webhook'd rows have
+    // no user attached yet). The `inArray` filters to non-null in SQL,
+    // but the TS type stays `string | null` — guard before insert.
+    for (const r of counts) {
+      if (r.userId) gumroadCounts.set(r.userId, r.n);
+    }
   }
 
   return c.json({

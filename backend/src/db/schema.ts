@@ -55,12 +55,15 @@ export const gumroadLicense = sqliteTable(
   "gumroad_license",
   {
     id: text("id").primaryKey(),
-    userId: text("userId").notNull().references(() => user.id, { onDelete: "cascade" }),
+    // Nullable: webhook-received rows have no userId until the buyer
+    // signs in. The email column does the attribution; this column is
+    // set when /gumroad/verify links a row to a session.
+    userId: text("userId").references(() => user.id, { onDelete: "cascade" }),
     licenseKey: text("licenseKey").notNull().unique(),
     productId: text("productId").notNull(),
     saleId: text("saleId"),
-    // Gumroad purchaser email at verify time. Stored lowercase so a
-    // case-insensitive match is just an `inArray` away.
+    // Gumroad purchaser email. Stored lowercase so a case-insensitive
+    // match is just an `inArray` away.
     email: text("email"),
     verifiedAt: integer("verifiedAt", { mode: "timestamp" }).notNull(),
   },
