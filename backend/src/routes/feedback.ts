@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import { Resend } from "resend";
 import { getDb } from "../db/client";
 import {
@@ -11,15 +11,17 @@ import {
   user,
 } from "../db/schema";
 import {
-  FEEDBACK_TYPES,
+  STATUSES,
   getSession,
   isAdmin,
+  isFeedbackType,
+  isStatus,
   requireAdmin,
   requireSession,
-  STATUSES,
   type FeedbackType,
   type Status,
 } from "../lib/auth-helpers";
+import type { DB } from "../db/client";
 import type { Env } from "../env";
 
 type PublicAuthor = {
@@ -45,12 +47,12 @@ type PublicPost = {
 
 const feedback = new Hono<{ Bindings: Env }>();
 
-const isStatus = (s: string): s is Status => (STATUSES as readonly string[]).includes(s);
-const isFeedbackType = (s: string): s is FeedbackType =>
-  (FEEDBACK_TYPES as readonly string[]).includes(s);
-
-const validateTitle = (s: unknown) => typeof s === "string" && s.trim().length >= 3 && s.length <= 120;
-const validateBody = (s: unknown, min: number, max: number) =>
+// Type predicates so a successful validation narrows the input to `string`
+// at the call site — drops the `as string` casts that would otherwise
+// litter every handler.
+const validateTitle = (s: unknown): s is string =>
+  typeof s === "string" && s.trim().length >= 3 && s.length <= 120;
+const validateBody = (s: unknown, min: number, max: number): s is string =>
   typeof s === "string" && s.trim().length >= min && s.length <= max;
 
 const escapeHtml = (s: string) =>
@@ -60,6 +62,21 @@ const escapeHtml = (s: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+
+// Resolve which of a known set of user IDs are verified Gumroad buyers.
+// Scoped to the authors actually visible in the response — the previous
+// implementation pulled every Gumroad user_id into a Set on every request,
+// which scaled linearly with total buyers regardless of how many authors
+// the page rendered. With `inArray` the query now bounds to the page's
+// author surface area (≤ a few dozen rows in practice).
+const resolveVerifiedBuyers = async (db: DB, userIds: string[]): Promise<Set<string>> => {
+  if (userIds.length === 0) return new Set();
+  const rows = await db
+    .selectDistinct({ userId: gumroadLicense.userId })
+    .from(gumroadLicense)
+    .where(inArray(gumroadLicense.userId, userIds));
+  return new Set(rows.map((r) => r.userId));
+};
 
 const sendBugReportEmail = async (
   env: Env,
@@ -135,10 +152,11 @@ feedback.get("/posts", async (c) => {
     viewerVotes = new Set(votes.map((v) => v.postId));
   }
 
-  const buyers = new Set(
-    (await db.selectDistinct({ userId: gumroadLicense.userId }).from(gumroadLicense)).map(
-      (b) => b.userId,
-    ),
+  // Bound the buyer lookup to the authors that will appear in the
+  // response. See resolveVerifiedBuyers' comment for the perf rationale.
+  const buyers = await resolveVerifiedBuyers(
+    db,
+    [...new Set(rows.map((r) => r.authorId))],
   );
 
   const grouped: Record<Status, PublicPost[]> = {
@@ -246,10 +264,11 @@ feedback.get("/posts/:id", async (c) => {
     .where(eq(feedbackComment.postId, id))
     .orderBy(feedbackComment.createdAt);
 
-  const buyers = new Set(
-    (await db.selectDistinct({ userId: gumroadLicense.userId }).from(gumroadLicense)).map(
-      (b) => b.userId,
-    ),
+  // Authors visible on the page = post author + each comment author.
+  // Same `inArray`-bounded lookup as the list view.
+  const buyers = await resolveVerifiedBuyers(
+    db,
+    [...new Set([postRow.authorId, ...comments.map((c) => c.authorId)])],
   );
 
   const status: Status = isStatus(postRow.status) ? postRow.status : "suggested";
@@ -288,7 +307,9 @@ feedback.get("/posts/:id", async (c) => {
 // POST /feedback/posts — auth required. Optional type (default "feature").
 feedback.post("/posts", async (c) => {
   const session = await requireSession(c);
-  const body = await c.req.json().catch(() => ({}));
+  const body = await c.req
+    .json<{ title?: unknown; body?: unknown; type?: unknown }>()
+    .catch(() => ({} as { title?: unknown; body?: unknown; type?: unknown }));
   const type: FeedbackType =
     typeof body.type === "string" && isFeedbackType(body.type) ? body.type : "feature";
   if (typeof body.type === "string" && !isFeedbackType(body.type)) {
@@ -305,6 +326,7 @@ feedback.post("/posts", async (c) => {
   const db = getDb(c.env);
   const now = new Date();
   const id = crypto.randomUUID();
+  // Narrowed by validateTitle / validateBody above — these are strings.
   const title = body.title.trim();
   const text = body.body.trim();
   await db.insert(feedbackPost).values({
@@ -383,7 +405,9 @@ feedback.post("/posts/:id/vote", async (c) => {
 feedback.post("/posts/:id/comments", async (c) => {
   const session = await requireSession(c);
   const postId = c.req.param("id");
-  const body = await c.req.json().catch(() => ({}));
+  const body = await c.req
+    .json<{ body?: unknown }>()
+    .catch(() => ({} as { body?: unknown }));
   if (!validateBody(body.body, 1, 2000)) {
     throw new HTTPException(400, { message: "body_invalid" });
   }
@@ -413,7 +437,9 @@ feedback.post("/posts/:id/comments", async (c) => {
 feedback.patch("/posts/:id", async (c) => {
   await requireAdmin(c);
   const postId = c.req.param("id");
-  const body = await c.req.json().catch(() => ({}));
+  const body = await c.req
+    .json<{ status?: unknown; type?: unknown; title?: unknown; body?: unknown }>()
+    .catch(() => ({} as { status?: unknown; type?: unknown; title?: unknown; body?: unknown }));
 
   const updates: Partial<{
     status: Status;

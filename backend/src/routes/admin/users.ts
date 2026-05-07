@@ -1,17 +1,16 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, count, desc, eq, gte, inArray, like, lt, or, sql, type SQL } from "drizzle-orm";
+import { count, desc, eq, gte, inArray, like, lt, or, sql } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import {
-  adminAuditLog,
   feedbackPost,
   gumroadLicense,
   user,
 } from "../../db/schema";
-import { serializeAuditEntry } from "../../lib/audit";
-import { parseISODate, toISO } from "../../lib/dates";
+import { selectAuditByTarget, serializeAuditEntry } from "../../lib/audit";
+import { toISO } from "../../lib/dates";
 import { listLicensesByEmail } from "../../lib/license-db";
-import { parsePositiveInt } from "../../lib/query";
+import { composeAnd, parseISORange, parsePagination } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
@@ -20,16 +19,13 @@ const users = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 // ── GET / — paginated list ────────────────────────────────────────────────
 users.get("/", async (c) => {
   const q = (c.req.query("q") || "").trim();
-  const since = parseISODate(c.req.query("since"));
-  const until = parseISODate(c.req.query("until"));
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
+  const { since, until } = parseISORange(c);
   // Capped at 100 (not 200 like the other routes) because the gumroadCounts
   // fan-in below uses `inArray(userIds)` which expands into one bind per id,
   // and D1 prepared statements top out around 100 binds. 100 is still 2× the
   // default page size, so this only matters for someone hand-crafting a
   // ?limit= override; the default 50 leaves plenty of headroom.
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 100);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(c, { limitMax: 100 });
 
   const db = getDb(c.env);
 
@@ -41,7 +37,7 @@ users.get("/", async (c) => {
   // case-insensitive for both the ASCII and the Unicode cases, and stays
   // symmetric with `listLicensesByEmail`'s lower-on-both-sides join.
   const qLower = q.toLowerCase();
-  const filters: (SQL | undefined)[] = [
+  const where = composeAnd([
     q
       ? or(
           like(sql`lower(${user.name})`, `%${qLower}%`),
@@ -50,9 +46,7 @@ users.get("/", async (c) => {
       : undefined,
     since ? gte(user.createdAt, since) : undefined,
     until ? lt(user.createdAt, until) : undefined,
-  ];
-  const active = filters.filter((c): c is SQL => c !== undefined);
-  const where = active.length > 0 ? and(...active) : undefined;
+  ]);
 
   const [rows, totalRow] = await Promise.all([
     db
@@ -169,18 +163,7 @@ users.get("/:id", async (c) => {
         .from(feedbackPost)
         .where(eq(feedbackPost.userId, id))
         .then((r) => r[0]?.n ?? 0),
-      db
-        .select({
-          id: adminAuditLog.id,
-          actorEmail: adminAuditLog.actorEmail,
-          action: adminAuditLog.action,
-          details: adminAuditLog.details,
-          createdAt: adminAuditLog.createdAt,
-        })
-        .from(adminAuditLog)
-        .where(and(eq(adminAuditLog.targetType, "user"), eq(adminAuditLog.targetId, id)))
-        .orderBy(desc(adminAuditLog.createdAt))
-        .limit(50),
+      selectAuditByTarget(db, "user", id),
     ]);
 
   return c.json({

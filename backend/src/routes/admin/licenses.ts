@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, count, desc, eq, like, or } from "drizzle-orm";
+import { count, desc, eq, like, or } from "drizzle-orm";
 import { Resend } from "resend";
 import { getDb } from "../../db/client";
-import { adminAuditLog, gumroadLicense, user } from "../../db/schema";
-import { serializeAuditEntry, writeAudit } from "../../lib/audit";
+import { gumroadLicense, user } from "../../db/schema";
+import { selectAuditByTarget, serializeAuditEntry, writeAudit } from "../../lib/audit";
 import { toISO } from "../../lib/dates";
-import { parsePositiveInt } from "../../lib/query";
+import { parsePagination } from "../../lib/query";
 import {
   countLahzaLicenses,
   deleteActivationById,
@@ -26,11 +26,9 @@ import type { Env } from "../../env";
 
 const licenses = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 
-// Source classification (`Source` / `sourceFor`) lives in lib/license-db.ts
-// so this route, the activations route, and any future section that touches
-// the prefix convention all read from one place. Re-export the type alias
-// locally only for backwards-compat with existing call sites in this file.
-type Source = LicenseSource;
+// Source classification (`LicenseSource` / `sourceFor`) lives in
+// lib/license-db.ts so this route, the activations route, and any future
+// section that touches the prefix convention all read from one place.
 
 // Crockford base32 (no I/L/O/U) — same alphabet license-server uses for
 // paid Lahza keys, so admin-issued comps look visually consistent.
@@ -68,7 +66,7 @@ const parseStatus = (raw: string | undefined): "active" | "revoked" | "all" => {
 // `revoked_at` locally — Gumroad-side revocation is managed in Gumroad's
 // dashboard, not here.
 type ListRow = {
-  source: Source;
+  source: LicenseSource;
   license_key: string;
   email: string | null;
   max_uses: number | null;
@@ -89,15 +87,25 @@ licenses.get("/", async (c) => {
   // with one bind per license key, which would blow past the limit at 200.
   // Default page size is 50; 100 is still 2× the default for hand-crafted
   // ?limit= overrides.
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 100);
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(c, { limitMax: 100 });
 
   const db = getDb(c.env);
   const ldb = c.env.LICENSE_DB;
 
   const wantsLahza = source === "all" || source === "lahza" || source === "comp";
   const wantsGumroad = source === "all" || source === "gumroad";
+
+  // Build the Gumroad search predicate once: the rows query and the count
+  // query both filter on the same columns, so duplicating the `or(...)`
+  // builder was a clean way to drift the two on the next column add.
+  const trimmedQ = q.trim();
+  const gumroadConds = trimmedQ
+    ? or(
+        like(gumroadLicense.licenseKey, `%${trimmedQ}%`),
+        like(gumroadLicense.saleId, `%${trimmedQ}%`),
+        like(user.email, `%${trimmedQ}%`),
+      )
+    : undefined;
 
   // Strategy: pull up to (offset+limit) rows from each source, merge,
   // sort, then slice. Practical because the dataset is small (low
@@ -114,7 +122,11 @@ licenses.get("/", async (c) => {
   const SLAB_CAP = 5_000;
   const slabSize = Math.min(offset + limit, SLAB_CAP);
 
-  const lahzaSource = source === "comp" ? "comp" : source === "lahza" ? "lahza" : "all";
+  // listLahzaLicenses' source param doesn't accept "gumroad" — when the
+  // caller filters to gumroad, `wantsLahza` is false above so the Lahza
+  // branches short-circuit and this value is never used. Otherwise pass
+  // through.
+  const lahzaSource = source === "gumroad" ? "all" : source;
 
   const [lahzaRows, lahzaCount, gumroadRowsRaw, gumroadCount] = await Promise.all([
     wantsLahza
@@ -123,52 +135,30 @@ licenses.get("/", async (c) => {
     wantsLahza
       ? countLahzaLicenses(ldb, { q, source: lahzaSource, status })
       : Promise.resolve(0),
-    wantsGumroad
-      ? (async () => {
-          // Gumroad never has a local revoked_at — filtering for
-          // status=revoked excludes it entirely.
-          if (status === "revoked") return [];
-          const trimmed = q.trim();
-          const conds = trimmed
-            ? or(
-                like(gumroadLicense.licenseKey, `%${trimmed}%`),
-                like(gumroadLicense.saleId, `%${trimmed}%`),
-                like(user.email, `%${trimmed}%`),
-              )
-            : undefined;
-          return db
-            .select({
-              licenseKey: gumroadLicense.licenseKey,
-              productId: gumroadLicense.productId,
-              saleId: gumroadLicense.saleId,
-              verifiedAt: gumroadLicense.verifiedAt,
-              email: user.email,
-            })
-            .from(gumroadLicense)
-            .leftJoin(user, eq(user.id, gumroadLicense.userId))
-            .where(conds)
-            .orderBy(desc(gumroadLicense.verifiedAt))
-            .limit(slabSize);
-        })()
+    wantsGumroad && status !== "revoked"
+      ? // Gumroad never has a local revoked_at — filtering for
+        // status=revoked excludes it entirely.
+        db
+          .select({
+            licenseKey: gumroadLicense.licenseKey,
+            productId: gumroadLicense.productId,
+            saleId: gumroadLicense.saleId,
+            verifiedAt: gumroadLicense.verifiedAt,
+            email: user.email,
+          })
+          .from(gumroadLicense)
+          .leftJoin(user, eq(user.id, gumroadLicense.userId))
+          .where(gumroadConds)
+          .orderBy(desc(gumroadLicense.verifiedAt))
+          .limit(slabSize)
       : Promise.resolve([]),
-    wantsGumroad
-      ? (async () => {
-          if (status === "revoked") return 0;
-          const trimmed = q.trim();
-          const conds = trimmed
-            ? or(
-                like(gumroadLicense.licenseKey, `%${trimmed}%`),
-                like(gumroadLicense.saleId, `%${trimmed}%`),
-                like(user.email, `%${trimmed}%`),
-              )
-            : undefined;
-          const rows = await db
-            .select({ n: count() })
-            .from(gumroadLicense)
-            .leftJoin(user, eq(user.id, gumroadLicense.userId))
-            .where(conds);
-          return rows[0]?.n ?? 0;
-        })()
+    wantsGumroad && status !== "revoked"
+      ? db
+          .select({ n: count() })
+          .from(gumroadLicense)
+          .leftJoin(user, eq(user.id, gumroadLicense.userId))
+          .where(gumroadConds)
+          .then((rows) => rows[0]?.n ?? 0)
       : Promise.resolve(0),
   ]);
 
@@ -251,18 +241,7 @@ licenses.get("/:key", async (c) => {
 
   // Audit timeline is the same lookup for every source — entries are
   // tagged target_type='license' with target_id=license_key.
-  const auditP = db
-    .select({
-      id: adminAuditLog.id,
-      actorEmail: adminAuditLog.actorEmail,
-      action: adminAuditLog.action,
-      details: adminAuditLog.details,
-      createdAt: adminAuditLog.createdAt,
-    })
-    .from(adminAuditLog)
-    .where(and(eq(adminAuditLog.targetType, "license"), eq(adminAuditLog.targetId, licenseKey)))
-    .orderBy(desc(adminAuditLog.createdAt))
-    .limit(50);
+  const auditP = selectAuditByTarget(db, "license", licenseKey);
 
   const activationsP = listActivationsForKey(ldb, licenseKey);
 

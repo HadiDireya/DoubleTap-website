@@ -2,22 +2,13 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { createAuth } from "./auth";
+import { buildOrigins } from "./lib/origins";
 import admin from "./routes/admin";
 import feedback from "./routes/feedback";
 import gumroad from "./routes/gumroad";
 import type { Env } from "./env";
 
 const app = new Hono<{ Bindings: Env }>();
-
-// Localhost origins are added only in dev (env.DEV === "true") so a malicious
-// local server on a user's machine cannot make credentialed requests in prod.
-const buildOrigins = (env: Env) => {
-  const list = ["https://doubletap-app.com", "https://www.doubletap-app.com"];
-  if (env.DEV === "true") {
-    list.push("http://localhost:8000", "http://127.0.0.1:8000");
-  }
-  return list;
-};
 
 app.use("*", async (c, next) => {
   const middleware = cors({ origin: buildOrigins(c.env), credentials: true });

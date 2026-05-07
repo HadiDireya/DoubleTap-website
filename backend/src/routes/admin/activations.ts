@@ -1,12 +1,11 @@
 import { Hono } from "hono";
-import { parseISODate } from "../../lib/dates";
 import {
   activationStats,
   countActivationsAdmin,
   listActivationsAdmin,
   sourceFor,
 } from "../../lib/license-db";
-import { parsePositiveInt } from "../../lib/query";
+import { parseISORange, parsePagination } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
@@ -32,21 +31,18 @@ activations.get("/", async (c) => {
   const q = c.req.query("q") ?? "";
   // Same pre-stringified-ISO contract as trials/licenses — the SQL wraps
   // both sides in `datetime(...)` so the separator doesn't matter.
-  const since = parseISODate(c.req.query("since"))?.toISOString() ?? null;
-  const until = parseISODate(c.req.query("until"))?.toISOString() ?? null;
+  const { sinceISO, untilISO } = parseISORange(c);
   const sharedOnly = c.req.query("shared") === "1";
   const licenseKey = c.req.query("license_key") || undefined;
   const machineId = c.req.query("machine_id") || undefined;
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(c);
 
   const ldb = c.env.LICENSE_DB;
   const [rows, total, stats] = await Promise.all([
     listActivationsAdmin(ldb, {
       q,
-      sinceISO: since,
-      untilISO: until,
+      sinceISO,
+      untilISO,
       sharedOnly,
       licenseKey,
       machineId,
@@ -55,8 +51,8 @@ activations.get("/", async (c) => {
     }),
     countActivationsAdmin(ldb, {
       q,
-      sinceISO: since,
-      untilISO: until,
+      sinceISO,
+      untilISO,
       sharedOnly,
       licenseKey,
       machineId,

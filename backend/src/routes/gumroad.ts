@@ -11,7 +11,9 @@ const gumroad = new Hono<{ Bindings: Env }>();
 
 gumroad.post("/verify", async (c) => {
   const session = await requireSession(c);
-  const body = await c.req.json().catch(() => ({}));
+  const body = await c.req
+    .json<{ licenseKey?: unknown }>()
+    .catch(() => ({} as { licenseKey?: unknown }));
   const licenseKey = typeof body.licenseKey === "string" ? body.licenseKey.trim() : "";
   if (!licenseKey) {
     throw new HTTPException(400, { message: "license_key_required" });

@@ -1,4 +1,6 @@
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "../db/client";
+import type { DB } from "../db/client";
 import { adminAuditLog } from "../db/schema";
 import { toISO } from "./dates";
 import type { Env } from "../env";
@@ -39,8 +41,6 @@ export type AuditAction =
   | "feedback.update_status"
   | "feedback.delete_post"
   | "feedback.delete_comment"
-  | "feedback.pin"
-  | "feedback.unpin"
   | "backup.trigger"
   // settings.update_maintenance is reserved for the maintenance-mode
   // toggle once the admin_settings migration lands. PR12 ships the
@@ -70,6 +70,29 @@ export const writeAudit = async (
     createdAt: new Date(),
   });
 };
+
+// The detail-page audit timeline is the same shape across licenses, trials,
+// users, and feedback posts — newest-first, capped at 50, scoped to one
+// (target_type, target_id) pair. Centralised so adding a new target type
+// (or changing the timeline's column projection) is a one-line touch.
+export const selectAuditByTarget = (
+  db: DB,
+  targetType: AuditTargetType,
+  targetId: string,
+  limit = 50,
+) =>
+  db
+    .select({
+      id: adminAuditLog.id,
+      actorEmail: adminAuditLog.actorEmail,
+      action: adminAuditLog.action,
+      details: adminAuditLog.details,
+      createdAt: adminAuditLog.createdAt,
+    })
+    .from(adminAuditLog)
+    .where(and(eq(adminAuditLog.targetType, targetType), eq(adminAuditLog.targetId, targetId)))
+    .orderBy(desc(adminAuditLog.createdAt))
+    .limit(limit);
 
 // Serializes an audit row for the JSON response. `toISO` handles the
 // Date|number|string surface area that Drizzle exposes for timestamp

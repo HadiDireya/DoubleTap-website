@@ -1,10 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "../../db/client";
-import { adminAuditLog } from "../../db/schema";
-import { serializeAuditEntry, writeAudit } from "../../lib/audit";
-import { parseISODate } from "../../lib/dates";
+import { selectAuditByTarget, serializeAuditEntry, writeAudit } from "../../lib/audit";
 import {
   countTrialsAdmin,
   getTrial,
@@ -12,7 +9,7 @@ import {
   listTrialsAdmin,
   setTrialDeadline,
 } from "../../lib/license-db";
-import { parsePositiveInt } from "../../lib/query";
+import { parseISORange, parsePagination } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
@@ -29,17 +26,14 @@ trials.get("/", async (c) => {
   const status = parseStatus(c.req.query("status"));
   // listTrialsAdmin expects ISO strings (the SQL wraps them in datetime()
   // so the helper takes pre-stringified values rather than Date objects).
-  const since = parseISODate(c.req.query("since"))?.toISOString() ?? null;
-  const until = parseISODate(c.req.query("until"))?.toISOString() ?? null;
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
-  const offset = (page - 1) * limit;
+  const { sinceISO, untilISO } = parseISORange(c);
+  const { page, limit, offset } = parsePagination(c);
   const nowISO = new Date().toISOString();
 
   const ldb = c.env.LICENSE_DB;
   const [rows, total] = await Promise.all([
-    listTrialsAdmin(ldb, { q, status, sinceISO: since, untilISO: until, nowISO, limit, offset }),
-    countTrialsAdmin(ldb, { q, status, sinceISO: since, untilISO: until, nowISO }),
+    listTrialsAdmin(ldb, { q, status, sinceISO, untilISO, nowISO, limit, offset }),
+    countTrialsAdmin(ldb, { q, status, sinceISO, untilISO, nowISO }),
   ]);
 
   return c.json({
@@ -69,18 +63,7 @@ trials.get("/:machineId", async (c) => {
   const ldb = c.env.LICENSE_DB;
   const db = getDb(c.env);
 
-  const auditP = db
-    .select({
-      id: adminAuditLog.id,
-      actorEmail: adminAuditLog.actorEmail,
-      action: adminAuditLog.action,
-      details: adminAuditLog.details,
-      createdAt: adminAuditLog.createdAt,
-    })
-    .from(adminAuditLog)
-    .where(and(eq(adminAuditLog.targetType, "trial"), eq(adminAuditLog.targetId, machineId)))
-    .orderBy(desc(adminAuditLog.createdAt))
-    .limit(50);
+  const auditP = selectAuditByTarget(db, "trial", machineId);
 
   const [row, activations, audit] = await Promise.all([
     getTrial(ldb, machineId),

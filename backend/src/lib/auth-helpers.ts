@@ -1,9 +1,6 @@
 import type { HonoRequest } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { eq } from "drizzle-orm";
 import { createAuth } from "../auth";
-import { getDb } from "../db/client";
-import { gumroadLicense } from "../db/schema";
 import type { Env } from "../env";
 
 // All emails currently allowed admin access. Surfaced to the admin panel
@@ -28,6 +25,16 @@ export type Status = (typeof STATUSES)[number];
 
 export const FEEDBACK_TYPES = ["bug", "feature", "praise"] as const;
 export type FeedbackType = (typeof FEEDBACK_TYPES)[number];
+
+// Type guards live next to the tuples they validate so the public route,
+// the admin route, and any future caller share one definition. The cast
+// to `readonly string[]` is unfortunate but unavoidable: `.includes()`
+// on a `readonly Status[]` requires its argument to already be a Status.
+export const isStatus = (s: string): s is Status =>
+  (STATUSES as readonly string[]).includes(s);
+
+export const isFeedbackType = (s: string): s is FeedbackType =>
+  (FEEDBACK_TYPES as readonly string[]).includes(s);
 
 // Structural minimal type so any Hono sub-app can pass its context here
 // regardless of how it parameterised Variables (the Variables generic is
@@ -60,13 +67,3 @@ export const requireAdmin = async (c: AppContext) => {
 
 export const isAdmin = (email: string | null | undefined) =>
   !!email && ADMIN_EMAILS_LOWER.includes(email.toLowerCase());
-
-export const verifiedBuyerSet = async (c: AppContext, userIds: string[]) => {
-  if (userIds.length === 0) return new Set<string>();
-  const db = getDb(c.env);
-  const rows = await db
-    .select({ userId: gumroadLicense.userId })
-    .from(gumroadLicense);
-  const all = new Set(rows.map((r) => r.userId));
-  return new Set(userIds.filter((id) => all.has(id)));
-};

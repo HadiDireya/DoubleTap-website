@@ -1,20 +1,19 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { and, count, desc, eq, gte, inArray, like, lt, or, sql, type SQL } from "drizzle-orm";
+import { count, desc, eq, gte, inArray, like, lt, or, sql } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import {
-  adminAuditLog,
   feedbackComment,
   feedbackPost,
   feedbackVote,
   user,
 } from "../../db/schema";
-import { serializeAuditEntry, writeAudit } from "../../lib/audit";
-import { parseISODate, toISO } from "../../lib/dates";
-import { parsePositiveInt } from "../../lib/query";
+import { selectAuditByTarget, serializeAuditEntry, writeAudit } from "../../lib/audit";
+import { toISO } from "../../lib/dates";
+import { composeAnd, parseISORange, parsePagination } from "../../lib/query";
 import {
-  FEEDBACK_TYPES,
-  STATUSES,
+  isFeedbackType,
+  isStatus,
   type FeedbackType,
   type Status,
 } from "../../lib/auth-helpers";
@@ -25,16 +24,11 @@ import type { Env } from "../../env";
 // column to `feedback_post` requires a SQL migration in
 // backend/migrations/, and migration creation was outside the permitted
 // edit scope for this PR. Pin/unpin remains on the deferred-forks list and
-// will land alongside the next migration that touches feedback. The audit
-// actions `feedback.pin` / `feedback.unpin` already exist in the union
-// (added pre-emptively when the union was hoisted) so wiring them up later
-// is purely additive — no audit-log rewrite needed.
+// will land alongside the next migration that touches feedback. Audit
+// actions (`feedback.pin` / `feedback.unpin`) will be added to the
+// AuditAction union in `lib/audit.ts` when the handler ships.
 
 const feedback = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
-
-const isStatus = (s: string): s is Status => (STATUSES as readonly string[]).includes(s);
-const isFeedbackType = (s: string): s is FeedbackType =>
-  (FEEDBACK_TYPES as readonly string[]).includes(s);
 
 const parseStatusFilter = (raw: string | undefined): Status | "all" => {
   if (raw && isStatus(raw)) return raw;
@@ -62,19 +56,16 @@ feedback.get("/", async (c) => {
   const q = (c.req.query("q") || "").trim();
   const type = parseTypeFilter(c.req.query("type"));
   const status = parseStatusFilter(c.req.query("status"));
-  const since = parseISODate(c.req.query("since"));
-  const until = parseISODate(c.req.query("until"));
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
+  const { since, until } = parseISORange(c);
   // Cap at 100 (not 200): the per-row vote/comment-count fan-in below
   // would otherwise risk D1's prepared-statement bind ceiling on giant
   // pages. Default 50 is still 2× the typical query.
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 100);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(c, { limitMax: 100 });
 
   const db = getDb(c.env);
   const qLower = q.toLowerCase();
 
-  const filters: (SQL | undefined)[] = [
+  const where = composeAnd([
     q
       ? or(
           like(sql`lower(${feedbackPost.title})`, `%${qLower}%`),
@@ -85,9 +76,7 @@ feedback.get("/", async (c) => {
     status !== "all" ? eq(feedbackPost.status, status) : undefined,
     since ? gte(feedbackPost.createdAt, since) : undefined,
     until ? lt(feedbackPost.createdAt, until) : undefined,
-  ];
-  const active = filters.filter((c): c is SQL => c !== undefined);
-  const where = active.length > 0 ? and(...active) : undefined;
+  ]);
 
   const [rows, totalRow] = await Promise.all([
     db
@@ -210,23 +199,7 @@ feedback.get("/:id", async (c) => {
       .from(feedbackVote)
       .where(eq(feedbackVote.postId, id))
       .then((r) => r[0]?.n ?? 0),
-    db
-      .select({
-        id: adminAuditLog.id,
-        actorEmail: adminAuditLog.actorEmail,
-        action: adminAuditLog.action,
-        details: adminAuditLog.details,
-        createdAt: adminAuditLog.createdAt,
-      })
-      .from(adminAuditLog)
-      .where(
-        and(
-          eq(adminAuditLog.targetType, "feedback_post"),
-          eq(adminAuditLog.targetId, id),
-        ),
-      )
-      .orderBy(desc(adminAuditLog.createdAt))
-      .limit(50),
+    selectAuditByTarget(db, "feedback_post", id),
   ]);
 
   return c.json({
@@ -246,12 +219,12 @@ feedback.get("/:id", async (c) => {
         }
       : null,
     vote_count: voteCountRow,
-    comments: comments.map((c) => ({
-      id: c.id,
-      body: c.body,
-      created_at: toISO(c.createdAt),
-      author: c.authorId
-        ? { id: c.authorId, name: c.authorName, email: c.authorEmail }
+    comments: comments.map((cm) => ({
+      id: cm.id,
+      body: cm.body,
+      created_at: toISO(cm.createdAt),
+      author: cm.authorId
+        ? { id: cm.authorId, name: cm.authorName, email: cm.authorEmail }
         : null,
     })),
     audit: audit.map(serializeAuditEntry),

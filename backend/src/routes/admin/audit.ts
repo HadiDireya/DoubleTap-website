@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { and, count, desc, eq, gte, like, lt, or, type SQL } from "drizzle-orm";
+import { count, desc, eq, gte, like, lt, or } from "drizzle-orm";
 import { getDb } from "../../db/client";
 import { adminAuditLog } from "../../db/schema";
-import { parseISODate, toISO } from "../../lib/dates";
-import { parsePositiveInt } from "../../lib/query";
+import { toISO } from "../../lib/dates";
+import { composeAnd, parseISORange, parsePagination } from "../../lib/query";
 import type { AdminVariables } from "./index";
 import type { Env } from "../../env";
 
@@ -29,20 +29,16 @@ audit.get("/", async (c) => {
   const targetType = c.req.query("target_type") || "";
   const targetId = c.req.query("target_id") || "";
   const actorEmail = c.req.query("actor_email") || "";
-  const since = parseISODate(c.req.query("since"));
-  const until = parseISODate(c.req.query("until"));
+  const { since, until } = parseISORange(c);
   const q = (c.req.query("q") || "").trim();
-  const page = parsePositiveInt(c.req.query("page"), 1, 1_000_000);
-  const limit = parsePositiveInt(c.req.query("limit"), 50, 200);
-  const offset = (page - 1) * limit;
+  const { page, limit, offset } = parsePagination(c);
 
   const db = getDb(c.env);
 
-  // Compose Drizzle conditions. The typed predicate narrows the array
-  // element type to `SQL` so the spread into `and(...)` doesn't need a
-  // cast. When zero filters apply, `where` stays `undefined` — Drizzle
-  // emits no WHERE clause in that case.
-  const filters: (SQL | undefined)[] = [
+  // Compose Drizzle conditions. composeAnd skips `undefined` holes and
+  // collapses to `undefined` when no filters are active — Drizzle then
+  // emits no WHERE clause at all.
+  const where = composeAnd([
     action ? eq(adminAuditLog.action, action) : undefined,
     targetType ? eq(adminAuditLog.targetType, targetType) : undefined,
     targetId ? like(adminAuditLog.targetId, `%${targetId}%`) : undefined,
@@ -58,9 +54,7 @@ audit.get("/", async (c) => {
           like(adminAuditLog.details, `%${q}%`),
         )
       : undefined,
-  ];
-  const active = filters.filter((c): c is SQL => c !== undefined);
-  const where = active.length > 0 ? and(...active) : undefined;
+  ]);
 
   const [rows, totalRow] = await Promise.all([
     db
