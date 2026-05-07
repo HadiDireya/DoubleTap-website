@@ -106,6 +106,8 @@ const adminUpdatePost = (postId, updates) =>
   apiFetch(`/feedback/posts/${postId}`, { method: 'PATCH', body: JSON.stringify(updates) });
 const adminDeletePost = (postId) =>
   apiFetch(`/feedback/posts/${postId}`, { method: 'DELETE' });
+const deleteComment = (commentId) =>
+  apiFetch(`/feedback/comments/${commentId}`, { method: 'DELETE' });
 
 const OAUTH_HOSTS = new Set(['accounts.google.com', 'appleid.apple.com']);
 const safeOauthRedirect = (raw) => {
@@ -222,7 +224,7 @@ const AVATAR_HUES = [156, 220, 195, 32, 8, 280, 330, 78];
 const initials = (name) => {
   if (!name || typeof name !== 'string') return '?';
   const parts = name.trim().split(/[\s._\-]+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return '?';
 };
@@ -663,6 +665,33 @@ const renderDetail = (post) => {
       const head = el('div', { class: 'roadmap-comment-head' });
       head.append(el('span', { class: 'roadmap-comment-author', text: c.author.name || 'Anonymous' }));
       if (c.author.isVerifiedBuyer) head.append(verifiedBadge());
+      const canDelete = Boolean(
+        session && session.user && c.author && (session.user.id === c.author.id || isAdmin()),
+      );
+      // Append delete before the timestamp so the timestamp's
+      // `margin-inline-start: auto` pushes only itself to the end —
+      // leaves the delete affordance grouped with the author/badge cluster.
+      if (canDelete) {
+        const del = el('button', {
+          class: 'roadmap-comment-delete',
+          text: 'Delete',
+          attrs: { type: 'button', 'aria-label': 'Delete comment' },
+        });
+        del.addEventListener('click', async () => {
+          if (!window.confirm('Delete this comment? This cannot be undone.')) return;
+          del.disabled = true;
+          try {
+            await deleteComment(c.id);
+            const fresh = await fetchPostDetail(post.id);
+            renderDetail(fresh);
+            loadBoard();
+          } catch (err) {
+            console.error('comment delete failed', err);
+            del.disabled = false;
+          }
+        });
+        head.append(del);
+      }
       head.append(el('span', { class: 'roadmap-comment-time', text: formatRelative(c.createdAt) }));
       main.append(head);
       main.append(el('p', { class: 'roadmap-comment-body', text: c.body }));
@@ -677,7 +706,7 @@ const renderDetail = (post) => {
     form.append(avatarEl({ name: session.user.name || session.user.email, image: session.user.image }, 'md'));
     const inputCol = el('div', { class: 'roadmap-comment-form-input' });
     const ta = el('textarea', {
-      attrs: { placeholder: 'Add a comment…', maxlength: '2000', required: 'true' },
+      attrs: { placeholder: 'Add a comment…', maxlength: '2000', required: 'true', 'aria-label': 'Add a comment' },
     });
     const submit = el('button', { class: 'btn btn-primary', text: 'Comment', attrs: { type: 'submit' } });
     inputCol.append(ta, submit);

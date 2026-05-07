@@ -202,9 +202,11 @@ body.light {
   --color-backdrop: rgba(20, 20, 20, 0.4);
 }
 
+/* Light-theme avatar tint. 28% lightness keeps amber/gold hues
+   (32, 78) above WCAG AA (4.5:1) on the pale matching background. */
 body.light .avatar-initials {
   background: hsla(var(--avatar-hue, 156), 65%, 50%, 0.14);
-  color: hsl(var(--avatar-hue, 156), 70%, 32%);
+  color: hsl(var(--avatar-hue, 156), 70%, 28%);
   box-shadow: inset 0 0 0 var(--border-width) hsla(var(--avatar-hue, 156), 60%, 45%, 0.3);
 }
 
@@ -3307,7 +3309,13 @@ body.light {
    on the author payload, falling back to initials with a
    deterministic hue (set per-user via `--avatar-hue` inline style).
    Hue palette is curated brand-adjacent (8 stops) so users get a
-   consistent identity color without clashing with status/type pills. */
+   consistent identity color without clashing with status/type pills.
+
+   Note: `.avatar-initials` uses raw `hsl()`/`hsla()` because the
+   color is parameterised by `--avatar-hue` set per element. CLAUDE.md
+   bans raw colors but tokenising one stop per hue × theme is the
+   wrong tradeoff; the intent (deterministic per-user tint) requires
+   composing the hue at use-site. Document, not refactor. */
 .avatar {
   display: inline-flex;
   align-items: center;
@@ -3967,6 +3975,15 @@ body.light {
   -webkit-backdrop-filter: blur(6px);
 }
 
+/* Native <dialog>.showModal() puts the dialog in the top layer but
+   doesn't always block the page underneath from scrolling (notably
+   iOS Safari). Lock scroll on both <html> and <body> while any
+   dialog is open. */
+html:has(dialog[open]),
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 .roadmap-dialog-form {
   display: flex;
   flex-direction: column;
@@ -4197,6 +4214,29 @@ body.light {
   font-size: var(--font-size-xs);
   color: var(--color-text-faint);
   letter-spacing: var(--letter-spacing-wide);
+}
+
+.roadmap-comment-delete {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-faint);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.roadmap-comment-delete:hover,
+.roadmap-comment-delete:focus-visible {
+  color: var(--color-text);
+}
+
+.roadmap-comment-delete:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .roadmap-comment-body {
