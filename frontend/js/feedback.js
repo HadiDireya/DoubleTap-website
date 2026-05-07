@@ -203,6 +203,56 @@ const heartIcon = () => {
   return svg;
 };
 
+const commentIcon = () => {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  const path = document.createElementNS(svgNS, 'path');
+  path.setAttribute('d', 'M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z');
+  svg.append(path);
+  return svg;
+};
+
+/* ---------- Avatar ----------
+   See roadmap.js for the rationale; both files keep their own copy
+   to match the existing duplicate-helpers pattern in this codebase. */
+const AVATAR_HUES = [156, 220, 195, 32, 8, 280, 330, 78];
+
+const initials = (name) => {
+  if (!name || typeof name !== 'string') return '?';
+  const parts = name.trim().split(/[\s._\-]+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return '?';
+};
+
+const hueFromName = (name) => {
+  if (!name) return AVATAR_HUES[0];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_HUES[h % AVATAR_HUES.length];
+};
+
+const avatarEl = (user, size = 'sm') => {
+  const wrap = el('span', { class: `avatar avatar-${size}`, attrs: { 'aria-hidden': 'true' } });
+  const name = (user && user.name) || '';
+  const setInitials = () => {
+    wrap.replaceChildren();
+    wrap.classList.add('avatar-initials');
+    wrap.textContent = initials(name);
+    wrap.style.setProperty('--avatar-hue', String(hueFromName(name)));
+  };
+  if (user && typeof user.image === 'string' && user.image.startsWith('https://')) {
+    const img = el('img', { attrs: { src: user.image, alt: '', referrerpolicy: 'no-referrer' } });
+    img.addEventListener('error', setInitials, { once: true });
+    wrap.append(img);
+  } else {
+    setInitials();
+  }
+  return wrap;
+};
+
 const safeType = (t) => (TYPES.includes(t) ? t : 'feature');
 
 /* ---------- Auth UI ---------- */
@@ -221,13 +271,7 @@ const renderAuth = () => {
   }
   const u = session.user;
   const wrap = el('div', { class: 'roadmap-auth-user' });
-  const avatar = el('span', { class: 'roadmap-auth-avatar' });
-  if (typeof u.image === 'string' && u.image.startsWith('https://')) {
-    const img = el('img', { attrs: { src: u.image, alt: '', referrerpolicy: 'no-referrer' } });
-    avatar.append(img);
-  } else {
-    avatar.textContent = (u.name || u.email || '?').slice(0, 1).toUpperCase();
-  }
+  const avatar = avatarEl({ name: u.name || u.email, image: u.image }, 'sm');
   const name = el('span', { class: 'roadmap-auth-name', text: u.name || u.email });
   const out = el('button', {
     class: 'roadmap-auth-signout',
@@ -250,18 +294,10 @@ const renderCard = (post) => {
   const item = el('li', { class: 'roadmap-feed-item roadmap-card', attrs: { tabindex: '0', role: 'button' } });
   item.dataset.postId = post.id;
   item.dataset.type = safeType(post.type);
+  if (post.type !== 'praise' && post.status) item.dataset.status = post.status;
 
-  const vote = el('button', {
-    class: 'roadmap-card-vote' + (post.userVoted ? ' is-active' : ''),
-    attrs: { type: 'button', 'aria-pressed': String(post.userVoted), 'aria-label': 'Like' },
-  });
-  vote.append(heartIcon(), el('span', { class: 'roadmap-card-vote-count', text: String(post.voteCount) }));
-  vote.addEventListener('click', (e) => {
-    e.stopPropagation();
-    handleVote(post.id, vote);
-  });
-
-  const content = el('div', { class: 'roadmap-card-content' });
+  // Header: type + (optional) status chip on the left, time + buyer on the right.
+  const head = el('div', { class: 'roadmap-card-head' });
   const chips = el('div', { class: 'roadmap-card-chips' });
   const typeChip = el('span', {
     class: 'roadmap-card-type',
@@ -277,22 +313,44 @@ const renderCard = (post) => {
     statusChip.dataset.status = post.status;
     chips.append(statusChip);
   }
-  content.append(chips);
-  content.append(el('div', { class: 'roadmap-card-title', text: post.title }));
-  content.append(el('div', { class: 'roadmap-card-body', text: post.body }));
+  const headMeta = el('div', { class: 'roadmap-card-head-meta' });
+  if (post.author.isVerifiedBuyer) headMeta.append(verifiedBadge());
+  headMeta.append(el('span', { class: 'roadmap-card-time', text: formatRelative(post.createdAt) }));
+  head.append(chips, headMeta);
+  item.append(head);
 
-  const meta = el('div', { class: 'roadmap-card-meta' });
-  meta.append(el('span', { class: 'roadmap-card-author', text: post.author.name || 'Anonymous' }));
-  if (post.author.isVerifiedBuyer) meta.append(verifiedBadge());
+  item.append(el('div', { class: 'roadmap-card-title', text: post.title }));
+  item.append(el('div', { class: 'roadmap-card-body', text: post.body }));
+
+  // Footer: author left; vote + comments right.
+  const foot = el('div', { class: 'roadmap-card-foot' });
+  const footLeft = el('div', { class: 'roadmap-card-foot-left' });
+  footLeft.append(avatarEl(post.author, 'sm'));
+  footLeft.append(el('span', { class: 'roadmap-card-author', text: post.author.name || 'Anonymous' }));
+  const footRight = el('div', { class: 'roadmap-card-foot-right' });
+
+  const vote = el('button', {
+    class: 'roadmap-card-vote' + (post.userVoted ? ' is-active' : ''),
+    attrs: { type: 'button', 'aria-pressed': String(post.userVoted), 'aria-label': 'Like' },
+  });
+  vote.append(heartIcon(), el('span', { class: 'roadmap-card-vote-count', text: String(post.voteCount) }));
+  vote.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleVote(post.id, vote);
+  });
+  footRight.append(vote);
+
   if (post.commentCount > 0) {
-    meta.append(el('span', {
+    const commentChip = el('span', {
       class: 'roadmap-card-comments',
-      text: `${post.commentCount} comment${post.commentCount === 1 ? '' : 's'}`,
-    }));
+      attrs: { 'aria-label': `${post.commentCount} comment${post.commentCount === 1 ? '' : 's'}` },
+    });
+    commentChip.append(commentIcon());
+    commentChip.append(el('span', { text: String(post.commentCount) }));
+    footRight.append(commentChip);
   }
-  meta.append(el('span', { text: formatRelative(post.createdAt) }));
-  content.append(meta);
-  item.append(vote, content);
+  foot.append(footLeft, footRight);
+  item.append(foot);
 
   const open = () => openDetail(post.id);
   item.addEventListener('click', open);
@@ -518,6 +576,12 @@ const renderDetail = (post) => {
   detailBody.replaceChildren();
 
   const meta = el('div', { class: 'roadmap-detail-meta' });
+  // Author is the lead — anchors the post like a forum/thread header.
+  const authorWrap = el('span', { class: 'roadmap-detail-author' });
+  authorWrap.append(avatarEl(post.author, 'sm'));
+  authorWrap.append(el('span', { text: post.author.name || 'Anonymous' }));
+  meta.append(authorWrap);
+  if (post.author.isVerifiedBuyer) meta.append(verifiedBadge());
   const typePill = el('span', { class: 'roadmap-card-type', text: TYPE_LABELS[safeType(post.type)] });
   typePill.dataset.type = safeType(post.type);
   meta.append(typePill);
@@ -526,8 +590,6 @@ const renderDetail = (post) => {
     sPill.dataset.status = post.status;
     meta.append(sPill);
   }
-  meta.append(el('span', { text: post.author.name || 'Anonymous' }));
-  if (post.author.isVerifiedBuyer) meta.append(verifiedBadge());
   meta.append(el('span', { text: formatRelative(post.createdAt) }));
   meta.append(el('span', { text: `${post.voteCount} like${post.voteCount === 1 ? '' : 's'}` }));
   detailBody.append(meta);
@@ -596,12 +658,15 @@ const renderDetail = (post) => {
   } else {
     for (const c of post.comments) {
       const li = el('li', { class: 'roadmap-comment' });
+      li.append(avatarEl(c.author, 'md'));
+      const main = el('div', { class: 'roadmap-comment-main' });
       const head = el('div', { class: 'roadmap-comment-head' });
-      head.append(el('span', { text: c.author.name || 'Anonymous' }));
+      head.append(el('span', { class: 'roadmap-comment-author', text: c.author.name || 'Anonymous' }));
       if (c.author.isVerifiedBuyer) head.append(verifiedBadge());
-      head.append(el('span', { text: formatRelative(c.createdAt) }));
-      li.append(head);
-      li.append(el('p', { class: 'roadmap-comment-body', text: c.body }));
+      head.append(el('span', { class: 'roadmap-comment-time', text: formatRelative(c.createdAt) }));
+      main.append(head);
+      main.append(el('p', { class: 'roadmap-comment-body', text: c.body }));
+      li.append(main);
       list.append(li);
     }
   }
@@ -609,11 +674,14 @@ const renderDetail = (post) => {
 
   if (session) {
     const form = el('form', { class: 'roadmap-comment-form', attrs: { 'data-comment-form': 'true' } });
+    form.append(avatarEl({ name: session.user.name || session.user.email, image: session.user.image }, 'md'));
+    const inputCol = el('div', { class: 'roadmap-comment-form-input' });
     const ta = el('textarea', {
       attrs: { placeholder: 'Add a comment…', maxlength: '2000', required: 'true' },
     });
     const submit = el('button', { class: 'btn btn-primary', text: 'Comment', attrs: { type: 'submit' } });
-    form.append(ta, submit);
+    inputCol.append(ta, submit);
+    form.append(inputCol);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = ta.value.trim();

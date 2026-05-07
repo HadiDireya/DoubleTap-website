@@ -64,6 +64,34 @@
   --color-type-feature: #8b9bf7;
   --color-type-praise: #ffd166;
 
+  /* Soft tints — used for badges, KPI tiles, accent rails on the
+     roadmap/feedback boards. Alpha-based so they read on both themes. */
+  --color-bug-soft: rgba(255, 122, 108, 0.12);
+  --color-feature-soft: rgba(139, 155, 247, 0.12);
+  --color-praise-soft: rgba(255, 209, 102, 0.14);
+  --color-shipped-soft: rgba(0, 229, 160, 0.14);
+  --color-review-soft: rgba(245, 183, 107, 0.14);
+  --color-planned-soft: rgba(139, 155, 247, 0.14);
+  --color-progress-soft: rgba(107, 212, 245, 0.14);
+  --color-suggested-soft: rgba(255, 255, 255, 0.06);
+
+  /* Text variants of status/type/accent colors. Default to the bright
+     base; light theme overrides with darker variants that pass WCAG AA
+     when used as text on the matching `-soft` background. Use these
+     for *text* (chip labels, msg states); base tokens stay bright for
+     dots, rails, and borders where saturation aids scannability. */
+  --color-status-shipped-text: var(--color-status-shipped);
+  --color-status-review-text: var(--color-status-review);
+  --color-status-planned-text: var(--color-status-planned);
+  --color-status-progress-text: var(--color-status-progress);
+  --color-type-bug-text: var(--color-type-bug);
+  --color-type-feature-text: var(--color-type-feature);
+  --color-type-praise-text: var(--color-type-praise);
+  --color-accent-text: var(--color-accent);
+
+  /* Modal scrim — overridden in light theme. */
+  --color-backdrop: rgba(0, 0, 0, 0.6);
+
   /* Fonts */
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, Helvetica, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -158,6 +186,26 @@ body.light {
   --color-hud-bg: rgba(255, 255, 255, 0.92);
   --color-hud-text: #000;
   --color-status-suggested: rgba(0, 0, 0, 0.45);
+  --color-suggested-soft: rgba(0, 0, 0, 0.05);
+
+  /* Light-theme text variants — darker so chip labels and state msgs
+     pass WCAG AA against `-soft` backgrounds and white-ish surfaces. */
+  --color-status-shipped-text: #0a7a55;
+  --color-status-review-text: #a86a14;
+  --color-status-planned-text: #3d4fb3;
+  --color-status-progress-text: #146f93;
+  --color-type-bug-text: #b8362a;
+  --color-type-feature-text: #3d4fb3;
+  --color-type-praise-text: #8b6010;
+  --color-accent-text: #0a7a55;
+
+  --color-backdrop: rgba(20, 20, 20, 0.4);
+}
+
+body.light .avatar-initials {
+  background: hsla(var(--avatar-hue, 156), 65%, 50%, 0.14);
+  color: hsl(var(--avatar-hue, 156), 70%, 32%);
+  box-shadow: inset 0 0 0 var(--border-width) hsla(var(--avatar-hue, 156), 60%, 45%, 0.3);
 }
 
 /* =====================================
@@ -3171,23 +3219,39 @@ body.light {
 }
 
 /* =====================================
-   17.6  ROADMAP
+   17.6  ROADMAP / FEEDBACK BOARD
+   Admin-language redesign: bento KPI hero, dense full-card posts,
+   soft-tinted pills tied to status/type colors. Class names match
+   roadmap.js / feedback.js so JS doesn't need to know about visuals.
    ===================================== */
 .roadmap-page {
   padding-block: var(--space-20) var(--space-16);
 }
 
+/* ---------- Page header ---------- */
 .roadmap-header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-6);
-  margin-block-end: var(--space-12);
+  margin-block-end: var(--space-10);
 }
 
 .roadmap-header-text {
   max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.roadmap-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-accent);
 }
 
 .roadmap-title {
@@ -3195,13 +3259,13 @@ body.light {
   font-weight: 700;
   letter-spacing: var(--letter-spacing-hero);
   line-height: var(--line-height-tight);
-  margin-block-end: var(--space-4);
 }
 
 .roadmap-subtitle {
   font-size: var(--font-size-md);
   color: var(--color-text-muted);
   line-height: var(--line-height-normal);
+  max-width: 56ch;
 }
 
 .roadmap-actions {
@@ -3211,6 +3275,7 @@ body.light {
   flex-wrap: wrap;
 }
 
+/* ---------- Auth chip ---------- */
 .roadmap-auth {
   display: flex;
   align-items: center;
@@ -3223,45 +3288,81 @@ body.light {
   color: var(--color-text-faint);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .roadmap-auth-user {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-full);
 }
 
-.roadmap-auth-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface-2);
+/* ---------- Avatar primitive ----------
+   Used in: auth chip, card footer, detail meta, comment threads,
+   comment form. Renders a Google profile photo when one is supplied
+   on the author payload, falling back to initials with a
+   deterministic hue (set per-user via `--avatar-hue` inline style).
+   Hue palette is curated brand-adjacent (8 stops) so users get a
+   consistent identity color without clashing with status/type pills. */
+.avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
   color: var(--color-text);
   overflow: hidden;
+  user-select: none;
 }
 
-.roadmap-auth-avatar img {
+.avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.avatar-sm {
+  width: var(--space-6);
+  height: var(--space-6);
+  font-size: var(--font-size-xs);
+}
+
+.avatar-md {
+  width: var(--space-8);
+  height: var(--space-8);
+  font-size: var(--font-size-sm);
+}
+
+.avatar-initials {
+  background: hsla(var(--avatar-hue, 156), 70%, 50%, 0.18);
+  color: hsl(var(--avatar-hue, 156), 60%, 75%);
+  box-shadow: inset 0 0 0 var(--border-width) hsla(var(--avatar-hue, 156), 70%, 60%, 0.28);
 }
 
 .roadmap-auth-name {
   color: var(--color-text);
   font-weight: 600;
+  font-size: var(--font-size-sm);
 }
 
 .roadmap-auth-signout {
   background: none;
   border: 0;
   color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-family: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
   cursor: pointer;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
@@ -3272,7 +3373,110 @@ body.light {
   color: var(--color-text);
 }
 
-/* Filter chips */
+/* ---------- Bento stats / filter tiles ---------- */
+.board-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--board-stats-cols, 6), 1fr);
+  gap: var(--space-3);
+  margin-block-end: var(--space-6);
+}
+
+.board-stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 112px;
+  padding: var(--space-5);
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-xl);
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease);
+}
+
+.board-stat::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 3px;
+  background: var(--board-stat-rail, transparent);
+  transition: background var(--duration-fast) var(--ease);
+}
+
+.board-stat:hover {
+  border-color: var(--color-line-strong);
+}
+
+.board-stat:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.board-stat.is-active {
+  border-color: var(--color-line-strong);
+  background: var(--color-surface-2);
+}
+
+.board-stat.is-active::after {
+  background: var(--board-stat-rail, var(--color-accent));
+}
+
+.board-stat-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.board-stat.is-active .board-stat-eyebrow {
+  color: var(--color-text);
+}
+
+.board-stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--board-stat-rail, var(--color-text-faint));
+  flex-shrink: 0;
+}
+
+.board-stat-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Per-status / per-type rail colors. Setting --board-stat-rail
+   means dot, hover rail, and active rail all stay in sync. */
+.board-stat[data-filter="suggested"]   { --board-stat-rail: var(--color-status-suggested); }
+.board-stat[data-filter="under_review"]{ --board-stat-rail: var(--color-status-review); }
+.board-stat[data-filter="planned"]     { --board-stat-rail: var(--color-status-planned); }
+.board-stat[data-filter="in_progress"] { --board-stat-rail: var(--color-status-progress); }
+.board-stat[data-filter="shipped"]     { --board-stat-rail: var(--color-status-shipped); }
+.board-stat[data-type="bug"]           { --board-stat-rail: var(--color-type-bug); }
+.board-stat[data-type="feature"]       { --board-stat-rail: var(--color-type-feature); }
+.board-stat[data-type="praise"]        { --board-stat-rail: var(--color-type-praise); }
+
+/* Secondary filter chip rail (status filters on feedback page,
+   plus any future tertiary axes). Mirrors admin's `.lic-chip`. */
 .roadmap-filters {
   display: flex;
   flex-wrap: wrap;
@@ -3283,77 +3487,106 @@ body.light {
 .roadmap-filters button {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-full);
-  padding: var(--space-2) var(--space-4);
-  font: inherit;
-  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
   color: var(--color-text-muted);
   cursor: pointer;
   transition:
     border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease),
     color var(--duration-fast) var(--ease);
 }
 
 .roadmap-filters button:hover {
+  color: var(--color-text);
   border-color: var(--color-line-strong);
 }
 
 .roadmap-filters button.is-active {
-  background: var(--color-surface-2);
-  border-color: var(--color-line-strong);
-  color: var(--color-text);
+  background: var(--color-accent-dim);
+  color: var(--color-accent);
+  border-color: transparent;
 }
 
 .roadmap-filters button [data-count] {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
   color: var(--color-text-faint);
   margin-inline-start: var(--space-1);
 }
 
-/* Feed list */
+.roadmap-filters button.is-active [data-count] {
+  color: var(--color-accent);
+  opacity: 0.7;
+}
+
+/* ---------- Feed list ---------- */
 .roadmap-feed-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  max-width: var(--content-narrow);
+  gap: var(--space-4);
 }
 
 .roadmap-empty {
+  font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   color: var(--color-text-faint);
-  font-style: italic;
-  padding: var(--space-4) 0;
+  letter-spacing: var(--letter-spacing-wide);
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  background: var(--color-bg-elevated);
+  border: var(--border-width) dashed var(--color-line);
+  border-radius: var(--radius-xl);
 }
 
-/* Feed card */
+/* ---------- Card (full bento) ---------- */
 .roadmap-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
   background: var(--color-bg-elevated);
   border: var(--border-width) solid var(--color-line);
-  border-radius: var(--radius-2xl);
-  padding: var(--space-6);
-  display: flex;
-  gap: var(--space-5);
+  border-radius: var(--radius-xl);
   cursor: pointer;
-  transition:
-    border-color var(--duration-fast) var(--ease),
-    transform var(--duration-fast) var(--ease);
   text-align: start;
   font: inherit;
   color: inherit;
   width: 100%;
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
+}
+
+.roadmap-card::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 3px;
+  background: var(--card-rail, var(--color-line-strong));
+  transition: background var(--duration-fast) var(--ease),
+              width var(--duration-fast) var(--ease);
 }
 
 .roadmap-card:hover {
   border-color: var(--color-line-strong);
-  transform: translateY(-1px);
+}
+
+.roadmap-card:hover::before {
+  width: 4px;
 }
 
 .roadmap-card:focus-visible {
@@ -3361,85 +3594,59 @@ body.light {
   outline-offset: 2px;
 }
 
-.roadmap-card-vote {
+/* Rail color is driven by status (roadmap) or type (feedback).
+   Falls back to the muted line color for posts with no signal. */
+.roadmap-card[data-status="suggested"]    { --card-rail: var(--color-status-suggested); }
+.roadmap-card[data-status="under_review"] { --card-rail: var(--color-status-review); }
+.roadmap-card[data-status="planned"]      { --card-rail: var(--color-status-planned); }
+.roadmap-card[data-status="in_progress"]  { --card-rail: var(--color-status-progress); }
+.roadmap-card[data-status="shipped"]      { --card-rail: var(--color-status-shipped); }
+.roadmap-card[data-type="bug"]            { --card-rail: var(--color-type-bug); }
+.roadmap-card[data-type="feature"]        { --card-rail: var(--color-type-feature); }
+.roadmap-card[data-type="praise"]         { --card-rail: var(--color-type-praise); }
+
+/* Card header — chips on the left, time/buyer on the right. */
+.roadmap-card-head {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  background: var(--color-surface-2);
-  border: var(--border-width) solid var(--color-line);
-  border-radius: var(--radius-xl);
-  padding: var(--space-3) var(--space-4);
-  min-width: 64px;
-  cursor: pointer;
-  font-family: inherit;
-  color: inherit;
-  transition:
-    background-color var(--duration-fast) var(--ease),
-    border-color var(--duration-fast) var(--ease),
-    color var(--duration-fast) var(--ease);
-  flex-shrink: 0;
-}
-
-.roadmap-card-vote:hover {
-  background: var(--color-surface-3);
-  border-color: var(--color-line-strong);
-}
-
-.roadmap-card-vote.is-active {
-  background: var(--color-accent-dim);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.roadmap-card-vote-icon {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
-
-.roadmap-card-vote-count {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  line-height: 1;
-}
-
-.roadmap-card-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .roadmap-card-chips {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-block-end: var(--space-2);
 }
 
+.roadmap-card-head-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-faint);
+}
+
+/* Status + type pills — soft-tinted, mono caps. */
 .roadmap-card-status,
 .roadmap-card-type {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  align-self: flex-start;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
   background: var(--color-surface-2);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-muted);
-}
-
-/* When status appears bare (not inside .roadmap-card-chips), keep its prior spacing. */
-.roadmap-card-content > .roadmap-card-status {
-  margin-block-end: var(--space-2);
+  white-space: nowrap;
 }
 
 .roadmap-card-status::before,
@@ -3452,13 +3659,22 @@ body.light {
   flex-shrink: 0;
 }
 
+.roadmap-card-status[data-status="suggested"]    { background: var(--color-suggested-soft); color: var(--color-text-muted); }
+.roadmap-card-status[data-status="suggested"]::before    { background: var(--color-status-suggested); }
+.roadmap-card-status[data-status="under_review"] { background: var(--color-review-soft); color: var(--color-status-review-text); }
 .roadmap-card-status[data-status="under_review"]::before { background: var(--color-status-review); }
+.roadmap-card-status[data-status="planned"]      { background: var(--color-planned-soft); color: var(--color-status-planned-text); }
 .roadmap-card-status[data-status="planned"]::before      { background: var(--color-status-planned); }
+.roadmap-card-status[data-status="in_progress"]  { background: var(--color-progress-soft); color: var(--color-status-progress-text); }
 .roadmap-card-status[data-status="in_progress"]::before  { background: var(--color-status-progress); }
+.roadmap-card-status[data-status="shipped"]      { background: var(--color-shipped-soft); color: var(--color-status-shipped-text); }
 .roadmap-card-status[data-status="shipped"]::before      { background: var(--color-status-shipped); }
 
+.roadmap-card-type[data-type="bug"]     { background: var(--color-bug-soft); color: var(--color-type-bug-text); }
 .roadmap-card-type[data-type="bug"]::before     { background: var(--color-type-bug); }
+.roadmap-card-type[data-type="feature"] { background: var(--color-feature-soft); color: var(--color-type-feature-text); }
 .roadmap-card-type[data-type="feature"]::before { background: var(--color-type-feature); }
+.roadmap-card-type[data-type="praise"]  { background: var(--color-praise-soft); color: var(--color-type-praise-text); }
 .roadmap-card-type[data-type="praise"]::before  { background: var(--color-type-praise); }
 
 .roadmap-card-title {
@@ -3466,6 +3682,7 @@ body.light {
   font-weight: 600;
   color: var(--color-text);
   line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .roadmap-card-body {
@@ -3473,37 +3690,128 @@ body.light {
   color: var(--color-text-muted);
   line-height: var(--line-height-normal);
   white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.roadmap-card-meta {
+/* Footer — author left, vote + comments right, divided from body
+   by a hairline so the row reads as a separate action zone. */
+.roadmap-card-foot {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block-start: var(--space-4);
+  border-block-start: var(--border-width) solid var(--color-line);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-faint);
-  margin-block-start: var(--space-2);
+}
+
+.roadmap-card-foot-left {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.roadmap-card-foot-right {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .roadmap-card-author {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roadmap-card-time {
+  color: var(--color-text-faint);
 }
 
 .roadmap-card-comments {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
 }
 
-/* Verified buyer badge */
+.roadmap-card-comments svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* Vote button — the heart pill. Inactive: muted surface.
+   Active: accent-glow background + accent text, mirrors the
+   admin's KPI delta "is-up" treatment. */
+.roadmap-card-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-2);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+  flex-shrink: 0;
+}
+
+.roadmap-card-vote:hover {
+  border-color: var(--color-line-strong);
+  color: var(--color-text);
+}
+
+.roadmap-card-vote.is-active {
+  background: var(--color-accent-glow);
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.roadmap-card-vote-icon {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+.roadmap-card-vote-count {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* ---------- Verified buyer pill ---------- */
 .verified-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  color: var(--color-status-shipped);
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-shipped-soft);
+  color: var(--color-status-shipped-text);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   font-weight: 600;
@@ -3518,118 +3826,102 @@ body.light {
   flex-shrink: 0;
 }
 
-/* Admin status select */
-/* Feedback page — type filter row sits above status filters; tighten spacing. */
-.roadmap-filters-type {
-  margin-block-end: var(--space-3);
-}
-
-.roadmap-filters-type + .roadmap-filters {
-  margin-block-end: var(--space-6);
-}
-
-/* Type-pill chips inside filter buttons get the same color dot as cards. */
-.roadmap-filters-type button {
-  position: relative;
-}
-
-.roadmap-filters-type button[data-type="bug"]::before,
-.roadmap-filters-type button[data-type="feature"]::before,
-.roadmap-filters-type button[data-type="praise"]::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  margin-inline-end: var(--space-2);
-  vertical-align: middle;
-}
-
-.roadmap-filters-type button[data-type="bug"]::before     { background: var(--color-type-bug); }
-.roadmap-filters-type button[data-type="feature"]::before { background: var(--color-type-feature); }
-.roadmap-filters-type button[data-type="praise"]::before  { background: var(--color-type-praise); }
-
-/* Submit dialog — type picker as segmented radio. */
+/* ---------- Submit dialog: type segmented picker ---------- */
 .feedback-type-picker {
   border: 0;
   padding: 0;
-  margin: 0 0 var(--space-3) 0;
-  display: flex;
-  flex-wrap: wrap;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
 }
 
 .feedback-type-picker > legend {
-  flex-basis: 100%;
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--color-text-faint);
   margin-block-end: var(--space-2);
 }
 
 .feedback-type-picker label {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: var(--transition-colors);
 }
 
 .feedback-type-picker label:has(input:checked) {
-  background: var(--color-surface-2);
   color: var(--color-text);
-  border-color: var(--color-line-strong, var(--color-text));
+  border-color: var(--color-line-strong);
 }
+
+.feedback-type-picker label:has(input[value="bug"]:checked) { background: var(--color-bug-soft); border-color: var(--color-type-bug); color: var(--color-type-bug-text); }
+.feedback-type-picker label:has(input[value="feature"]:checked) { background: var(--color-feature-soft); border-color: var(--color-type-feature); color: var(--color-type-feature-text); }
+.feedback-type-picker label:has(input[value="praise"]:checked) { background: var(--color-praise-soft); border-color: var(--color-type-praise); color: var(--color-type-praise-text); }
 
 .feedback-type-picker input[type="radio"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 8px;
+  height: 8px;
   border-radius: var(--radius-full);
-  border: var(--border-width) solid var(--color-line);
+  background: currentColor;
   margin: 0;
   display: inline-block;
   flex-shrink: 0;
   cursor: pointer;
+  opacity: 0.4;
 }
 
-.feedback-type-picker label:has(input[value="bug"]:checked) input { background: var(--color-type-bug); border-color: var(--color-type-bug); }
-.feedback-type-picker label:has(input[value="feature"]:checked) input { background: var(--color-type-feature); border-color: var(--color-type-feature); }
-.feedback-type-picker label:has(input[value="praise"]:checked) input { background: var(--color-type-praise); border-color: var(--color-type-praise); }
+.feedback-type-picker label:has(input:checked) input { opacity: 1; }
 
 .feedback-type-hint {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  background: var(--color-surface-2);
-  border-left: 3px solid var(--color-type-bug);
-  padding: var(--space-2) var(--space-3);
+  background: var(--color-bug-soft);
+  border-inline-start: 3px solid var(--color-type-bug);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-  margin-block-end: var(--space-3);
   line-height: var(--line-height-normal);
 }
 
+/* ---------- Detail dialog admin controls ---------- */
 .roadmap-admin-controls {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-block-start: var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2) var(--space-3);
+  padding-block-start: var(--space-4);
+  margin-block-start: var(--space-2);
   border-top: var(--border-width) solid var(--color-line);
-  margin-block-start: var(--space-3);
 }
 
 .roadmap-admin-controls label {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  font-weight: 500;
   color: var(--color-text-faint);
   text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-wider);
+  align-self: end;
 }
 
-.roadmap-admin-controls select,
-.roadmap-admin-controls button {
+.roadmap-admin-controls select {
   font-family: inherit;
   font-size: var(--font-size-sm);
   padding: var(--space-2) var(--space-3);
@@ -3640,13 +3932,17 @@ body.light {
   cursor: pointer;
 }
 
-/* Dialog — explicit longhand positioning to override UA defaults reliably */
+.roadmap-admin-controls > .btn {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Dialog (sign-in / suggest / detail) ---------- */
 .roadmap-dialog {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  right: auto;
-  bottom: auto;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  inset-block-end: auto;
+  inset-inline-end: auto;
   margin: 0;
   transform: translate(-50%, -50%);
   border: var(--border-width) solid var(--color-line-strong);
@@ -3654,7 +3950,7 @@ body.light {
   background: var(--color-bg-elevated);
   color: var(--color-text);
   padding: 0;
-  max-width: 480px;
+  max-width: 520px;
   width: calc(100vw - var(--space-8));
   max-height: calc(100vh - var(--space-8));
   overflow: auto;
@@ -3662,12 +3958,13 @@ body.light {
 }
 
 .roadmap-dialog-detail {
-  max-width: 640px;
+  max-width: 720px;
 }
 
 .roadmap-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: var(--color-backdrop);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .roadmap-dialog-form {
@@ -3685,14 +3982,15 @@ body.light {
 
 .roadmap-dialog-head h2 {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 .roadmap-dialog-close {
-  background: none;
-  border: 0;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-line);
   color: var(--color-text-muted);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   line-height: 1;
   width: 32px;
   height: 32px;
@@ -3703,16 +4001,16 @@ body.light {
   justify-content: center;
   transition:
     color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
+    border-color var(--duration-fast) var(--ease);
 }
 
 .roadmap-dialog-close:hover {
   color: var(--color-text);
-  background: var(--color-surface);
+  border-color: var(--color-line-strong);
 }
 
 .roadmap-dialog-sub {
-  padding: var(--space-4) var(--space-6) 0;
+  padding: var(--space-5) var(--space-6) 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
@@ -3732,17 +4030,19 @@ body.light {
 }
 
 .roadmap-dialog-msg {
-  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-muted);
   min-height: 1.4em;
 }
 
 .roadmap-dialog-msg.is-error {
-  color: var(--color-status-review);
+  color: var(--color-type-bug-text);
 }
 
 .roadmap-dialog-msg.is-success {
-  color: var(--color-status-shipped);
+  color: var(--color-status-shipped-text);
 }
 
 .roadmap-divider {
@@ -3753,7 +4053,7 @@ body.light {
   font-size: var(--font-size-xs);
   color: var(--color-text-faint);
   text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-wider);
 }
 
 .roadmap-divider::before,
@@ -3769,7 +4069,7 @@ body.light {
   width: 100%;
 }
 
-/* Form inputs (used in dialogs) */
+/* Form fields */
 .roadmap-field {
   display: flex;
   flex-direction: column;
@@ -3779,9 +4079,10 @@ body.light {
 .roadmap-field-label {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  font-weight: 500;
   color: var(--color-text-faint);
   text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-wider);
 }
 
 .roadmap-field input[type="email"],
@@ -3796,7 +4097,7 @@ body.light {
   padding: var(--space-3);
   transition:
     border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
+    background var(--duration-fast) var(--ease);
   resize: vertical;
 }
 
@@ -3807,32 +4108,49 @@ body.light {
   border-color: var(--color-accent);
 }
 
-/* Detail dialog content */
+/* ---------- Detail dialog content ---------- */
 .roadmap-detail-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
   color: var(--color-text-faint);
 }
 
+.roadmap-detail-meta > span:not([class]) {
+  padding-inline: var(--space-2);
+}
+
 .roadmap-detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-wide);
-  font-weight: 600;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-2);
-  color: var(--color-text);
+  color: var(--color-text-muted);
 }
+
+.roadmap-detail-status[data-status="under_review"] { background: var(--color-review-soft); color: var(--color-status-review-text); }
+.roadmap-detail-status[data-status="planned"]      { background: var(--color-planned-soft); color: var(--color-status-planned-text); }
+.roadmap-detail-status[data-status="in_progress"]  { background: var(--color-progress-soft); color: var(--color-status-progress-text); }
+.roadmap-detail-status[data-status="shipped"]      { background: var(--color-shipped-soft); color: var(--color-status-shipped-text); }
 
 .roadmap-detail-body {
   font-size: var(--font-size-base);
   color: var(--color-text);
   line-height: var(--line-height-normal);
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .roadmap-comment-list {
@@ -3844,20 +4162,41 @@ body.light {
 }
 
 .roadmap-comment {
+  display: flex;
+  gap: var(--space-3);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
+  padding: var(--space-4);
+}
+
+.roadmap-comment-main {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .roadmap-comment-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.roadmap-comment-author {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.roadmap-comment-time {
+  margin-inline-start: auto;
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   color: var(--color-text-faint);
-  margin-block-end: var(--space-2);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
 .roadmap-comment-body {
@@ -3865,9 +4204,32 @@ body.light {
   color: var(--color-text);
   line-height: var(--line-height-normal);
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
+/* Author + avatar group used in `.roadmap-detail-meta` to override
+   the meta row's mono caps treatment for the human name. */
+.roadmap-detail-author {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Comment form mirrors the comment row geometry: avatar on the
+   left, textarea + submit stack on the right. Reads as "yours". */
 .roadmap-comment-form {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.roadmap-comment-form-input {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -3882,15 +4244,27 @@ body.light {
   border-radius: var(--radius-md);
   padding: var(--space-3);
   resize: vertical;
-  min-height: 80px;
+  min-height: var(--space-20);
+}
+
+.roadmap-comment-form textarea:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-color: var(--color-accent);
 }
 
 .roadmap-section-label {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
+  font-weight: 500;
   color: var(--color-text-faint);
   text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-wider);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 960px) {
+  .board-stats { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 720px) {
@@ -3908,18 +4282,22 @@ body.light {
   .roadmap-title {
     font-size: var(--font-size-2xl);
   }
-  .roadmap-card {
+  .board-stats { grid-template-columns: repeat(2, 1fr); }
+  .board-stat { min-height: 96px; padding: var(--space-4); }
+  .roadmap-card { padding: var(--space-5); }
+  .roadmap-card-foot {
     flex-direction: column;
+    align-items: flex-start;
     gap: var(--space-3);
-    padding: var(--space-5);
   }
-  .roadmap-card-vote {
-    flex-direction: row;
-    align-self: flex-start;
-    min-width: 0;
-    padding: var(--space-2) var(--space-3);
-  }
+  .feedback-type-picker { grid-template-columns: 1fr; }
+  .roadmap-admin-controls { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 480px) {
+  .board-stats { grid-template-columns: 1fr 1fr; }
+}
+
 
 /* =====================================
    18. SCROLL REVEAL

@@ -74,8 +74,9 @@
 
     <header class="roadmap-header">
       <div class="roadmap-header-text">
-        <h1 class="roadmap-title">Feedback</h1>
-        <p class="roadmap-subtitle">Report a bug, suggest a feature, or just share what you love. Like the posts that resonate with you.</p>
+        <p class="roadmap-eyebrow">Feedback</p>
+        <h1 class="roadmap-title">Tell us what you think.</h1>
+        <p class="roadmap-subtitle">Bug, feature idea, or just praise — drop it here. Like the posts that resonate with you.</p>
       </div>
       <div class="roadmap-actions" id="roadmap-actions">
         <button type="button" class="btn btn-primary" id="suggest-open" disabled>Share feedback</button>
@@ -85,13 +86,27 @@
       </div>
     </header>
 
-    <nav class="roadmap-filters roadmap-filters-type" id="type-filters" aria-label="Filter by type">
-      <button type="button" class="is-active" data-type="all">All <span data-count>0</span></button>
-      <button type="button" data-type="bug">Bugs <span data-count>0</span></button>
-      <button type="button" data-type="feature">Features <span data-count>0</span></button>
-      <button type="button" data-type="praise">Praise <span data-count>0</span></button>
+    <!-- Type tiles double as bento KPIs and primary filters -->
+    <nav class="board-stats board-stats-types" id="type-filters" style="--board-stats-cols: 4" aria-label="Filter by type">
+      <button type="button" class="board-stat is-active" data-type="all">
+        <span class="board-stat-eyebrow">All</span>
+        <span class="board-stat-value" data-count>0</span>
+      </button>
+      <button type="button" class="board-stat" data-type="bug">
+        <span class="board-stat-eyebrow"><span class="board-stat-dot"></span>Bugs</span>
+        <span class="board-stat-value" data-count>0</span>
+      </button>
+      <button type="button" class="board-stat" data-type="feature">
+        <span class="board-stat-eyebrow"><span class="board-stat-dot"></span>Features</span>
+        <span class="board-stat-value" data-count>0</span>
+      </button>
+      <button type="button" class="board-stat" data-type="praise">
+        <span class="board-stat-eyebrow"><span class="board-stat-dot"></span>Praise</span>
+        <span class="board-stat-value" data-count>0</span>
+      </button>
     </nav>
 
+    <!-- Secondary status chip rail -->
     <nav class="roadmap-filters" id="status-filters" aria-label="Filter by status">
       <button type="button" class="is-active" data-status="all">Any status</button>
       <button type="button" data-status="suggested">Suggested</button>
@@ -209,6 +224,7 @@
 </footer>
 
 <script src="js/main.js" type="module"></script>
+<script src="js/demo.js" type="module"></script>
 <script src="js/feedback.js" type="module"></script>
 <script src="js/download.js" type="module"></script>
 </body>
