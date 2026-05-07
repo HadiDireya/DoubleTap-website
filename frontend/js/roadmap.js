@@ -43,6 +43,11 @@ let session = null;
 let openDetailId = null;
 let allPosts = [];
 let currentFilter = 'all';
+// Single in-flight gate for comment deletes. Prevents the user from
+// firing a second DELETE on a sibling comment while the first request
+// is still pending — without it, two near-simultaneous clicks can both
+// pass the confirm() gate and both render the post twice.
+let commentDeleteInFlight = false;
 
 /* ---------- API ---------- */
 const apiFetch = async (path, init = {}) => {
@@ -580,7 +585,9 @@ const renderDetail = (post) => {
           attrs: { type: 'button', 'aria-label': 'Delete comment' },
         });
         del.addEventListener('click', async () => {
+          if (commentDeleteInFlight) return;
           if (!window.confirm('Delete this comment? This cannot be undone.')) return;
+          commentDeleteInFlight = true;
           del.disabled = true;
           try {
             await deleteComment(c.id);
@@ -590,6 +597,8 @@ const renderDetail = (post) => {
           } catch (err) {
             console.error('comment delete failed', err);
             del.disabled = false;
+          } finally {
+            commentDeleteInFlight = false;
           }
         });
         head.append(del);

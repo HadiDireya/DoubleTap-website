@@ -313,3 +313,23 @@ document.addEventListener('click', (e) => {
   // Update the URL hash without re-triggering default jump.
   history.replaceState(null, '', hash);
 });
+
+/* ================================================================
+   Dialog scroll-lock fallback — the CSS uses `:has(dialog[open])`
+   to lock body scroll, which is silently ignored on Safari < 15.4
+   and Firefox < 121. Mirror it here by toggling a class whenever
+   any <dialog>'s `open` attribute flips.
+   ================================================================ */
+const dialogs = document.querySelectorAll('dialog');
+if (dialogs.length > 0 && 'MutationObserver' in window) {
+  const updateDialogLock = () => {
+    const anyOpen = Array.from(dialogs).some((d) => d.open);
+    document.documentElement.classList.toggle('dialog-open', anyOpen);
+  };
+  const dialogObserver = new MutationObserver(updateDialogLock);
+  dialogs.forEach((d) => dialogObserver.observe(d, {
+    attributes: true,
+    attributeFilter: ['open'],
+  }));
+  updateDialogLock();
+}

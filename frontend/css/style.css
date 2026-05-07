@@ -3978,9 +3978,13 @@ body.light {
 /* Native <dialog>.showModal() puts the dialog in the top layer but
    doesn't always block the page underneath from scrolling (notably
    iOS Safari). Lock scroll on both <html> and <body> while any
-   dialog is open. */
+   dialog is open. The `:has()` rule covers modern browsers; the
+   `.dialog-open` class is the JS fallback toggled in main.js for
+   Safari < 15.4 / Firefox < 121 where `:has()` parses as invalid. */
 html:has(dialog[open]),
-body:has(dialog[open]) {
+body:has(dialog[open]),
+html.dialog-open,
+html.dialog-open body {
   overflow: hidden;
 }
 
