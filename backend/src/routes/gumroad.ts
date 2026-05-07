@@ -44,6 +44,7 @@ gumroad.post("/verify", async (c) => {
     licenseKey,
     productId: result.productId,
     saleId: result.saleId,
+    email: result.email ? result.email.trim().toLowerCase() : null,
     verifiedAt: new Date(),
   });
 

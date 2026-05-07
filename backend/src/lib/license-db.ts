@@ -742,6 +742,27 @@ export const listLicensesByEmail = async (
   return results ?? [];
 };
 
+// Batched variant: given a set of account emails, return the subset
+// that have at least one active (non-revoked) Lahza/comp license. Used
+// by the public feedback board to mark verified buyers without making
+// N round-trips. Lower-case both sides — same case-sensitivity caveat
+// documented on `listLicensesByEmail`. Returns lowercased emails so
+// the caller can map back to user IDs via a lowercase email→id map.
+export const findActiveBuyerEmails = async (
+  db: D1Database,
+  emails: string[],
+): Promise<Set<string>> => {
+  if (emails.length === 0) return new Set();
+  const lower = [...new Set(emails.map((e) => e.toLowerCase()))];
+  const placeholders = lower.map(() => "?").join(", ");
+  const sql = `
+    SELECT DISTINCT lower(email) AS email
+    FROM licenses
+    WHERE revoked_at IS NULL AND lower(email) IN (${placeholders})`;
+  const { results } = await db.prepare(sql).bind(...lower).all<{ email: string }>();
+  return new Set((results ?? []).map((r) => r.email));
+};
+
 // ── Activations page ──────────────────────────────────────────────────────
 // Cross-cut view of every (license_key, machine_id) pair. Two fraud signals
 // the page wants to surface:

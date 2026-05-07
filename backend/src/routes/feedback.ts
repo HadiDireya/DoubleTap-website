@@ -23,6 +23,7 @@ import {
 } from "../lib/auth-helpers";
 import type { DB } from "../db/client";
 import type { Env } from "../env";
+import { findActiveBuyerEmails } from "../lib/license-db";
 
 type PublicAuthor = {
   id: string;
@@ -63,19 +64,68 @@ const escapeHtml = (s: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// Resolve which of a known set of user IDs are verified Gumroad buyers.
-// Scoped to the authors actually visible in the response — the previous
-// implementation pulled every Gumroad user_id into a Set on every request,
-// which scaled linearly with total buyers regardless of how many authors
-// the page rendered. With `inArray` the query now bounds to the page's
-// author surface area (≤ a few dozen rows in practice).
-const resolveVerifiedBuyers = async (db: DB, userIds: string[]): Promise<Set<string>> => {
+// Resolve which of a known set of user IDs count as verified buyers.
+// Scoped to the authors actually visible in the response so we don't
+// scan either license table in full on every request.
+//
+// Three independent paths — first match wins, all OR'd together:
+//   1) Direct gumroad link — `gumroad_license.userId` is the user's
+//      (set when the user pastes their key via /gumroad/verify).
+//   2) Gumroad email match — `gumroad_license.email` (captured at
+//      verify time) matches the user's account email. Catches the
+//      "I bought + signed in with the same email but never linked
+//      the key" case.
+//   3) Lahza/comp email match — `licenses.email` (LICENSE_DB) matches
+//      the user's account email. Lahza is its own license source
+//      with no userId column; email is the only join key. This is
+//      the path that covers buyers whose only license is Lahza.
+const resolveVerifiedBuyers = async (
+  db: DB,
+  env: Env,
+  userIds: string[],
+): Promise<Set<string>> => {
   if (userIds.length === 0) return new Set();
-  const rows = await db
+
+  // Path 1 — direct Gumroad userId link.
+  const directRows = await db
     .selectDistinct({ userId: gumroadLicense.userId })
     .from(gumroadLicense)
     .where(inArray(gumroadLicense.userId, userIds));
-  return new Set(rows.map((r) => r.userId));
+  const verified = new Set(directRows.map((r) => r.userId));
+
+  // Resolve the visible authors' account emails once; reused by both
+  // email-match paths below.
+  const userRows = await db
+    .select({ id: user.id, email: user.email })
+    .from(user)
+    .where(inArray(user.id, userIds));
+  const emailToUserId = new Map<string, string>();
+  for (const u of userRows) {
+    if (u.email) emailToUserId.set(u.email.toLowerCase(), u.id);
+  }
+  if (emailToUserId.size === 0) return verified;
+  const emails = [...emailToUserId.keys()];
+
+  // Path 2 — Gumroad email match (works once verifyLicense captured
+  // the purchaser email; older rows have email = NULL and are skipped
+  // by `inArray`).
+  const gumroadEmailRows = await db
+    .selectDistinct({ email: gumroadLicense.email })
+    .from(gumroadLicense)
+    .where(inArray(gumroadLicense.email, emails));
+  for (const r of gumroadEmailRows) {
+    const uid = r.email ? emailToUserId.get(r.email) : undefined;
+    if (uid) verified.add(uid);
+  }
+
+  // Path 3 — Lahza/comp email match (separate D1 binding).
+  const lahzaEmails = await findActiveBuyerEmails(env.LICENSE_DB, emails);
+  for (const lower of lahzaEmails) {
+    const uid = emailToUserId.get(lower);
+    if (uid) verified.add(uid);
+  }
+
+  return verified;
 };
 
 const sendBugReportEmail = async (
@@ -156,6 +206,7 @@ feedback.get("/posts", async (c) => {
   // response. See resolveVerifiedBuyers' comment for the perf rationale.
   const buyers = await resolveVerifiedBuyers(
     db,
+    c.env,
     [...new Set(rows.map((r) => r.authorId))],
   );
 
@@ -268,6 +319,7 @@ feedback.get("/posts/:id", async (c) => {
   // Same `inArray`-bounded lookup as the list view.
   const buyers = await resolveVerifiedBuyers(
     db,
+    c.env,
     [...new Set([postRow.authorId, ...comments.map((c) => c.authorId)])],
   );
 

@@ -8,6 +8,7 @@ type VerifyResponse = {
     product_id: string;
     refunded: boolean;
     chargebacked: boolean;
+    email?: string;
   };
 };
 
@@ -25,5 +26,9 @@ export const verifyLicense = async (env: Env, licenseKey: string) => {
   const data = (await res.json()) as VerifyResponse;
   if (!data.success || !data.purchase) return null;
   if (data.purchase.refunded || data.purchase.chargebacked) return null;
-  return { saleId: data.purchase.sale_id, productId: data.purchase.product_id };
+  return {
+    saleId: data.purchase.sale_id,
+    productId: data.purchase.product_id,
+    email: typeof data.purchase.email === "string" ? data.purchase.email : null,
+  };
 };
