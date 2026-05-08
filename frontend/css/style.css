@@ -1004,14 +1004,10 @@ ul {
 }
 
 .hero-headline .muted {
-  display: block;
+  display: inline;
   color: var(--color-text);
   font-weight: 800;
-  /* Give descenders ('g', 'y') room — gradient-clipped text needs extra
-     vertical breathing room or the bottom of the glyph gets cropped. */
-  line-height: 1.1;
-  padding-bottom: 0.12em;
-  /* "Launch anything." — gradient sweep so it pops without a flat dim */
+  /* Inline gradient-clip word — gradient sweep so it pops without a flat dim */
   background: linear-gradient(
     100deg,
     var(--color-text) 0%,
