@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { count, desc, eq, like, or, sql } from "drizzle-orm";
+import { count, desc, eq, isNull, like, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { getDb } from "../../db/client";
 import { gumroadLicense, user } from "../../db/schema";
+import { parseMaxUsesFromVariants, verifyLicense } from "../../gumroad";
 import { selectAuditByTarget, serializeAuditEntry, writeAudit } from "../../lib/audit";
 import { toISO } from "../../lib/dates";
 import { parsePagination } from "../../lib/query";
@@ -155,6 +156,11 @@ licenses.get("/", async (c) => {
             // email was never backfilled — those have a userId but a
             // null row email, so coalesce in that order.
             email: sql<string | null>`COALESCE(${gumroadLicense.email}, ${user.email})`,
+            // Seats parsed from the Gumroad variant string at write
+            // time (migration 0005). NULL = legacy row not yet seen by
+            // a re-ping or by the backfill endpoint — surfaced as null
+            // so the admin can render "—" rather than guessing 1.
+            maxUses: gumroadLicense.maxUses,
           })
           .from(gumroadLicense)
           .leftJoin(user, eq(user.id, gumroadLicense.userId))
@@ -206,10 +212,10 @@ licenses.get("/", async (c) => {
       source: "gumroad",
       license_key: r.licenseKey,
       email: r.email ?? null,
-      // Gumroad's max_uses is encoded in the variant string and only
-      // discoverable via a Gumroad API round-trip — not worth fetching for
-      // the list view. The detail endpoint hydrates it on demand.
-      max_uses: null,
+      // Persisted at write time (webhook + /verify) by parsing the
+      // Gumroad variant string. Legacy pre-0005 rows are NULL until a
+      // re-ping hits them or the admin backfill endpoint runs.
+      max_uses: r.maxUses,
       tx_reference: r.saleId ?? null,
       issued_at: toISO(r.verifiedAt),
       revoked_at: null,
@@ -266,6 +272,7 @@ licenses.get("/:key", async (c) => {
           // See list query above — same coalesce order: row email first,
           // user-table email as legacy fallback.
           email: sql<string | null>`COALESCE(${gumroadLicense.email}, ${user.email})`,
+          maxUses: gumroadLicense.maxUses,
           userId: gumroadLicense.userId,
         })
         .from(gumroadLicense)
@@ -285,7 +292,7 @@ licenses.get("/:key", async (c) => {
       sale_id: row.saleId,
       issued_at: toISO(row.verifiedAt),
       revoked_at: null,
-      max_uses: null,
+      max_uses: row.maxUses,
       user_id: row.userId,
       activations,
       audit: audit.map(serializeAuditEntry),
@@ -528,6 +535,74 @@ licenses.post("/comp", async (c) => {
   });
 
   return c.json({ ok: true, license_key: key, email, max_uses: maxUses, emailed });
+});
+
+// ── POST /gumroad/backfill-seats ──────────────────────────────────────────
+//
+// One-shot maintenance: walk every gumroad_license row whose maxUses
+// is NULL (legacy rows from before migration 0005) and re-fetch the
+// variant string from Gumroad's verify API to populate it. Idempotent —
+// rows that already have maxUses set are untouched, so this can be
+// re-run safely after a Gumroad outage.
+//
+// Returns per-row outcomes. Failures (network, refund, deleted key)
+// are reported, not thrown — the admin can spot-check them and decide
+// whether to clean up the row manually.
+licenses.post("/gumroad/backfill-seats", async (c) => {
+  const db = getDb(c.env);
+  // Workers have a wall-clock cap (~30s on paid). Each row is one
+  // Gumroad HTTPS round-trip (~200-500ms), so cap each invocation at
+  // 100 rows and surface `has_more` so the admin can re-click. The
+  // endpoint is idempotent (only touches IS NULL), so re-running is
+  // safe.
+  const BACKFILL_BATCH = 100;
+  const rows = await db
+    .select({ licenseKey: gumroadLicense.licenseKey })
+    .from(gumroadLicense)
+    .where(isNull(gumroadLicense.maxUses))
+    .limit(BACKFILL_BATCH);
+
+  const results: Array<{ license_key: string; max_uses: number | null; status: string }> = [];
+  let updated = 0;
+  for (const row of rows) {
+    let result: Awaited<ReturnType<typeof verifyLicense>> = null;
+    try {
+      result = await verifyLicense(c.env, row.licenseKey);
+    } catch (e) {
+      results.push({ license_key: row.licenseKey, max_uses: null, status: `error:${(e as Error).message}` });
+      continue;
+    }
+    if (!result) {
+      // Refunded/charged-back/deleted-on-Gumroad rows verify=false. Leave
+      // maxUses NULL so the next backfill run picks them up if Gumroad
+      // restores the sale.
+      results.push({ license_key: row.licenseKey, max_uses: null, status: "verify_failed" });
+      continue;
+    }
+    const maxUses = parseMaxUsesFromVariants(result.variants);
+    await db
+      .update(gumroadLicense)
+      .set({ maxUses })
+      .where(eq(gumroadLicense.licenseKey, row.licenseKey));
+    updated += 1;
+    results.push({ license_key: row.licenseKey, max_uses: maxUses, status: "ok" });
+  }
+
+  await writeAudit(c, {
+    actorEmail: c.var.session.user.email,
+    action: "license.gumroad_backfill_seats",
+    targetType: "license",
+    targetId: "*",
+    details: { scanned: rows.length, updated },
+  });
+
+  return c.json({
+    ok: true,
+    scanned: rows.length,
+    updated,
+    has_more: rows.length === BACKFILL_BATCH,
+    results,
+  });
 });
 
 // ── Email helper ──────────────────────────────────────────────────────────

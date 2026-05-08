@@ -143,6 +143,7 @@ users.get("/:id", async (c) => {
           productId: gumroadLicense.productId,
           saleId: gumroadLicense.saleId,
           verifiedAt: gumroadLicense.verifiedAt,
+          maxUses: gumroadLicense.maxUses,
         })
         .from(gumroadLicense)
         .where(eq(gumroadLicense.userId, id))
@@ -184,6 +185,7 @@ users.get("/:id", async (c) => {
         license_key: r.licenseKey,
         product_id: r.productId,
         sale_id: r.saleId,
+        max_uses: r.maxUses,
         issued_at: toISO(r.verifiedAt),
       })),
       // Lahza+comp surfaced together, distinguished by the LZ-COMP- prefix

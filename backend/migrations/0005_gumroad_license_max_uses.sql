@@ -1,0 +1,11 @@
+-- Capture the seat allowance for Gumroad licenses. Gumroad encodes the
+-- seat count in the variant string (e.g. "(2 Mac Licences)" → 2,
+-- "Personal" → 1 default); the webhook + /verify routes parse it once
+-- at write time and store it here so the admin doesn't need an API
+-- round-trip per row to render "n / max" on the licenses page.
+--
+-- NULL = legacy row not yet backfilled. The admin should render this
+-- as "—" rather than "0 / 1" so the gap is visible. A one-shot admin
+-- endpoint re-fetches each NULL row from Gumroad and populates this
+-- column.
+ALTER TABLE `gumroad_license` ADD COLUMN `maxUses` integer;

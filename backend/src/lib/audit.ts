@@ -30,6 +30,7 @@ export type AuditAction =
   | "license.change_email"
   | "license.regenerate_key"
   | "license.resend_email"
+  | "license.gumroad_backfill_seats"
   | "activation.free"
   | "trial.extend"
   | "trial.terminate"

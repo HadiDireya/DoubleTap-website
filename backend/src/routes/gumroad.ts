@@ -3,9 +3,26 @@ import { HTTPException } from "hono/http-exception";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { gumroadLicense } from "../db/schema";
-import { verifyLicense } from "../gumroad";
+import { parseMaxUsesFromVariants, verifyLicense } from "../gumroad";
 import { requireSession } from "../lib/auth-helpers";
 import type { Env } from "../env";
+
+// Pull the variants string out of a Gumroad Ping form payload. Gumroad
+// encodes per-category variants as `variants[<category>]=<value>` form
+// fields (e.g. `variants[Tier]=Personal`), so Hono's parseBody surfaces
+// them as flat keys with the bracket syntax preserved. We concatenate
+// every value across all categories — the seat regex doesn't care
+// about category labels, it only needs an integer somewhere in the
+// concatenation.
+const variantTextFromForm = (form: Record<string, unknown>): string => {
+  const parts: string[] = [];
+  for (const [k, v] of Object.entries(form)) {
+    if (k === "variants" || k.startsWith("variants[")) {
+      if (typeof v === "string") parts.push(v);
+    }
+  }
+  return parts.join(" ");
+};
 
 const gumroad = new Hono<{ Bindings: Env }>();
 
@@ -84,6 +101,7 @@ gumroad.post("/verify", async (c) => {
     productId: result.productId,
     saleId: result.saleId,
     email: result.email ? result.email.trim().toLowerCase() : null,
+    maxUses: parseMaxUsesFromVariants(result.variants),
     verifiedAt: new Date(),
   });
 
@@ -134,6 +152,11 @@ gumroad.post("/webhook/:secret", async (c) => {
     form.disputed === "true" ||
     form.chargebacked === "true";
 
+  // Seat allowance lives in the variant string (e.g. `variants[Tier]=Personal`
+  // → 1, `variants[Tier]=2 Mac Licences` → 2). The helper concatenates
+  // every variant value and the parser pulls the first integer out.
+  const maxUses = parseMaxUsesFromVariants(variantTextFromForm(form));
+
   // Drop pings that don't match our product. A Gumroad seller can run
   // many products through a single Ping URL — without this filter,
   // someone who guessed the secret could insert arbitrary rows.
@@ -173,11 +196,13 @@ gumroad.post("/webhook/:secret", async (c) => {
     .limit(1);
 
   if (existing) {
-    // Idempotent re-ping: refresh email/saleId/productId, leave userId
-    // alone so a re-fired ping doesn't unlink a manual claim.
+    // Idempotent re-ping: refresh email/saleId/productId/maxUses, leave
+    // userId alone so a re-fired ping doesn't unlink a manual claim.
+    // Refreshing maxUses also fixes legacy NULL rows the moment Gumroad
+    // re-fires their ping for any reason.
     await db
       .update(gumroadLicense)
-      .set({ email, saleId, productId })
+      .set({ email, saleId, productId, maxUses })
       .where(eq(gumroadLicense.licenseKey, licenseKey));
   } else {
     await db.insert(gumroadLicense).values({
@@ -187,6 +212,7 @@ gumroad.post("/webhook/:secret", async (c) => {
       productId,
       saleId,
       email,
+      maxUses,
       verifiedAt: new Date(),
     });
   }

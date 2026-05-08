@@ -65,6 +65,11 @@ export const gumroadLicense = sqliteTable(
     // Gumroad purchaser email. Stored lowercase so a case-insensitive
     // match is just an `inArray` away.
     email: text("email"),
+    // Seat allowance derived from the Gumroad variant string at write
+    // time (e.g. "(2 Mac Licences)" → 2, "Personal" → 1). Nullable for
+    // legacy rows created before migration 0005 — the backfill endpoint
+    // populates them by re-hitting Gumroad's verify API.
+    maxUses: integer("maxUses"),
     verifiedAt: integer("verifiedAt", { mode: "timestamp" }).notNull(),
   },
   (t) => ({
