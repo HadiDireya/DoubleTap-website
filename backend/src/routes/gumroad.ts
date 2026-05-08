@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { getDb } from "../db/client";
 import { gumroadLicense } from "../db/schema";
 import { parseMaxUsesFromVariants, verifyLicense } from "../gumroad";
@@ -59,11 +59,23 @@ gumroad.post("/verify", async (c) => {
   if (existing) {
     // Webhook landed first, no user attached yet → claim it.
     if (existing.userId === null) {
+      // Gate the claim on userId still being NULL so two racing /verify
+      // requests can't both stomp the same row. D1 serialises writes,
+      // so the second UPDATE matches 0 rows; re-read to see who won and
+      // map that to claimed / alreadyLinked / 409.
       await db
         .update(gumroadLicense)
         .set({ userId: session.user.id, verifiedAt: new Date() })
-        .where(eq(gumroadLicense.licenseKey, licenseKey));
-      return c.json({ verified: true, claimed: true });
+        .where(and(eq(gumroadLicense.licenseKey, licenseKey), isNull(gumroadLicense.userId)));
+      const [winner] = await db
+        .select({ userId: gumroadLicense.userId })
+        .from(gumroadLicense)
+        .where(eq(gumroadLicense.licenseKey, licenseKey))
+        .limit(1);
+      if (winner?.userId === session.user.id) {
+        return c.json({ verified: true, claimed: true });
+      }
+      throw new HTTPException(409, { message: "license_linked_to_another_account" });
     }
     if (existing.userId !== session.user.id) {
       throw new HTTPException(409, { message: "license_linked_to_another_account" });
