@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { count, desc, eq, like, or } from "drizzle-orm";
+import { count, desc, eq, like, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { getDb } from "../../db/client";
 import { gumroadLicense, user } from "../../db/schema";
@@ -103,6 +103,11 @@ licenses.get("/", async (c) => {
     ? or(
         like(gumroadLicense.licenseKey, `%${trimmedQ}%`),
         like(gumroadLicense.saleId, `%${trimmedQ}%`),
+        // Match both the row's purchaser email (set by the webhook at
+        // sale time, before the buyer signs in) and the linked account
+        // email (set on /verify). Without the row-email predicate,
+        // searching for a webhook-only license by email returns nothing.
+        like(gumroadLicense.email, `%${trimmedQ}%`),
         like(user.email, `%${trimmedQ}%`),
       )
     : undefined;
@@ -144,7 +149,12 @@ licenses.get("/", async (c) => {
             productId: gumroadLicense.productId,
             saleId: gumroadLicense.saleId,
             verifiedAt: gumroadLicense.verifiedAt,
-            email: user.email,
+            // Purchaser email is on gumroadLicense.email (set by the
+            // webhook at sale time, lowercased). user.email is only the
+            // fallback for legacy pre-migration-0003 rows whose row
+            // email was never backfilled — those have a userId but a
+            // null row email, so coalesce in that order.
+            email: sql<string | null>`COALESCE(${gumroadLicense.email}, ${user.email})`,
           })
           .from(gumroadLicense)
           .leftJoin(user, eq(user.id, gumroadLicense.userId))
@@ -253,7 +263,9 @@ licenses.get("/:key", async (c) => {
           productId: gumroadLicense.productId,
           saleId: gumroadLicense.saleId,
           verifiedAt: gumroadLicense.verifiedAt,
-          email: user.email,
+          // See list query above — same coalesce order: row email first,
+          // user-table email as legacy fallback.
+          email: sql<string | null>`COALESCE(${gumroadLicense.email}, ${user.email})`,
           userId: gumroadLicense.userId,
         })
         .from(gumroadLicense)
