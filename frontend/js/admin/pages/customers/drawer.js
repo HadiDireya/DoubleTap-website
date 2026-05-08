@@ -167,7 +167,7 @@ const paintCustomerDrawer = (data) => {
       list.append(renderLinkedLicenseRow({
         license_key: r.license_key,
         source: "gumroad",
-        meta: `Issued ${fmtDateTime(r.issued_at)} · Sale ${r.sale_id || "—"}`,
+        meta: `Issued ${fmtDateTime(r.issued_at)} · Sale ${r.sale_id || "—"} · max ${r.max_uses ?? "—"} seats`,
         revoked: false,
       }));
     }

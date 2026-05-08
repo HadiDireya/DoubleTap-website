@@ -552,10 +552,11 @@ licenses.post("/gumroad/backfill-seats", async (c) => {
   const db = getDb(c.env);
   // Workers have a wall-clock cap (~30s on paid). Each row is one
   // Gumroad HTTPS round-trip (~200-500ms), so cap each invocation at
-  // 100 rows and surface `has_more` so the admin can re-click. The
+  // 50 rows and surface `has_more` so the admin can re-click. The
   // endpoint is idempotent (only touches IS NULL), so re-running is
-  // safe.
-  const BACKFILL_BATCH = 100;
+  // safe. 50 leaves enough headroom to absorb a single ~5s outlier
+  // call without blowing the cap.
+  const BACKFILL_BATCH = 50;
   const rows = await db
     .select({ licenseKey: gumroadLicense.licenseKey })
     .from(gumroadLicense)
