@@ -14,6 +14,21 @@
   var API_BASE = window.DT_API_BASE
     || (isLocal ? "http://127.0.0.1:8787" : "https://doubletap-license.hadidireya.workers.dev");
 
+  // Refuse to navigate anywhere that isn't Lahza's hosted checkout — guards
+  // against an /lahza/init response returning an attacker-controlled URL.
+  // Returns the parsed URL string (so the caller navigates to the validated
+  // value, not the raw input) or null if the URL fails the host/protocol check.
+  var CHECKOUT_HOSTS = { "checkout.lahza.io": true };
+  function safeCheckoutRedirect(raw) {
+    if (typeof raw !== "string") return null;
+    try {
+      var u = new URL(raw);
+      if (u.protocol !== "https:") return null;
+      if (CHECKOUT_HOSTS[u.host] !== true) return null;
+      return u.href;
+    } catch (_) { return null; }
+  }
+
   // ---------- buy.html ----------
   var payBtn = document.getElementById("pay-lahza");
   if (payBtn) {
@@ -47,7 +62,9 @@
         if (!data || !data.success || !data.authorization_url) {
           throw new Error(data && data.error || "init_failed");
         }
-        window.location.href = data.authorization_url;
+        var safeUrl = safeCheckoutRedirect(data.authorization_url);
+        if (!safeUrl) throw new Error("untrusted_redirect");
+        window.location.href = safeUrl;
       })
       .catch(function (e) {
         setBusy(payBtn, false, "Continue to secure checkout →");

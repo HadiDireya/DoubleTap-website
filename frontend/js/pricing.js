@@ -90,6 +90,21 @@ const isLocal = location.hostname === 'localhost' || location.hostname === '127.
 const API_BASE = window.DT_API_BASE
   || (isLocal ? 'http://127.0.0.1:8787' : 'https://doubletap-license.hadidireya.workers.dev');
 
+// Refuse to navigate to anything that isn't Lahza's hosted checkout, so a
+// tampered/buggy /lahza/init response can't turn this into an open redirect.
+// Returns the parsed URL string (so the caller assigns the validated value,
+// not the raw input) or null if the URL fails the host/protocol check.
+const CHECKOUT_HOSTS = new Set(['checkout.lahza.io']);
+const safeCheckoutRedirect = (raw) => {
+  if (typeof raw !== 'string') return null;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return null;
+    if (!CHECKOUT_HOSTS.has(u.host)) return null;
+    return u.href;
+  } catch (_) { return null; }
+};
+
 document.querySelectorAll('.price-card').forEach((card) => {
   const cta = card.querySelector('.price-card-cta');
   const form = card.querySelector('.price-checkout');
@@ -132,7 +147,9 @@ document.querySelectorAll('.price-card').forEach((card) => {
         if (!data || !data.success || !data.authorization_url) {
           throw new Error((data && data.error) || 'init_failed');
         }
-        window.location.href = data.authorization_url;
+        const safeUrl = safeCheckoutRedirect(data.authorization_url);
+        if (!safeUrl) throw new Error('untrusted_redirect');
+        window.location.href = safeUrl;
       })
       .catch((err) => {
         setBusy(payBtn, false, `${ctaLabel} →`);
