@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import { createAuth } from "./auth";
 import { buildOrigins } from "./lib/origins";
+import { rateLimit } from "./lib/rate-limit";
 import admin from "./routes/admin";
 import feedback from "./routes/feedback";
 import gumroad from "./routes/gumroad";
@@ -53,6 +54,14 @@ app.onError((err, c) => {
 app.get("/health", (c) => c.json({ ok: true }));
 
 // Better Auth: /auth/sign-in/*, /auth/callback/*, /auth/sign-out, /auth/get-session, etc.
+// Rate-limit POSTs only — GET /auth/get-session is hit on every page load by
+// signed-in visitors and would blow through any reasonable per-IP budget.
+// 30/min/IP across all auth POSTs covers magic-link sends (Resend cost) and
+// social sign-in starts; legitimate users do 1–3 of these per session.
+app.use(
+  "/auth/*",
+  rateLimit({ label: "auth", limit: 30 }),
+);
 app.on(["GET", "POST"], "/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
 
 app.route("/feedback", feedback);

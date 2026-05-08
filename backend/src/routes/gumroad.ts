@@ -5,6 +5,7 @@ import { getDb } from "../db/client";
 import { gumroadLicense } from "../db/schema";
 import { parseMaxUsesFromVariants, verifyLicense } from "../gumroad";
 import { requireSession } from "../lib/auth-helpers";
+import { rateLimit } from "../lib/rate-limit";
 import type { Env } from "../env";
 
 // Pull the variants string out of a Gumroad Ping form payload. Gumroad
@@ -39,7 +40,10 @@ const gumroad = new Hono<{ Bindings: Env }>();
 // signs in. Kept as a fallback for buyers who can't be matched by
 // email (e.g. signed in with a different email than the one they
 // bought with) and for legacy rows from before the webhook existed.
-gumroad.post("/verify", async (c) => {
+//
+// 10/min/IP — license-key probing is the realistic abuse vector; a real
+// buyer enters their key once, twice if they typo'd it.
+gumroad.post("/verify", rateLimit({ label: "gumroad_verify", limit: 10 }), async (c) => {
   const session = await requireSession(c);
   const body = await c.req
     .json<{ licenseKey?: unknown }>()

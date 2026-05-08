@@ -21,6 +21,7 @@ import {
   type FeedbackType,
   type Status,
 } from "../lib/auth-helpers";
+import { rateLimit } from "../lib/rate-limit";
 import type { DB } from "../db/client";
 import type { D1Database } from "@cloudflare/workers-types";
 import type { Env } from "../env";
@@ -390,7 +391,8 @@ feedback.get("/posts/:id", async (c) => {
 });
 
 // POST /feedback/posts — auth required. Optional type (default "feature").
-feedback.post("/posts", async (c) => {
+// 10/min/IP — bug submissions trigger Resend so this is the costliest write.
+feedback.post("/posts", rateLimit({ label: "feedback_post", limit: 10 }), async (c) => {
   const session = await requireSession(c);
   const body = await c.req
     .json<{ title?: unknown; body?: unknown; type?: unknown }>()
@@ -444,7 +446,8 @@ feedback.post("/posts", async (c) => {
 });
 
 // POST /feedback/posts/:id/vote — toggle (auth required)
-feedback.post("/posts/:id/vote", async (c) => {
+// 60/min/IP — voting is one click and users may quickly vote across the board.
+feedback.post("/posts/:id/vote", rateLimit({ label: "feedback_vote", limit: 60 }), async (c) => {
   const session = await requireSession(c);
   const postId = c.req.param("id");
   const db = getDb(c.env);
@@ -487,7 +490,8 @@ feedback.post("/posts/:id/vote", async (c) => {
 });
 
 // POST /feedback/posts/:id/comments — auth required
-feedback.post("/posts/:id/comments", async (c) => {
+// 20/min/IP — sits between post creation and voting.
+feedback.post("/posts/:id/comments", rateLimit({ label: "feedback_comment", limit: 20 }), async (c) => {
   const session = await requireSession(c);
   const postId = c.req.param("id");
   const body = await c.req
