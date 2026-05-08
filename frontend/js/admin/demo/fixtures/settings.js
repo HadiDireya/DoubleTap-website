@@ -7,8 +7,6 @@ export const settingsFixture = (path) => {
     secrets: [
       { name: "BETTER_AUTH_SECRET", configured: true },
       { name: "RESEND_API_KEY", configured: true },
-      { name: "APPLE_CLIENT_ID", configured: true },
-      { name: "APPLE_CLIENT_SECRET", configured: true },
       { name: "GOOGLE_CLIENT_ID", configured: true },
       { name: "GOOGLE_CLIENT_SECRET", configured: true },
       { name: "GUMROAD_PRODUCT_ID", configured: true },

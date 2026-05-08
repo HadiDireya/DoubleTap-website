@@ -18,10 +18,6 @@ export const createAuth = (env: Env) =>
     // the two layers can't drift.
     trustedOrigins: buildOrigins(env),
     socialProviders: {
-      apple: {
-        clientId: env.APPLE_CLIENT_ID,
-        clientSecret: env.APPLE_CLIENT_SECRET,
-      },
       google: {
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,

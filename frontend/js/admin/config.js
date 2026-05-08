@@ -24,7 +24,7 @@ export const SVG_NS = "http://www.w3.org/2000/svg";
 // Better Auth's /sign-in/social returns a `url` to redirect to; we refuse to
 // navigate anywhere not on this list, so a tampered/spoofed response can't
 // route the admin into a phishing page.
-export const OAUTH_HOSTS = new Set(["accounts.google.com", "appleid.apple.com"]);
+export const OAUTH_HOSTS = new Set(["accounts.google.com"]);
 
 // Local-only demo mode: when /admin/?demo=1 is loaded from localhost, the
 // admin endpoints are answered from in-page fixtures instead of the API.

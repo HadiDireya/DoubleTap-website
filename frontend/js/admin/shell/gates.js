@@ -34,10 +34,9 @@ export const renderGate = (root, kind) => {
     wrap.append(
       el("div", { class: "admin-gate-title" }, "Sign in to continue"),
       el("p", { class: "admin-gate-message" },
-        "This area is for the DoubleTap admin only. Sign in with the admin Google or Apple account."),
+        "This area is for the DoubleTap admin only. Sign in with the admin Google account."),
       el("div", { class: "admin-gate-buttons" },
         el("button", { class: "admin-gate-cta", type: "button", onclick: onSocial("google") }, "Sign in with Google"),
-        el("button", { class: "admin-gate-cta", type: "button", onclick: onSocial("apple") }, "Sign in with Apple"),
       ),
       el("form", { class: "admin-gate-magic", onsubmit: onMagic },
         el("input", { type: "email", placeholder: "or email me a link…", required: true, autocomplete: "email" }),

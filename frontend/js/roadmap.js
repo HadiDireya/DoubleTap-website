@@ -99,7 +99,7 @@ const adminDeletePost = (postId) =>
 const deleteComment = (commentId) =>
   apiFetch(`/feedback/comments/${commentId}`, { method: 'DELETE' });
 
-const OAUTH_HOSTS = new Set(['accounts.google.com', 'appleid.apple.com']);
+const OAUTH_HOSTS = new Set(['accounts.google.com']);
 
 const safeOauthRedirect = (raw) => {
   try {

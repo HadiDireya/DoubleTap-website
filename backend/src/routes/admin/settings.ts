@@ -57,7 +57,6 @@ const settings = new Hono<{ Bindings: Env; Variables: AdminVariables }>();
 // knowing are wired. Add a payment-provider secret here when one ships.
 const TRACKED_SECRETS = [
   "RESEND_API_KEY",
-  "APPLE_CLIENT_ID",
   "GOOGLE_CLIENT_ID",
   "GUMROAD_PRODUCT_ID",
   "BACKUP_GH_TOKEN",

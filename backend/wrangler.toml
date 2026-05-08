@@ -39,8 +39,6 @@ API_URL = "https://api.doubletap-app.com"
 # Secrets — set via `wrangler secret put <NAME>`:
 #   BETTER_AUTH_SECRET           openssl rand -base64 32
 #   RESEND_API_KEY               https://resend.com/api-keys
-#   APPLE_CLIENT_ID              Service ID from Apple Developer
-#   APPLE_CLIENT_SECRET          generated JWT (see better-auth docs)
 #   GOOGLE_CLIENT_ID             Google Cloud Console
 #   GOOGLE_CLIENT_SECRET
 #   GUMROAD_PRODUCT_ID           from your Gumroad product settings
